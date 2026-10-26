@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local Claude Code agent config — keep local, never commit
+.claude/
