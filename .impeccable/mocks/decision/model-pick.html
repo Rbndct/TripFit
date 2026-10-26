@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;padding:0;width:390px;height:844px;overflow:hidden;
+    background:#14161b;color:#f0c76a;
+    font-family:"Courier New",ui-monospace,monospace;}
+  .page{position:relative;width:390px;height:844px;box-sizing:border-box;}
+  .statusbar{height:28px;}
+  .topbar{padding:14px 20px 10px;border-bottom:1px solid #2e323c;}
+  .callsign{font-size:12px;letter-spacing:3px;color:#8a8f99;text-transform:uppercase;}
+  .greeting{font-size:22px;letter-spacing:1px;margin-top:6px;color:#f0c76a;}
+  .board{margin:16px 20px 0;border:1px solid #2e323c;background:#1a1d24;}
+  .row{display:flex;align-items:stretch;border-bottom:1px solid #2e323c;padding:14px 14px;}
+  .row:last-child{border-bottom:none;}
+  .cell{padding:0 8px;position:relative;}
+  .cell::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#0d0f13;opacity:.5;}
+  .label{font-size:9px;letter-spacing:1.5px;color:#6b7078;display:block;}
+  .value{font-size:16px;letter-spacing:1.5px;font-weight:700;margin-top:3px;}
+  .value.status{color:#5ad17a;}
+  .value.status.draft{color:#8a8f99;}
+  .headrow{display:flex;gap:10px;padding:10px 14px;background:#111318;}
+  .headrow .label{font-size:9px;}
+  .flex1{flex:1;}
+  .section{padding:22px 20px 0;font-size:11px;letter-spacing:2.5px;color:#6b7078;text-transform:uppercase;}
+  .stat-strip{display:flex;gap:10px;padding:14px 20px 0;}
+  .stat{flex:1;border:1px solid #2e323c;padding:10px;text-align:center;}
+  .stat .n{font-size:20px;font-weight:700;color:#f0c76a;}
+  .stat .l{font-size:9px;color:#6b7078;letter-spacing:1.5px;margin-top:4px;}
+  .fab{position:absolute;right:20px;bottom:92px;width:54px;height:54px;background:#f0c76a;color:#14161b;
+    display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;}
+  .navbar{position:absolute;left:0;bottom:0;width:390px;height:72px;background:#111318;
+    border-top:1px solid #2e323c;display:flex;align-items:center;justify-content:space-around;}
+  .navitem{font-size:10px;letter-spacing:1.5px;color:#6b7078;text-transform:uppercase;}
+  .navitem.active{color:#f0c76a;border-top:2px solid #f0c76a;padding-top:8px;margin-top:-10px;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="statusbar"></div>
+  <div class="topbar">
+    <div class="callsign">TripFit &middot; Departures</div>
+    <div class="greeting">Hi, Traveler</div>
+  </div>
+
+  <div class="board">
+    <div class="headrow">
+      <div class="label flex1">Trip</div>
+      <div class="label" style="width:70px">Progress</div>
+      <div class="label" style="width:64px">Stops</div>
+      <div class="label" style="width:64px">Status</div>
+    </div>
+    <div class="row">
+      <div class="cell flex1"><span class="label">Up next</span><span class="value">Tokyo Trip</span></div>
+      <div class="cell" style="width:70px"><span class="label">Day</span><span class="value">1/2</span></div>
+      <div class="cell" style="width:64px"><span class="label">Stops</span><span class="value">6</span></div>
+      <div class="cell" style="width:64px"><span class="label">&nbsp;</span><span class="value status">ON TRACK</span></div>
+    </div>
+    <div class="row">
+      <div class="cell flex1"><span class="label">Draft</span><span class="value">Kyoto Weekend</span></div>
+      <div class="cell" style="width:70px"><span class="label">Day</span><span class="value">&mdash;</span></div>
+      <div class="cell" style="width:64px"><span class="label">Stops</span><span class="value">3</span></div>
+      <div class="cell" style="width:64px"><span class="label">&nbsp;</span><span class="value status draft">DRAFT</span></div>
+    </div>
+  </div>
+
+  <div class="section">Budget today</div>
+  <div class="stat-strip">
+    <div class="stat"><div class="n">&yen;18,400</div><div class="l">Spent</div></div>
+    <div class="stat"><div class="n">&yen;31,600</div><div class="l">Remaining</div></div>
+  </div>
+
+  <div class="fab">+</div>
+  <div class="navbar">
+    <div class="navitem active">Home</div>
+    <div class="navitem">Trips</div>
+    <div class="navitem">Budget</div>
+    <div class="navitem">Profile</div>
+  </div>
+</div>
+</body>
+</html>

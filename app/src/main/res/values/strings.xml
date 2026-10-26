@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">TripFit</string>
+
+    <!-- Itinerary screen -->
+    <string name="itinerary_title">Tokyo Trip</string>
+    <string name="itinerary_subtitle">Day-by-day itinerary</string>
+    <string name="add_destination">Add destination</string>
+    <string name="day_label">Day %1$d</string>
+    <string name="stops_count">%1$d stops</string>
+    <string name="stop_duration">Stay %1$s</string>
+    <string name="no_duration">No set duration</string>
+
+    <!-- Add destination screen -->
+    <string name="add_destination_title">Add destination</string>
+    <string name="field_name_hint">Destination name</string>
+    <string name="field_name_helper">Search a place or drop a pin (coming soon)</string>
+    <string name="field_day_hint">Day</string>
+    <string name="field_duration_hint">Duration (optional)</string>
+    <string name="field_duration_suffix">min</string>
+    <string name="mark_booked">Mark as booked (fixed time)</string>
+    <string name="field_time_hint">Fixed time</string>
+    <string name="action_save">Save destination</string>
+    <string name="select_time">Select fixed time</string>
+    <string name="error_name_required">Enter a destination name</string>
+    <string name="error_day_required">Enter a day number</string>
+    <string name="error_time_required">Pick a time for a booked stop</string>
+    <string name="saved_ui_only">Saved (UI only — persistence comes in the DB task)</string>
+    <string name="cd_booked">Booked stop with fixed time</string>
+    <string name="badge_booked_label">Booked</string>
+
+    <!-- Login screen -->
+    <string name="login_subtitle">Plan your next adventure</string>
+    <string name="field_email_hint">Email</string>
+    <string name="field_password_hint">Password</string>
+    <string name="action_sign_in">Sign In</string>
+    <string name="divider_or">or</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="error_email_required">Enter your email</string>
+    <string name="error_password_required">Enter your password</string>
+
+    <!-- Home screen -->
+    <string name="home_greeting">Hi, Traveler</string>
+    <string name="home_subtitle">Plan your next adventure</string>
+    <string name="home_your_trips">Your Trips</string>
+    <string name="trip_days_count">2 days</string>
+    <string name="trip_stops_count">6 stops</string>
+    <string name="new_trip">New Trip</string>
+    <string name="new_trip_coming_soon">New trip creation is coming soon</string>
+    <string name="profile_coming_soon">Profile is coming soon</string>
+    <string name="cd_profile">Profile</string>
+</resources>

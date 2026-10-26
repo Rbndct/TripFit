@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;padding:0;width:390px;height:844px;overflow:hidden;
+    background:#f3ead8;
+    font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:#2b2622;}
+  .page{position:relative;width:390px;height:844px;padding:0 20px;box-sizing:border-box;}
+  .statusbar{height:28px;}
+  .header{padding:18px 0 10px;}
+  .greeting{font-size:26px;font-weight:700;letter-spacing:-0.3px;}
+  .subtitle{font-size:14px;color:#6b6155;margin-top:4px;position:relative;display:inline-block;}
+  .subtitle svg{position:absolute;left:-2px;bottom:-6px;width:170px;height:8px;}
+  .avatar{position:absolute;top:18px;right:0;width:40px;height:40px;border-radius:50%;
+    background:#fff;border:1.5px solid #2b2622;display:flex;align-items:center;justify-content:center;
+    font-size:16px;}
+  .tape{position:absolute;top:-10px;left:28px;width:70px;height:22px;background:#e3c86b;
+    opacity:0.85;transform:rotate(-4deg);box-shadow:0 1px 2px rgba(0,0,0,0.15);}
+  .hero{position:relative;margin-top:28px;background:#fffdf7;border:1.5px solid #2b2622;
+    border-radius:4px;padding:22px 18px 18px;box-shadow:3px 4px 0 rgba(43,38,34,0.12);}
+  .hero-kicker{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#b5542c;font-weight:700;}
+  .hero-title{font-size:24px;font-weight:700;margin-top:6px;position:relative;display:inline-block;}
+  .hero-title .ring{position:absolute;left:-10px;top:-10px;width:150px;height:46px;}
+  .hero-sub{font-size:13px;color:#6b6155;margin-top:10px;}
+  .stats{display:flex;gap:10px;margin-top:16px;}
+  .tag{border:1.3px solid #2b2622;border-radius:3px;padding:6px 10px;font-size:12px;font-weight:600;
+    background:#f9f2e3;}
+  .tag:nth-child(1){transform:rotate(-2deg);}
+  .tag:nth-child(2){transform:rotate(1.5deg);}
+  .section-head{font-size:17px;font-weight:700;margin-top:30px;position:relative;display:inline-block;}
+  .section-head svg{position:absolute;left:0;bottom:-7px;width:95px;height:10px;}
+  .card2{margin-top:16px;background:#fffdf7;border:1.3px solid #2b2622;border-radius:4px;
+    padding:14px 16px;display:flex;justify-content:space-between;align-items:center;
+    box-shadow:2px 3px 0 rgba(43,38,34,0.08);}
+  .card2-title{font-size:15px;font-weight:700;}
+  .card2-meta{font-size:11.5px;color:#6b6155;margin-top:3px;}
+  .stamp{width:30px;height:30px;border:1.5px solid #b5542c;border-radius:50%;color:#b5542c;
+    display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+    transform:rotate(-8deg);}
+  .fab{position:absolute;right:20px;bottom:92px;width:56px;height:56px;border-radius:50%;
+    background:#2b2622;border:2px solid #b5542c;color:#f3ead8;font-size:26px;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 3px 6px rgba(0,0,0,0.25);}
+  .navbar{position:absolute;left:0;bottom:0;width:390px;height:72px;background:#fffdf7;
+    border-top:1.3px solid #2b2622;display:flex;align-items:center;justify-content:space-around;}
+  .navitem{font-size:11px;color:#6b6155;text-align:center;}
+  .navitem.active{color:#2b2622;font-weight:700;}
+  .navdot{width:6px;height:6px;border-radius:50%;background:#b5542c;margin:0 auto 4px;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="statusbar"></div>
+  <div class="header">
+    <div class="greeting">Hi, Traveler</div>
+    <div class="subtitle">Plan your next adventure
+      <svg viewBox="0 0 170 8"><path d="M2 5 Q40 1 85 5 T168 4" stroke="#b5542c" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+    </div>
+    <div class="avatar">R</div>
+  </div>
+
+  <div class="hero">
+    <div class="tape"></div>
+    <div class="hero-kicker">Up next</div>
+    <div class="hero-title">Tokyo Trip
+      <svg class="ring" viewBox="0 0 150 46"><ellipse cx="75" cy="23" rx="68" ry="19" stroke="#b5542c" stroke-width="2" fill="none" transform="rotate(-3 75 23)"/></svg>
+    </div>
+    <div class="hero-sub">Day-by-day itinerary</div>
+    <div class="stats">
+      <div class="tag">2 days</div>
+      <div class="tag">6 stops</div>
+    </div>
+  </div>
+
+  <div class="section-head">Your Trips
+    <svg viewBox="0 0 95 10"><path d="M2 6 Q25 2 47 6 T92 5" stroke="#2b2622" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+  </div>
+
+  <div class="card2">
+    <div>
+      <div class="card2-title">Kyoto Weekend</div>
+      <div class="card2-meta">Draft &middot; 3 stops</div>
+    </div>
+    <div class="stamp">IDEA</div>
+  </div>
+
+  <div class="fab">+</div>
+  <div class="navbar">
+    <div class="navitem active"><div class="navdot"></div>Home</div>
+    <div class="navitem">Trips</div>
+    <div class="navitem">Budget</div>
+    <div class="navitem">Profile</div>
+  </div>
+</div>
+</body>
+</html>
