@@ -20,6 +20,12 @@ import com.google.android.material.textfield.TextInputLayout;
  */
 public class LoginActivity extends AppCompatActivity {
 
+    /**
+     * TESTING ONLY: skip credential validation and go straight to Home.
+     * Gated on BuildConfig.DEBUG so it is compiled out of release builds and can never ship.
+     */
+    private static final boolean DEV_BYPASS_LOGIN = BuildConfig.DEBUG;
+
     private TextInputLayout layoutEmail;
     private TextInputLayout layoutPassword;
     private TextInputEditText inputEmail;
@@ -46,6 +52,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void attemptSignIn() {
+        if (DEV_BYPASS_LOGIN) {
+            goToHome();
+            return;
+        }
+
         boolean valid = true;
 
         if (TextUtils.isEmpty(safeText(inputEmail))) {
