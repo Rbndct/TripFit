@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:390px;height:844px;overflow:hidden;background:#ffffff;
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:#15181d;}
+.page{position:relative;width:390px;height:844px;padding:0 20px;box-sizing:border-box;}
+.statusbar{height:28px;}
+.header{padding:16px 0 8px;}
+.greeting{font-size:24px;font-weight:700;}
+.subtitle{font-size:13px;color:#6b7280;margin-top:3px;}
+.avatar{position:absolute;top:18px;right:0;width:38px;height:38px;border-radius:50%;background:#15181d;
+  color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.hero{margin-top:24px;background:#f4f5f7;border-radius:12px;padding:18px;}
+.hero-title{font-size:22px;font-weight:700;}
+.hero-sub{font-size:13px;color:#6b7280;margin-top:4px;}
+.route{position:relative;height:40px;margin-top:18px;}
+.line{position:absolute;left:8px;right:8px;top:19px;height:3px;background:#2563eb;border-radius:2px;}
+.node{position:absolute;top:10px;width:20px;height:20px;border-radius:50%;background:#2563eb;border:3px solid #f4f5f7;}
+.node.n1{left:0;} .node.n2{left:28%;background:#2563eb;} .node.n3{left:56%;background:#9ca3af;}
+.node.n4{left:calc(100% - 20px);background:#9ca3af;}
+.legend{display:flex;gap:14px;margin-top:6px;font-size:10.5px;color:#6b7280;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+.section-head{font-size:16px;font-weight:700;margin-top:28px;}
+.card2{margin-top:14px;background:#f4f5f7;border-radius:10px;padding:14px 16px;
+  display:flex;justify-content:space-between;align-items:center;}
+.card2-title{font-size:14px;font-weight:700;}
+.card2-meta{font-size:11px;color:#6b7280;margin-top:2px;}
+.badge{font-size:10px;font-weight:700;color:#6b7280;background:#e5e7eb;border-radius:4px;padding:4px 8px;}
+.fab{position:absolute;right:20px;bottom:92px;width:56px;height:56px;border-radius:50%;background:#2563eb;
+  color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 6px rgba(0,0,0,.25);}
+.navbar{position:absolute;left:0;bottom:0;width:390px;height:72px;background:#fff;border-top:1px solid #eceef2;
+  display:flex;align-items:center;justify-content:space-around;}
+.navitem{font-size:11px;color:#6b7280;}
+.navitem.active{color:#2563eb;font-weight:700;}
+</style></head><body>
+<div class="page">
+  <div class="statusbar"></div>
+  <div class="header"><div class="greeting">Hi, Traveler</div><div class="subtitle">Plan your next adventure</div>
+    <div class="avatar">R</div></div>
+  <div class="hero">
+    <div class="hero-title">Tokyo Trip</div>
+    <div class="hero-sub">Day 1 of 2 &middot; 6 stops</div>
+    <div class="route"><div class="line"></div>
+      <div class="node n1"></div><div class="node n2"></div><div class="node n3"></div><div class="node n4"></div>
+    </div>
+    <div class="legend"><span><span class="dot" style="background:#2563eb"></span>Visited / next</span>
+      <span><span class="dot" style="background:#9ca3af"></span>Later today</span></div>
+  </div>
+  <div class="section-head">Your Trips</div>
+  <div class="card2"><div><div class="card2-title">Kyoto Weekend</div><div class="card2-meta">3 stops</div></div>
+    <div class="badge">DRAFT</div></div>
+  <div class="fab">+</div>
+  <div class="navbar"><div class="navitem active">Home</div><div class="navitem">Trips</div>
+    <div class="navitem">Budget</div><div class="navitem">Profile</div></div>
+</div>
+</body></html>

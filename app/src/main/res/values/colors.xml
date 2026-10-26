@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Brand: ticket-stub navy (light) -->
+    <color name="md_primary">#13213B</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#D7DEEA</color>
+    <color name="md_on_primary_container">#13213B</color>
+
+    <!-- Secondary: amber, used for "booked" accents (light) -->
+    <color name="md_secondary">#8A5B00</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#FFE8B2</color>
+    <color name="md_on_secondary_container">#2B1B00</color>
+
+    <!-- Surfaces: off-white paper (light) -->
+    <color name="md_background">#FBFBF9</color>
+    <color name="md_on_background">#15181D</color>
+    <color name="md_surface">#FBFBF9</color>
+    <color name="md_on_surface">#15181D</color>
+    <color name="md_surface_variant">#E7E9ED</color>
+    <color name="md_on_surface_variant">#4A4E57</color>
+    <color name="md_outline">#8B93A6</color>
+
+    <!-- Ticket motif accents -->
+    <color name="ticket_barcode_bar">#8B93A6</color>
+</resources>
