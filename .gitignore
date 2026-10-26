@@ -17,3 +17,6 @@ local.properties
 # Local Claude Code agent config — keep local, never commit
 .claude/
 CLAUDE.md
+
+# claude-mem local session/memory files — keep local, never commit
+docs/memory/
