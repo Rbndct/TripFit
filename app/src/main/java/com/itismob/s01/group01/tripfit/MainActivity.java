@@ -2,6 +2,7 @@ package com.itismob.s01.group01.tripfit;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
+import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.ui.ItineraryAdapter;
 import com.itismob.s01.group01.tripfit.ui.ItineraryRow;
 import com.itismob.s01.group01.tripfit.viewmodel.ItineraryViewModel;
@@ -46,6 +47,13 @@ public class MainActivity extends AppCompatActivity {
                 new ItineraryViewModel.Factory(app.getTripRepository(), tripId))
                 .get(ItineraryViewModel.class);
 
+        TextView tripTitle = findViewById(R.id.text_trip_title);
+        app.getTripRepository().observeTrip(tripId).observe(this, trip -> {
+            if (trip != null) {
+                tripTitle.setText(trip.getName());
+            }
+        });
+
         RecyclerView recyclerView = findViewById(R.id.recycler_itinerary);
         recyclerView.setAdapter(adapter);
         viewModel.getItems().observe(this, items -> adapter.submitRows(buildRows(items)));
@@ -59,18 +67,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Groups flat items by day into header + stop rows, preserving day and item order. */
-    private List<ItineraryRow> buildRows(List<ItineraryItemEntity> items) {
-        Map<Integer, List<ItineraryItemEntity>> byDay = new LinkedHashMap<>();
-        for (ItineraryItemEntity item : items) {
-            byDay.computeIfAbsent(item.getDay(), day -> new ArrayList<>()).add(item);
+    private List<ItineraryRow> buildRows(List<ItineraryItemWithPlace> items) {
+        Map<Integer, List<ItineraryItemWithPlace>> byDay = new LinkedHashMap<>();
+        for (ItineraryItemWithPlace item : items) {
+            byDay.computeIfAbsent(item.item.getDay(), day -> new ArrayList<>()).add(item);
         }
 
         List<ItineraryRow> rows = new ArrayList<>();
-        for (Map.Entry<Integer, List<ItineraryItemEntity>> entry : byDay.entrySet()) {
-            List<ItineraryItemEntity> dayItems = entry.getValue();
+        for (Map.Entry<Integer, List<ItineraryItemWithPlace>> entry : byDay.entrySet()) {
+            List<ItineraryItemWithPlace> dayItems = entry.getValue();
             rows.add(new ItineraryRow.DayHeader(entry.getKey(), dayItems.size()));
             for (int i = 0; i < dayItems.size(); i++) {
-                rows.add(new ItineraryRow.Stop(dayItems.get(i), i + 1));
+                rows.add(new ItineraryRow.Stop(dayItems.get(i).item, dayItems.get(i).placeName, i + 1));
             }
         }
         return rows;

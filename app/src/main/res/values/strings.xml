@@ -13,7 +13,7 @@
     <!-- Add destination screen -->
     <string name="add_destination_title">Add destination</string>
     <string name="field_name_hint">Destination name</string>
-    <string name="field_name_helper">Search a place or drop a pin (coming soon)</string>
+    <string name="field_name_helper">Used if it isn\'t in the search results above</string>
     <string name="field_day_hint">Day</string>
     <string name="field_duration_hint">Duration (optional)</string>
     <string name="field_duration_suffix">min</string>
@@ -46,7 +46,21 @@
     <string name="trip_days_count">%1$d days</string>
     <string name="trip_stops_count">%1$d stops</string>
     <string name="new_trip">New Trip</string>
-    <string name="new_trip_coming_soon">New trip creation is coming soon</string>
     <string name="profile_coming_soon">Profile is coming soon</string>
     <string name="cd_profile">Profile</string>
+
+    <!-- New trip screen -->
+    <string name="new_trip_title">New trip</string>
+    <string name="field_trip_name_hint">Trip name</string>
+    <string name="action_create_trip">Create trip</string>
+    <string name="error_trip_name_required">Enter a trip name</string>
+    <string name="error_create_trip_failed">Could not create trip</string>
+
+    <!-- Destination search -->
+    <string name="field_search_hint">Search places</string>
+    <string name="search_empty_state">No places found. You can still add it by name below.</string>
+    <string name="search_error">Could not search right now</string>
+    <string name="divider_or_manual">or add manually</string>
+    <string name="hidden_gem_label">Hidden gem</string>
+    <string name="cities_load_error">Could not load cities</string>
 </resources>

@@ -89,7 +89,7 @@ public class ItineraryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         void bind(ItineraryRow.Stop stop) {
             indexBadge.setText(String.valueOf(stop.getIndexInDay()));
-            name.setText(stop.getItem().displayName(null));
+            name.setText(stop.getItem().displayName(stop.getPlaceName()));
             meta.setText(resolveMetaText(stop.getItem()));
             bookedBadge.setVisibility(stop.getItem().isBooked() ? View.VISIBLE : View.GONE);
         }

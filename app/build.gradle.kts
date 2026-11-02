@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
-    debugImplementation(libs.okhttp.logging.interceptor)
+    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.room.runtime)
     annotationProcessor(libs.room.compiler)
     implementation(libs.lifecycle.viewmodel)

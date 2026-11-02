@@ -35,15 +35,21 @@ public abstract class ItineraryRow {
 
     public static final class Stop extends ItineraryRow {
         private final ItineraryItemEntity item;
+        private final String placeName;
         private final int indexInDay;
 
-        public Stop(ItineraryItemEntity item, int indexInDay) {
+        public Stop(ItineraryItemEntity item, String placeName, int indexInDay) {
             this.item = item;
+            this.placeName = placeName;
             this.indexInDay = indexInDay;
         }
 
         public ItineraryItemEntity getItem() {
             return item;
+        }
+
+        public String getPlaceName() {
+            return placeName;
         }
 
         public int getIndexInDay() {

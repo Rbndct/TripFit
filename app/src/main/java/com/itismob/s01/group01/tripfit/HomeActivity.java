@@ -80,7 +80,7 @@ public class HomeActivity extends AppCompatActivity {
                 showComingSoon(R.string.profile_coming_soon));
 
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_new_trip);
-        fab.setOnClickListener(v -> showComingSoon(R.string.new_trip_coming_soon));
+        fab.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, NewTripActivity.class)));
     }
 
     private void showComingSoon(int messageRes) {
