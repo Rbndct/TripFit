@@ -1,0 +1,29 @@
+name: Places ingestion pipeline
+
+on:
+  schedule:
+    # Weekly, Monday 03:00 UTC. Nominatim/Overpass/Wikidata are shared public
+    # infra — keep this infrequent and batched (see docs/api-terms.md).
+    - cron: "0 3 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Run ingestion for seed cities
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
+          OPENTRIPMAP_API_KEY: ${{ secrets.OPENTRIPMAP_API_KEY }}
+        run: python -m pipeline.main --cities "Tokyo,JP" "Manila,PH"

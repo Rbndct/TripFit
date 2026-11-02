@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Senso-ji",
+    "category": "attraction",
+    "lat": 35.71477,
+    "lng": 139.79638,
+    "osm_id": "way/12345",
+    "sources_json": {"overpass": {"osm_id": "way/12345"}}
+  },
+  {
+    "name": "Sensoji Temple",
+    "category": null,
+    "lat": 35.714795,
+    "lng": 139.796374,
+    "wikidata_id": "Q335011",
+    "sources_json": {"wikidata": {"qid": "Q335011"}}
+  },
+  {
+    "name": "Meiji Shrine",
+    "category": "place_of_worship",
+    "lat": 35.6764,
+    "lng": 139.6993,
+    "osm_id": "way/67890",
+    "address": "1-1 Yoyogikamizonocho",
+    "sources_json": {"overpass": {"osm_id": "way/67890"}}
+  },
+  {
+    "name": "Random Cafe With No Coords",
+    "category": "cafe",
+    "lat": null,
+    "lng": null,
+    "sources_json": {"overpass": {}}
+  },
+  {
+    "name": "",
+    "category": "attraction",
+    "lat": 35.0,
+    "lng": 139.0,
+    "sources_json": {}
+  }
+]
