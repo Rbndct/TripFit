@@ -1,6 +1,6 @@
 package com.itismob.s01.group01.tripfit.ui;
 
-import com.itismob.s01.group01.tripfit.model.ItineraryItem;
+import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 
 /** A row in the itinerary list: either a day header or a stop. */
 public abstract class ItineraryRow {
@@ -34,15 +34,15 @@ public abstract class ItineraryRow {
     }
 
     public static final class Stop extends ItineraryRow {
-        private final ItineraryItem item;
+        private final ItineraryItemEntity item;
         private final int indexInDay;
 
-        public Stop(ItineraryItem item, int indexInDay) {
+        public Stop(ItineraryItemEntity item, int indexInDay) {
             this.item = item;
             this.indexInDay = indexInDay;
         }
 
-        public ItineraryItem getItem() {
+        public ItineraryItemEntity getItem() {
             return item;
         }
 
