@@ -9,9 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.itismob.s01.group01.tripfit.R;
+import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Renders a flat list of {@link ItineraryRow}s as day headers and stop cards. */
 public class ItineraryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -87,17 +89,18 @@ public class ItineraryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
         void bind(ItineraryRow.Stop stop) {
             indexBadge.setText(String.valueOf(stop.getIndexInDay()));
-            name.setText(stop.getItem().getName());
+            name.setText(stop.getItem().displayName(null));
             meta.setText(resolveMetaText(stop.getItem()));
             bookedBadge.setVisibility(stop.getItem().isBooked() ? View.VISIBLE : View.GONE);
         }
 
-        private String resolveMetaText(com.itismob.s01.group01.tripfit.model.ItineraryItem item) {
-            if (item.isBooked() && item.getBookedTime() != null) {
-                return meta.getContext().getString(R.string.stop_duration, item.getBookedTime());
+        private String resolveMetaText(ItineraryItemEntity item) {
+            if (item.isBooked() && item.getTime() != null) {
+                return meta.getContext().getString(R.string.stop_duration, item.getTime());
             }
-            if (item.getDurationLabel() != null) {
-                return meta.getContext().getString(R.string.stop_duration, item.getDurationLabel());
+            if (item.getDurationMin() != null) {
+                String label = String.format(Locale.getDefault(), "%d min", item.getDurationMin());
+                return meta.getContext().getString(R.string.stop_duration, label);
             }
             return meta.getContext().getString(R.string.no_duration);
         }

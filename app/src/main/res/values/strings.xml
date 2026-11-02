@@ -24,7 +24,8 @@
     <string name="error_name_required">Enter a destination name</string>
     <string name="error_day_required">Enter a day number</string>
     <string name="error_time_required">Pick a time for a booked stop</string>
-    <string name="saved_ui_only">Saved (UI only — persistence comes in the DB task)</string>
+    <string name="destination_saved">Destination added</string>
+    <string name="error_save_failed">Could not save destination</string>
     <string name="cd_booked">Booked stop with fixed time</string>
     <string name="badge_booked_label">Booked</string>
 
@@ -42,8 +43,8 @@
     <string name="home_greeting">Hi, Traveler</string>
     <string name="home_subtitle">Plan your next adventure</string>
     <string name="home_your_trips">Your Trips</string>
-    <string name="trip_days_count">2 days</string>
-    <string name="trip_stops_count">6 stops</string>
+    <string name="trip_days_count">%1$d days</string>
+    <string name="trip_stops_count">%1$d stops</string>
     <string name="new_trip">New Trip</string>
     <string name="new_trip_coming_soon">New trip creation is coming soon</string>
     <string name="profile_coming_soon">Profile is coming soon</string>
