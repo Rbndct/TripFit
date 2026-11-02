@@ -5,7 +5,12 @@ on:
     # Weekly, Monday 03:00 UTC. Nominatim/Overpass/Wikidata are shared public
     # infra — keep this infrequent and batched (see docs/api-terms.md).
     - cron: "0 3 * * 1"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      cities:
+        description: '"Name,CC" pairs, space-separated (DEV-HANDOFF.md §9 secondary targets: Osaka,JP Kyoto,JP "Cebu City",PH Bangkok,TH Singapore,SG Hanoi,VN "Kuala Lumpur",MY)'
+        required: false
+        default: 'Tokyo,JP Manila,PH'
 
 jobs:
   ingest:
@@ -26,4 +31,11 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           ORS_API_KEY: ${{ secrets.ORS_API_KEY }}
           OPENTRIPMAP_API_KEY: ${{ secrets.OPENTRIPMAP_API_KEY }}
-        run: python -m pipeline.main --cities "Tokyo,JP" "Manila,PH"
+          CITIES: ${{ github.event.inputs.cities || 'Tokyo,JP Manila,PH' }}
+        # shlex.split (not shell eval) safely handles quoted "City Name,CC" pairs.
+        run: |
+          python -c "
+          import os, shlex, subprocess, sys
+          cities = shlex.split(os.environ['CITIES'])
+          subprocess.run([sys.executable, '-m', 'pipeline.main', '--cities', *cities], check=True)
+          "

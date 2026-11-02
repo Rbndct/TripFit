@@ -63,4 +63,11 @@
     <string name="divider_or_manual">or add manually</string>
     <string name="hidden_gem_label">Hidden gem</string>
     <string name="cities_load_error">Could not load cities</string>
+    <string name="action_pick_on_map">Pick on map</string>
+
+    <!-- Map picker screen -->
+    <string name="map_picker_title">Drop a pin</string>
+    <string name="map_picker_marker_hint">Drag to the exact spot</string>
+    <string name="action_use_location">Use this location</string>
+    <string name="map_picker_fallback_name">Pinned location</string>
 </resources>

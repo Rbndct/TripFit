@@ -5,6 +5,18 @@ SEED_CITIES = [
     {"name": "Manila", "country": "PH"},
 ]
 
+# Secondary SEA expansion targets (DEV-HANDOFF.md §9, decision 2). Not run automatically --
+# pass explicitly via `--cities` or the ingest workflow's `cities` dispatch input.
+SECONDARY_CITIES = [
+    {"name": "Osaka", "country": "JP"},
+    {"name": "Kyoto", "country": "JP"},
+    {"name": "Cebu City", "country": "PH"},
+    {"name": "Bangkok", "country": "TH"},
+    {"name": "Singapore", "country": "SG"},
+    {"name": "Hanoi", "country": "VN"},
+    {"name": "Kuala Lumpur", "country": "MY"},
+]
+
 # A Wikidata item with this many or fewer sitelinks, but at least one, reads as
 # locally/regionally known rather than globally famous — our "hidden gem" proxy.
 # Items with zero Wikidata presence are "unknown", not confirmed hidden gems.
