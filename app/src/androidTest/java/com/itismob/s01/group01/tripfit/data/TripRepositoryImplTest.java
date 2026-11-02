@@ -7,8 +7,11 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.local.TripFitDatabase;
+import com.itismob.s01.group01.tripfit.data.local.entity.CityEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
+import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +33,7 @@ public class TripRepositoryImplTest {
         database = Room.inMemoryDatabaseBuilder(
                 ApplicationProvider.getApplicationContext(), TripFitDatabase.class
         ).allowMainThreadQueries().build();
-        repository = new TripRepositoryImpl(database, AppExecutors.getInstance());
+        repository = new TripRepositoryImpl(database, AppExecutors.getInstance(), new RemoteDataSource());
     }
 
     @After
@@ -69,6 +72,58 @@ public class TripRepositoryImplTest {
                 .orElseThrow();
 
         assertEquals(day1CountBefore, added.getPosition());
+    }
+
+    @Test
+    public void createTrip_insertsTripAndReturnsItsId() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        Result<String>[] holder = new Result[1];
+        repository.createTrip("Manila Trip", result -> {
+            holder[0] = result;
+            latch.countDown();
+        });
+        latch.await(5, TimeUnit.SECONDS);
+
+        assertTrue(holder[0].isSuccess());
+        assertEquals(1, database.tripDao().countSync());
+    }
+
+    @Test
+    public void addItineraryItemFromPlace_cachesPlaceAndJoinsItsNameOnRead() throws InterruptedException {
+        database.cityDao().upsert(new CityEntity(
+                "city-1", "Tokyo", "JP", 35.68, 139.76, null, null, 0L));
+        awaitSeed();
+        PlaceDto place = new PlaceDto("place-1", "city-1", "Ueno Zoo", "zoo",
+                35.71, 139.77, null, null, null, false, null, null);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        repository.addItineraryItemFromPlace("seed-trip-tokyo", place, 1, null, null, false,
+                result -> latch.countDown());
+        latch.await(5, TimeUnit.SECONDS);
+
+        List<ItineraryItemWithPlace> items = awaitItemsWithPlace("seed-trip-tokyo");
+        ItineraryItemWithPlace added = items.stream()
+                .filter(i -> "place-1".equals(i.item.getPlaceId()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("Ueno Zoo", added.placeName);
+    }
+
+    private List<ItineraryItemWithPlace> awaitItemsWithPlace(String tripId) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        List<ItineraryItemWithPlace>[] holder = new List[1];
+        androidx.lifecycle.Observer<List<ItineraryItemWithPlace>> observer = items -> {
+            holder[0] = items;
+            latch.countDown();
+        };
+        androidx.lifecycle.LiveData<List<ItineraryItemWithPlace>> liveData =
+                repository.observeItineraryItemsWithPlaceNames(tripId);
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                .runOnMainSync(() -> liveData.observeForever(observer));
+        latch.await(5, TimeUnit.SECONDS);
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                .runOnMainSync(() -> liveData.removeObserver(observer));
+        return holder[0];
     }
 
     private int countForDay(List<ItineraryItemEntity> items, int day) {

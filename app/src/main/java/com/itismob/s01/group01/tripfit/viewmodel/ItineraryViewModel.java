@@ -6,19 +6,19 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.itismob.s01.group01.tripfit.data.TripRepository;
-import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
+import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 
 import java.util.List;
 
 public class ItineraryViewModel extends ViewModel {
 
-    private final LiveData<List<ItineraryItemEntity>> items;
+    private final LiveData<List<ItineraryItemWithPlace>> items;
 
     public ItineraryViewModel(TripRepository repository, String tripId) {
-        this.items = repository.observeItineraryItems(tripId);
+        this.items = repository.observeItineraryItemsWithPlaceNames(tripId);
     }
 
-    public LiveData<List<ItineraryItemEntity>> getItems() {
+    public LiveData<List<ItineraryItemWithPlace>> getItems() {
         return items;
     }
 
