@@ -13,7 +13,7 @@ _AMENITY_TAGS = "amenity~\"place_of_worship|marketplace\""
 _HISTORIC_TAGS = "historic"
 
 _QUERY_TEMPLATE = """
-[out:json][timeout:60];
+[out:json][timeout:120];
 (
   node[{tourism}]({south},{west},{north},{east});
   way[{tourism}]({south},{west},{north},{east});
@@ -31,7 +31,7 @@ def fetch_pois(bbox, limit=150):
         historic=_HISTORIC_TAGS,
         south=bbox["south"], west=bbox["west"], north=bbox["north"], east=bbox["east"],
     )
-    response = http_client.post(OVERPASS_URL, data={"data": query}, min_interval=2.0, timeout=90)
+    response = http_client.post(OVERPASS_URL, data={"data": query}, min_interval=2.0, timeout=150)
     elements = response.json().get("elements", [])
     return parse_elements(elements, limit)
 
