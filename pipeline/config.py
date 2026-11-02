@@ -21,3 +21,10 @@ WIKIVOYAGE_API_URL = "https://en.wikivoyage.org/w/api.php"
 # Metres within which two candidates are considered the same physical place
 # when they can't be matched by a stable external id (wikidata_id/osm_id).
 DEDUPE_PROXIMITY_METERS = 50
+
+# Some Nominatim admin-boundary bboxes are far larger than "the city" for POI
+# purposes -- e.g. Tokyo's includes the Izu/Ogasawara islands 1000+ km south,
+# producing an 18x15 degree box that times out/truncates against Overpass.
+# Clamp to a box this wide (degrees), centered on the geocoded point, which
+# comfortably covers a city's urban extent without pulling in remote exclaves.
+MAX_CITY_BBOX_SPAN_DEG = 0.6
