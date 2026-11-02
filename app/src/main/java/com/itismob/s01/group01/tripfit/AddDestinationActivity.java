@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +10,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -31,6 +35,7 @@ import com.itismob.s01.group01.tripfit.viewmodel.AddDestinationViewModel;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Sprint 1 UI for the "Add Destination" and "Booked Activity Lock-In" backlog items, now
@@ -59,8 +64,10 @@ public class AddDestinationActivity extends AppCompatActivity {
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
     private String selectedCityId;
+    private CityDto selectedCity;
     private PlaceDto selectedPlace;
     private boolean suppressNameWatcher;
+    private ActivityResultLauncher<Intent> mapPickerLauncher;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -90,6 +97,7 @@ public class AddDestinationActivity extends AppCompatActivity {
         searchEmptyState = findViewById(R.id.text_search_empty);
 
         setUpSearch();
+        setUpMapPicker();
 
         switchBooked.setOnCheckedChangeListener((button, checked) ->
                 layoutTime.setVisibility(checked ? View.VISIBLE : View.GONE));
@@ -174,6 +182,34 @@ public class AddDestinationActivity extends AppCompatActivity {
         });
     }
 
+    private void setUpMapPicker() {
+        mapPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null) {
+                        return;
+                    }
+                    Intent data = result.getData();
+                    double lat = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT, 0);
+                    double lng = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LNG, 0);
+                    String name = data.getStringExtra(MapPickerActivity.EXTRA_RESULT_NAME);
+                    if (TextUtils.isEmpty(name)) {
+                        name = getString(R.string.map_picker_fallback_name);
+                    }
+                    onPlaceSelected(new PlaceDto(UUID.randomUUID().toString(), selectedCityId,
+                            name, null, lat, lng, null, null, null, false, null, null));
+                });
+
+        findViewById(R.id.button_pick_on_map).setOnClickListener(v -> {
+            if (selectedCity == null) {
+                return;
+            }
+            Intent intent = new Intent(AddDestinationActivity.this, MapPickerActivity.class);
+            intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, selectedCity.getLat());
+            intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, selectedCity.getLng());
+            mapPickerLauncher.launch(intent);
+        });
+    }
+
     private void scheduleSearch(String query) {
         if (pendingSearch != null) {
             searchHandler.removeCallbacks(pendingSearch);
@@ -189,11 +225,13 @@ public class AddDestinationActivity extends AppCompatActivity {
             chip.setText(city.getName());
             chip.setCheckable(true);
             chip.setId(View.generateViewId());
-            chip.setTag(city.getId());
+            chip.setTag(city);
             chipGroupCities.addView(chip);
         }
         chipGroupCities.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            selectedCityId = checkedIds.isEmpty() ? null : (String) group.findViewById(checkedIds.get(0)).getTag();
+            selectedCity = checkedIds.isEmpty() ? null : (CityDto) group.findViewById(checkedIds.get(0)).getTag();
+            selectedCityId = selectedCity == null ? null : selectedCity.getId();
+            findViewById(R.id.button_pick_on_map).setEnabled(selectedCity != null);
             String query = inputSearch.getText() == null ? "" : inputSearch.getText().toString();
             scheduleSearch(query);
         });

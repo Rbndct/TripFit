@@ -52,6 +52,15 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_pick_on_map"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:enabled="false"
+                android:text="@string/action_pick_on_map" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_search_results"
                 android:layout_width="match_parent"
