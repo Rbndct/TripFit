@@ -2,40 +2,66 @@ package com.itismob.s01.group01.tripfit.viewmodel;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.itismob.s01.group01.tripfit.data.TripRepository;
-import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
+import com.itismob.s01.group01.tripfit.data.local.TripItemCount;
 import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
+import com.itismob.s01.group01.tripfit.ui.HomeTripRow;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HomeViewModel extends ViewModel {
 
-    private final LiveData<List<TripEntity>> trips;
-    private final LiveData<TripEntity> firstTrip;
-    private final LiveData<List<ItineraryItemEntity>> firstTripItems;
+    private final MediatorLiveData<List<HomeTripRow>> tripRows = new MediatorLiveData<>();
+
+    private List<TripEntity> latestTrips = new ArrayList<>();
+    private Map<String, TripItemCount> latestCounts = new HashMap<>();
 
     public HomeViewModel(TripRepository repository) {
-        this.trips = repository.observeTrips();
-        this.firstTrip = Transformations.map(trips,
-                list -> list.isEmpty() ? null : list.get(0));
-        this.firstTripItems = Transformations.switchMap(firstTrip, trip -> trip == null
-                ? new MutableLiveData<>(Collections.emptyList())
-                : repository.observeItineraryItems(trip.getId()));
+        LiveData<List<TripEntity>> trips = repository.observeTrips();
+        LiveData<List<TripItemCount>> counts = repository.observeTripItemCounts();
+
+        tripRows.addSource(trips, value -> {
+            latestTrips = value != null ? value : new ArrayList<>();
+            tripRows.setValue(buildRows());
+        });
+        tripRows.addSource(counts, value -> {
+            latestCounts = indexByTripId(value);
+            tripRows.setValue(buildRows());
+        });
+
         repository.ensureSeedData(result -> { /* trips LiveData updates on its own */ });
     }
 
-    public LiveData<TripEntity> getFirstTrip() {
-        return firstTrip;
+    public LiveData<List<HomeTripRow>> getTripRows() {
+        return tripRows;
     }
 
-    public LiveData<List<ItineraryItemEntity>> getFirstTripItems() {
-        return firstTripItems;
+    private List<HomeTripRow> buildRows() {
+        List<HomeTripRow> rows = new ArrayList<>();
+        for (TripEntity trip : latestTrips) {
+            TripItemCount count = latestCounts.get(trip.getId());
+            int dayCount = count != null ? count.dayCount : 0;
+            int stopCount = count != null ? count.stopCount : 0;
+            rows.add(new HomeTripRow(trip.getId(), trip.getName(), dayCount, stopCount));
+        }
+        return rows;
+    }
+
+    private static Map<String, TripItemCount> indexByTripId(List<TripItemCount> counts) {
+        Map<String, TripItemCount> byTripId = new HashMap<>();
+        if (counts != null) {
+            for (TripItemCount count : counts) {
+                byTripId.put(count.tripId, count);
+            }
+        }
+        return byTripId;
     }
 
     public static class Factory implements ViewModelProvider.Factory {

@@ -3,6 +3,7 @@ package com.itismob.s01.group01.tripfit.data;
 import androidx.lifecycle.LiveData;
 
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.data.local.TripItemCount;
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
@@ -16,6 +17,9 @@ public interface TripRepository {
     LiveData<List<TripEntity>> observeTrips();
 
     LiveData<TripEntity> observeTrip(String tripId);
+
+    /** Distinct day count and total stop count per trip, for the Home trip list. */
+    LiveData<List<TripItemCount>> observeTripItemCounts();
 
     LiveData<List<ItineraryItemEntity>> observeItineraryItems(String tripId);
 

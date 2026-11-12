@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/space_md"
+    android:layout_marginTop="@dimen/space_sm"
+    android:checkable="false"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="@dimen/card_corner"
+    app:cardElevation="2dp"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ticket_band"
+            android:orientation="vertical"
+            android:padding="@dimen/space_md">
+
+            <TextView
+                android:id="@+id/text_trip_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="@color/on_ticket_carrier" />
+
+            <TextView
+                android:id="@+id/text_trip_ticket_counts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:fontFamily="monospace"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="@color/on_ticket_carrier" />
+
+        </LinearLayout>
+
+        <com.itismob.s01.group01.tripfit.ui.PerforationDividerView
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/ticket_perforation_height"
+            android:background="?attr/colorSurface" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/space_md"
+            android:paddingBottom="@dimen/space_sm">
+
+            <TextView
+                android:id="@+id/text_trip_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_badge_draft"
+                android:fontFamily="monospace"
+                android:paddingHorizontal="@dimen/chip_padding_horizontal"
+                android:paddingVertical="@dimen/chip_padding_vertical"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_sm"
+                android:text="@string/itinerary_subtitle"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <com.itismob.s01.group01.tripfit.ui.BarcodeStripView
+            android:id="@+id/view_trip_barcode"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/ticket_barcode_height"
+            android:layout_marginHorizontal="@dimen/space_md"
+            android:layout_marginBottom="@dimen/space_md" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

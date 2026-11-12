@@ -6,7 +6,6 @@
     <string name="itinerary_subtitle">Day-by-day itinerary</string>
     <string name="add_destination">Add destination</string>
     <string name="day_label">Day %1$d</string>
-    <string name="stops_count">%1$d stops</string>
     <string name="stop_duration">Stay %1$s</string>
     <string name="no_duration">No set duration</string>
 
@@ -45,6 +44,9 @@
     <string name="home_your_trips">Your Trips</string>
     <string name="trip_days_count">%1$d days</string>
     <string name="trip_stops_count">%1$d stops</string>
+    <string name="ticket_days_stops">%1$d DAYS · %2$d STOPS</string>
+    <string name="trip_status_draft">DRAFT</string>
+    <string name="trip_status_planned">PLANNED</string>
     <string name="new_trip">New Trip</string>
     <string name="profile_coming_soon">Profile is coming soon</string>
     <string name="cd_profile">Profile</string>
