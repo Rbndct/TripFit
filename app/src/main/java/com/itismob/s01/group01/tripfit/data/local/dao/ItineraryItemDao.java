@@ -32,4 +32,15 @@ public interface ItineraryItemDao {
 
     @Query("SELECT COALESCE(MAX(position), -1) + 1 FROM itinerary_items WHERE tripId = :tripId AND day = :day")
     int nextPositionSync(String tripId, int day);
+
+    @Query("UPDATE itinerary_items SET day = :day, time = :time, durationMin = :durationMin, "
+            + "isBooked = :booked, position = :position WHERE id = :id")
+    void updateDetails(String id, int day, String time, Integer durationMin, boolean booked,
+                       int position);
+
+    @Query("UPDATE itinerary_items SET position = :position WHERE id = :id")
+    void updatePosition(String id, int position);
+
+    @Query("DELETE FROM itinerary_items WHERE id = :id")
+    void deleteById(String id);
 }

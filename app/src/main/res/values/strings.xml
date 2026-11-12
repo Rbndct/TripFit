@@ -48,7 +48,6 @@
     <string name="trip_status_draft">DRAFT</string>
     <string name="trip_status_planned">PLANNED</string>
     <string name="new_trip">New Trip</string>
-    <string name="profile_coming_soon">Profile is coming soon</string>
     <string name="cd_profile">Profile</string>
 
     <!-- New trip screen -->

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.itismob.s01.group01.tripfit.ui.TripAdapter;
 import com.itismob.s01.group01.tripfit.viewmodel.HomeViewModel;
 
@@ -45,7 +44,7 @@ public class HomeActivity extends AppCompatActivity {
         viewModel.getTripRows().observe(this, adapter::submitTrips);
 
         findViewById(R.id.button_profile).setOnClickListener(v ->
-                showComingSoon(R.string.profile_coming_soon));
+                startActivity(new Intent(HomeActivity.this, ProfileActivity.class)));
 
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_new_trip);
         fab.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, NewTripActivity.class)));
@@ -55,9 +54,5 @@ public class HomeActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(EXTRA_TRIP_ID, tripId);
         startActivity(intent);
-    }
-
-    private void showComingSoon(int messageRes) {
-        Snackbar.make(findViewById(R.id.home_root), messageRes, Snackbar.LENGTH_SHORT).show();
     }
 }

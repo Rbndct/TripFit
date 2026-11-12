@@ -47,4 +47,14 @@ public interface TripRepository {
 
     /** Searches the given city's places by name substring (case-insensitive). */
     void searchPlaces(String cityId, String query, Result.Callback<List<PlaceDto>> callback);
+
+    /** Edits a stop; moving it to another day appends it to the end of that day. */
+    void updateItineraryItem(String tripId, String itemId, int oldDay, int oldPosition, int newDay,
+                             String time, Integer durationMin, boolean booked,
+                             Result.Callback<Void> callback);
+
+    void deleteItineraryItem(String itemId, Result.Callback<Void> callback);
+
+    /** Rewrites positions so the given item ids appear in exactly this order within their day. */
+    void applyItemOrder(List<String> orderedItemIds, Result.Callback<Void> callback);
 }
