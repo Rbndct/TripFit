@@ -23,4 +23,9 @@
 
     <!-- Ticket motif accents -->
     <color name="ticket_barcode_bar">#6A7180</color>
+
+    <!-- Status: over-budget / warning (dark) -->
+    <color name="status_over">#F2B8B5</color>
+    <color name="status_over_container">#8C1D18</color>
+    <color name="on_status_over_container">#F9DEDC</color>
 </resources>

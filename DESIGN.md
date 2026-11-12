@@ -195,3 +195,14 @@ Itinerary's structural addition, built from a `HorizontalScrollView` + `LinearLa
 - **Don't** fill a selected pill (or any selected state) with navy when the component already sits on a navy ground — there is no contrast; use the white fill / translucent-stroke pairing instead.
 - **Don't** extend this documented system to Add Destination, New Trip, or Map Picker — those screens have no surface brief or built direction yet; this DESIGN.md covers Home and Itinerary only.
 - **Don't** treat the unverified tablet/expanded-width layout as settled — only phone-viewport (Pixel 6 / API 34) builds exist for both Home and Itinerary; no tablet AVD or `cmdline-tools`/`avdmanager` is available on this dev machine, so neither Home's nav-rail-at-expanded-width behavior nor Itinerary's day-tab wrap/scroll/rail behavior at expanded width is confirmed.
+
+
+## Prototype Screens (added with the clickable UI prototype)
+
+These screens inherit the same shell and were built without their own surface briefs, so treat them as provisional:
+
+- **Navy toolbar band** (`view_toolbar.xml`, fixed `ticket_carrier_navy`, back arrow) tops Profile, Stop Detail, Optimize, Budget, Budget Setup, Suggestions, Discover, Calendar Sync, Summary, Group and Journal. Itinerary keeps its own taller header and carries the feature menu (Optimize and Budget as actions, everything else in the overflow).
+- **Generic row card** (`item_row.xml` + `RowAdapter`/`UiRow`): 16dp outlined card, Roboto title, monospace trailing value (amounts, vote counts), optional tonal action button. Used by every simple list screen.
+- **Over-budget status** uses `status_over` / `status_over_container` (defined for both themes) and is always paired with an "OVER" text badge, never colour alone.
+- Monospace is still limited to data (amounts, times, counts, codes, dates).
+- Prototype state that has no backend yet lives in `prototype/PrototypeStore` (session-only). Stops, trips, ordering, bookings and durations are real Room data.

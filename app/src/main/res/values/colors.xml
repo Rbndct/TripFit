@@ -32,4 +32,9 @@
     <color name="ticket_carrier_navy">#13213B</color>
     <color name="on_ticket_carrier">#FFFFFF</color>
     <color name="on_ticket_carrier_translucent">#66FFFFFF</color>
+
+    <!-- Status: over-budget / warning (light) -->
+    <color name="status_over">#B3261E</color>
+    <color name="status_over_container">#F9DEDC</color>
+    <color name="on_status_over_container">#410E0B</color>
 </resources>

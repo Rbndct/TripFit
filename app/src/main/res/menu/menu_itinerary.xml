@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_optimize"
+        android:icon="@drawable/ic_route_24"
+        android:title="@string/action_optimize"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_budget"
+        android:icon="@drawable/ic_wallet_24"
+        android:title="@string/action_budget"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_suggestions"
+        android:title="@string/action_suggestions"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_discover"
+        android:title="@string/action_discover"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_calendar"
+        android:title="@string/action_calendar"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_summary"
+        android:title="@string/action_summary"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_group"
+        android:title="@string/action_group"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_journal"
+        android:title="@string/action_journal"
+        app:showAsAction="never" />
+
+</menu>

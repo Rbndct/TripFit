@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.materialswitch.MaterialSwitch;
@@ -27,14 +28,17 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
+import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 import com.itismob.s01.group01.tripfit.ui.PlaceSearchAdapter;
 import com.itismob.s01.group01.tripfit.viewmodel.AddDestinationViewModel;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -60,6 +64,7 @@ public class AddDestinationActivity extends AppCompatActivity {
     private AddDestinationViewModel viewModel;
     private PlaceSearchAdapter searchAdapter;
     private String tripId;
+    private final Set<String> existingNames = new HashSet<>();
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
@@ -120,6 +125,7 @@ public class AddDestinationActivity extends AppCompatActivity {
             }
         });
         viewModel.loadCities();
+        observeExistingNames(app);
 
         viewModel.getSearchResult().observe(this, result -> {
             if (result == null) {
@@ -302,6 +308,28 @@ public class AddDestinationActivity extends AppCompatActivity {
         }
 
         String name = safeText(inputName);
+        if (existingNames.contains(name.toLowerCase(Locale.ROOT))) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.duplicate_title)
+                    .setMessage(getString(R.string.duplicate_message, name))
+                    .setNegativeButton(R.string.action_cancel, null)
+                    .setPositiveButton(R.string.action_add_anyway, (dialog, which) -> persist(name))
+                    .show();
+            return;
+        }
+        persist(name);
+    }
+
+    private void observeExistingNames(TripFitApp app) {
+        app.getTripRepository().observeItineraryItemsWithPlaceNames(tripId).observe(this, items -> {
+            existingNames.clear();
+            for (ItineraryItemWithPlace entry : items) {
+                existingNames.add(entry.item.displayName(entry.placeName).toLowerCase(Locale.ROOT));
+            }
+        });
+    }
+
+    private void persist(String name) {
         int day = Integer.parseInt(safeText(inputDay));
         String durationText = safeText(inputDuration);
         Integer durationMin = durationText.isEmpty() ? null : Integer.parseInt(durationText);

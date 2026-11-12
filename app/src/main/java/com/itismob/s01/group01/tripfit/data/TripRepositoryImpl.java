@@ -12,6 +12,8 @@ import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +21,8 @@ import java.util.UUID;
 public class TripRepositoryImpl implements TripRepository {
 
     /** Fixed id so the Phase 0 seed trip is idempotent across app restarts. */
-    private static final String SEED_TRIP_ID = "seed-trip-tokyo";
+    public static final String SEED_TRIP_ID = "seed-trip-tokyo";
+    private static final String TAG = "TripRepository";
     private static final int PLACE_SEARCH_LIMIT = 25;
 
     private final TripFitDatabase database;
@@ -139,31 +142,79 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public void fetchCities(Result.Callback<List<CityDto>> callback) {
         executors.diskIO().execute(() -> {
+            List<CityDto> cities;
             try {
-                List<CityDto> cities = remoteDataSource.fetchCitiesSync();
-                // Cache locally so places selected from search can reference a city that
-                // already satisfies PlaceEntity's foreign key.
-                for (CityDto city : cities) {
-                    database.cityDao().upsert(new CityEntity(
-                            city.getId(), city.getName(), city.getCountry(), city.getLat(),
-                            city.getLng(), null, null, System.currentTimeMillis()
-                    ));
-                }
-                deliver(callback, Result.success(cities));
+                cities = remoteDataSource.fetchCitiesSync();
             } catch (IOException | RuntimeException e) {
-                deliver(callback, Result.error("Could not load cities: " + e.getMessage()));
+                Log.w(TAG, "Supabase cities unavailable, using offline demo data: " + e.getMessage());
+                cities = OfflineData.cities();
             }
+            // Cache locally so places selected from search can reference a city that
+            // already satisfies PlaceEntity's foreign key.
+            for (CityDto city : cities) {
+                database.cityDao().upsert(new CityEntity(
+                        city.getId(), city.getName(), city.getCountry(), city.getLat(),
+                        city.getLng(), null, null, System.currentTimeMillis()
+                ));
+            }
+            deliver(callback, Result.success(cities));
         });
     }
 
     @Override
     public void searchPlaces(String cityId, String query, Result.Callback<List<PlaceDto>> callback) {
         executors.diskIO().execute(() -> {
+            List<PlaceDto> places;
             try {
-                List<PlaceDto> places = remoteDataSource.searchPlacesSync(cityId, query, PLACE_SEARCH_LIMIT);
-                deliver(callback, Result.success(places));
+                places = remoteDataSource.searchPlacesSync(cityId, query, PLACE_SEARCH_LIMIT);
             } catch (IOException | RuntimeException e) {
-                deliver(callback, Result.error("Search failed: " + e.getMessage()));
+                Log.w(TAG, "Supabase search unavailable, using offline demo data: " + e.getMessage());
+                places = OfflineData.search(cityId, query);
+            }
+            deliver(callback, Result.success(places));
+        });
+    }
+
+    @Override
+    public void updateItineraryItem(String tripId, String itemId, int oldDay, int oldPosition,
+                                    int newDay, String time, Integer durationMin, boolean booked,
+                                    Result.Callback<Void> callback) {
+        executors.diskIO().execute(() -> {
+            try {
+                int position = newDay == oldDay
+                        ? oldPosition
+                        : database.itineraryItemDao().nextPositionSync(tripId, newDay);
+                database.itineraryItemDao().updateDetails(
+                        itemId, newDay, time, durationMin, booked, position);
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error("Could not update stop: " + e.getMessage()));
+            }
+        });
+    }
+
+    @Override
+    public void deleteItineraryItem(String itemId, Result.Callback<Void> callback) {
+        executors.diskIO().execute(() -> {
+            try {
+                database.itineraryItemDao().deleteById(itemId);
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error("Could not delete stop: " + e.getMessage()));
+            }
+        });
+    }
+
+    @Override
+    public void applyItemOrder(List<String> orderedItemIds, Result.Callback<Void> callback) {
+        executors.diskIO().execute(() -> {
+            try {
+                for (int i = 0; i < orderedItemIds.size(); i++) {
+                    database.itineraryItemDao().updatePosition(orderedItemIds.get(i), i);
+                }
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error("Could not reorder stops: " + e.getMessage()));
             }
         });
     }

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save_changes">Save changes</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_add">Add</string>
+    <string name="action_added">Added</string>
+    <string name="cd_back">Back</string>
+    <string name="stop_booked_at">At %1$s</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_name">Traveler</string>
+    <string name="profile_email">traveler@gmail.com</string>
+    <string name="profile_signed_in">Signed in with Google</string>
+    <string name="section_preferences">Preferences</string>
+    <string name="setting_home_currency">Home currency</string>
+    <string name="setting_buffer">Default buffer between stops</string>
+    <string name="setting_dark_mode">Dark mode</string>
+    <string name="setting_reminders">Event reminders</string>
+    <string name="setting_reminders_helper">Handled natively by Google Calendar</string>
+    <string name="setting_about">About TripFit</string>
+    <string name="about_message">TripFit v1.0: smart itinerary planning with route, budget and calendar sync. ITISMOB term project, DLSU CCS-IT.</string>
+    <string name="buffer_none">No buffer</string>
+    <string name="buffer_minutes">%1$d min</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="sign_out_title">Sign out?</string>
+    <string name="sign_out_message">Your trips stay saved on this device.</string>
+    <string name="reminders_on">Reminders on</string>
+    <string name="reminders_off">Reminders off</string>
+    <string name="action_close">Close</string>
+
+    <!-- Itinerary hub -->
+    <string name="action_optimize">Optimize route</string>
+    <string name="action_budget">Budget</string>
+    <string name="action_suggestions">Nearby food &amp; activities</string>
+    <string name="action_discover">Discover places</string>
+    <string name="action_calendar">Sync to Google Calendar</string>
+    <string name="action_summary">Trip summary</string>
+    <string name="action_group">Group trip</string>
+    <string name="action_journal">Journal</string>
+    <string name="itinerary_empty_title">No stops on this day yet</string>
+    <string name="itinerary_empty_body">Add a destination, or let TripFit suggest places.</string>
+    <string name="day_summary">%1$d stops · %2$d min travel</string>
+    <string name="weather_banner">Rain expected on Day %1$d · %2$d outdoor stops. Tap to review</string>
+    <string name="weather_title">Rain on Day %1$d</string>
+    <string name="weather_message">Forecast: 80%% chance of rain. These outdoor stops may need an indoor backup:\n%1$s\n\nBooked stops stay as they are.</string>
+    <string name="action_swap_indoor">Swap with indoor stops</string>
+    <string name="action_keep_plan">Keep plan</string>
+    <string name="weather_swapped">Swapped %1$d outdoor stops for indoor ones</string>
+    <string name="leg_label">%1$s · %2$d min to next stop</string>
+    <string name="leg_dialog_title">Transport to next stop</string>
+    <string name="leg_option">%1$s: %2$d min</string>
+    <string name="mode_walk">Walk</string>
+    <string name="mode_cycle">Cycle</string>
+    <string name="mode_drive">Drive</string>
+    <string name="mode_transit">Transit</string>
+
+    <!-- Stop detail -->
+    <string name="stop_detail_title">Stop details</string>
+    <string name="field_day_label">Day</string>
+    <string name="move_day_title">Move to day</string>
+    <string name="duration_helper">Leave blank for a smart estimate (%1$d min)</string>
+    <string name="buffer_switch">Add buffer after this stop</string>
+    <string name="buffer_helper">%1$d min for parking, queues and rest stops</string>
+    <string name="field_notes_hint">Notes</string>
+    <string name="action_attach_photo">Attach photo</string>
+    <string name="photo_attached">Photo attached</string>
+    <string name="action_nearby">Nearby food &amp; activities</string>
+    <string name="action_delete_stop">Delete stop</string>
+    <string name="delete_stop_title">Delete this stop?</string>
+    <string name="delete_stop_message">\"%1$s\" will be removed from Day %2$d.</string>
+    <string name="error_update_failed">Could not update stop</string>
+
+    <!-- Route optimization -->
+    <string name="optimize_title">Optimize route</string>
+    <string name="optimize_summary">Reordering saves about %1$d min of travel</string>
+    <string name="optimize_summary_none">Your route is already efficient</string>
+    <string name="optimize_day_detail">%1$.1f km → %2$.1f km</string>
+    <string name="optimize_order">New order: %1$s</string>
+    <string name="optimize_locked_note">Booked stops keep their fixed time and position.</string>
+    <string name="action_apply_order">Confirm new order</string>
+    <string name="action_keep_current">Keep current order</string>
+    <string name="optimize_empty">Add at least two stops to a day to optimize it.</string>
+    <string name="optimize_loading">Calculating the fastest order…</string>
+
+    <!-- Budget -->
+    <string name="budget_title">Budget</string>
+    <string name="budget_spent_label">Spent</string>
+    <string name="budget_left">%1$s left</string>
+    <string name="budget_over">%1$s over budget</string>
+    <string name="budget_of_total">of %1$s</string>
+    <string name="budget_categories">By category</string>
+    <string name="budget_expenses">Expenses</string>
+    <string name="action_add_expense">Add expense</string>
+    <string name="action_edit_budget">Edit budget</string>
+    <string name="budget_empty_expenses">No expenses logged yet</string>
+    <string name="category_status_over">Over</string>
+    <string name="category_progress">%1$s of %2$s</string>
+    <string name="category_no_limit">%1$s spent, no limit set</string>
+    <string name="cat_food">Food</string>
+    <string name="cat_activities">Activities</string>
+    <string name="cat_transport">Transport</string>
+    <string name="cat_other">Other</string>
+    <string name="expense_subtitle">%1$s · %2$s</string>
+    <string name="field_expense_title">What was it for?</string>
+    <string name="field_amount">Amount (%1$s)</string>
+    <string name="field_category_hint">Category</string>
+    <string name="conversion_preview">≈ %1$s at today\'s demo rate</string>
+    <string name="error_amount_required">Enter an amount</string>
+    <string name="error_title_required">Enter a description</string>
+    <string name="expense_added">Expense added</string>
+
+    <!-- Budget setup -->
+    <string name="budget_setup_title">Budget setup</string>
+    <string name="budget_mode_overall">Overall trip</string>
+    <string name="budget_mode_daily">Per day</string>
+    <string name="field_budget_hint">Budget (%1$s)</string>
+    <string name="budget_split_switch">Split by category</string>
+    <string name="budget_split_sum">Split total %1$s of %2$s</string>
+    <string name="error_split_exceeds">Category limits add up to more than the budget</string>
+    <string name="error_budget_required">Enter a budget amount</string>
+    <string name="action_save_budget">Save budget</string>
+    <string name="budget_currency_note">Prices are converted to your home currency (%1$s).</string>
+
+    <!-- Suggestions -->
+    <string name="suggestions_title">Nearby suggestions</string>
+    <string name="tab_food">Food</string>
+    <string name="tab_activities">Activities</string>
+    <string name="filter_fits_budget">Fits my budget</string>
+    <string name="suggestion_subtitle">%1$s · ★ %2$.1f · %3$.1f km · %4$s</string>
+    <string name="suggestions_budget_hint">%1$s left in your %2$s budget</string>
+    <string name="suggestions_empty">Nothing fits your remaining budget. Try turning off the filter.</string>
+    <string name="suggestion_added">%1$s added to Day %2$d</string>
+
+    <!-- Discover -->
+    <string name="discover_title">Discover</string>
+    <string name="discover_city">Suggestions for %1$s</string>
+    <string name="action_change_city">Change city</string>
+    <string name="discover_famous">Famous &amp; must-see</string>
+    <string name="discover_hidden">Hidden gems</string>
+    <string name="discover_row_sub">%1$s · ★ %2$.1f · %3$,d reviews</string>
+    <string name="discover_tap_swap">Tap a spot to swap it for another</string>
+    <string name="action_add_selected">Add %1$d to itinerary</string>
+    <string name="discover_none_selected">Select spots to add</string>
+    <string name="swap_title">Swap %1$s with…</string>
+    <string name="discover_added">Added %1$d stops to your itinerary</string>
+    <string name="city_dialog_title">Choose a city</string>
+
+    <!-- Calendar sync -->
+    <string name="calendar_title">Calendar sync</string>
+    <string name="calendar_account">Google account</string>
+    <string name="calendar_events_header">%1$d events will be created</string>
+    <string name="action_sync_calendar">Sync %1$d events</string>
+    <string name="action_resync">Re-sync (updates existing events)</string>
+    <string name="calendar_syncing">Syncing…</string>
+    <string name="calendar_success">%1$d events added to your calendar</string>
+    <string name="calendar_resynced">Calendar updated. No duplicates were created.</string>
+    <string name="action_open_calendar">Open Google Calendar</string>
+    <string name="calendar_open_failed">No calendar app found</string>
+    <string name="calendar_event_sub">Day %1$d · %2$s–%3$s</string>
+    <string name="calendar_empty">Add stops to your itinerary before syncing.</string>
+
+    <!-- Trip summary -->
+    <string name="summary_title">Trip summary</string>
+    <string name="summary_budget_title">Budget</string>
+    <string name="summary_spent_of">%1$s of %2$s spent</string>
+    <string name="action_export_pdf">Export PDF</string>
+    <string name="action_share_summary">Share summary</string>
+    <string name="summary_share_subject">TripFit itinerary: %1$s</string>
+    <string name="pdf_failed">Could not create the PDF</string>
+    <string name="summary_empty">No stops to summarize yet.</string>
+
+    <!-- Group trip -->
+    <string name="group_title">Group trip</string>
+    <string name="group_members">Travelers</string>
+    <string name="group_you">You (owner)</string>
+    <string name="group_joined">Joined</string>
+    <string name="invite_code_label">Invite code</string>
+    <string name="action_copy_code">Copy</string>
+    <string name="code_copied">Invite code copied</string>
+    <string name="action_share_invite">Share invite</string>
+    <string name="invite_message">Join my TripFit trip! Code: %1$s</string>
+    <string name="group_votes">Vote on destinations</string>
+    <string name="action_vote">Vote</string>
+    <string name="action_voted">Voted</string>
+    <string name="vote_count">%1$d votes</string>
+    <string name="group_split">Cost split</string>
+    <string name="split_even">Even</string>
+    <string name="split_custom">Custom</string>
+    <string name="split_total">Estimated total %1$s</string>
+    <string name="split_member_sub">%1$d%% share</string>
+
+    <!-- Journal -->
+    <string name="journal_title">Journal</string>
+    <string name="action_add_entry">Add entry</string>
+    <string name="journal_empty">No entries yet. Capture a note or photo from your day.</string>
+    <string name="journal_entry_sub">Day %1$d · %2$s</string>
+    <string name="journal_photo_tag">Photo attached</string>
+    <string name="field_entry_hint">What happened?</string>
+    <string name="entry_stop_label">Stop</string>
+    <string name="action_pick_photo">Add photo</string>
+    <string name="action_save_entry">Save entry</string>
+    <string name="entry_saved">Entry saved</string>
+    <string name="error_note_required">Write a short note</string>
+    <string name="journal_general">General</string>
+
+    <!-- New trip -->
+    <string name="field_city_hint">Destination city</string>
+    <string name="field_dates_hint">Trip dates</string>
+    <string name="field_currency_hint">Home currency</string>
+    <string name="plan_mode_title">How do you want to start?</string>
+    <string name="plan_mode_manual">I\'ll add stops</string>
+    <string name="plan_mode_discover">Suggest for me</string>
+    <string name="select_dates_title">Select trip dates</string>
+    <string name="error_city_required">Pick a city</string>
+
+    <!-- Add destination -->
+    <string name="duplicate_title">Already in your trip</string>
+    <string name="duplicate_message">\"%1$s\" is already planned. Add it again?</string>
+    <string name="action_add_anyway">Add anyway</string>
+</resources>
