@@ -12,4 +12,6 @@
     <dimen name="chip_padding_horizontal">10dp</dimen>
     <dimen name="chip_padding_vertical">4dp</dimen>
     <dimen name="chip_icon_size">14dp</dimen>
+    <dimen name="ticket_perforation_height">16dp</dimen>
+    <dimen name="ticket_barcode_height">28dp</dimen>
 </resources>

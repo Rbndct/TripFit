@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.local.TripFitDatabase;
+import com.itismob.s01.group01.tripfit.data.local.TripItemCount;
 import com.itismob.s01.group01.tripfit.data.local.entity.CityEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.PlaceEntity;
@@ -40,6 +41,11 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public LiveData<TripEntity> observeTrip(String tripId) {
         return database.tripDao().observeById(tripId);
+    }
+
+    @Override
+    public LiveData<List<TripItemCount>> observeTripItemCounts() {
+        return database.itineraryItemDao().observeItemCounts();
     }
 
     @Override

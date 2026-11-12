@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.data.local.TripItemCount;
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 
 import java.util.List;
@@ -19,6 +20,10 @@ public interface ItineraryItemDao {
 
     @Query("SELECT * FROM itinerary_items WHERE tripId = :tripId ORDER BY day, position")
     LiveData<List<ItineraryItemEntity>> observeByTripId(String tripId);
+
+    @Query("SELECT tripId, COUNT(DISTINCT day) AS dayCount, COUNT(*) AS stopCount "
+            + "FROM itinerary_items GROUP BY tripId")
+    LiveData<List<TripItemCount>> observeItemCounts();
 
     @Query("SELECT i.*, p.name AS placeName FROM itinerary_items i "
             + "LEFT JOIN places p ON p.id = i.placeId "

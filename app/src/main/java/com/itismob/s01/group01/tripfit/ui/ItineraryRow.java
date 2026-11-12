@@ -2,63 +2,28 @@ package com.itismob.s01.group01.tripfit.ui;
 
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 
-/** A row in the itinerary list: either a day header or a stop. */
-public abstract class ItineraryRow {
+/** A stop row within the active day's list (day grouping is now handled by the day tab strip). */
+public final class ItineraryRow {
 
-    public static final int TYPE_DAY_HEADER = 0;
-    public static final int TYPE_STOP = 1;
+    private final ItineraryItemEntity item;
+    private final String placeName;
+    private final int indexInDay;
 
-    public abstract int getViewType();
-
-    public static final class DayHeader extends ItineraryRow {
-        private final int day;
-        private final int stopCount;
-
-        public DayHeader(int day, int stopCount) {
-            this.day = day;
-            this.stopCount = stopCount;
-        }
-
-        public int getDay() {
-            return day;
-        }
-
-        public int getStopCount() {
-            return stopCount;
-        }
-
-        @Override
-        public int getViewType() {
-            return TYPE_DAY_HEADER;
-        }
+    public ItineraryRow(ItineraryItemEntity item, String placeName, int indexInDay) {
+        this.item = item;
+        this.placeName = placeName;
+        this.indexInDay = indexInDay;
     }
 
-    public static final class Stop extends ItineraryRow {
-        private final ItineraryItemEntity item;
-        private final String placeName;
-        private final int indexInDay;
+    public ItineraryItemEntity getItem() {
+        return item;
+    }
 
-        public Stop(ItineraryItemEntity item, String placeName, int indexInDay) {
-            this.item = item;
-            this.placeName = placeName;
-            this.indexInDay = indexInDay;
-        }
+    public String getPlaceName() {
+        return placeName;
+    }
 
-        public ItineraryItemEntity getItem() {
-            return item;
-        }
-
-        public String getPlaceName() {
-            return placeName;
-        }
-
-        public int getIndexInDay() {
-            return indexInDay;
-        }
-
-        @Override
-        public int getViewType() {
-            return TYPE_STOP;
-        }
+    public int getIndexInDay() {
+        return indexInDay;
     }
 }

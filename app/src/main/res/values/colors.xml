@@ -26,4 +26,10 @@
 
     <!-- Ticket motif accents -->
     <color name="ticket_barcode_bar">#8B93A6</color>
+
+    <!-- Ticket carrier band: fixed navy in both themes, never inverted by DayNight.
+         This is the direction's one committed shell color, not a Material role. -->
+    <color name="ticket_carrier_navy">#13213B</color>
+    <color name="on_ticket_carrier">#FFFFFF</color>
+    <color name="on_ticket_carrier_translucent">#66FFFFFF</color>
 </resources>
