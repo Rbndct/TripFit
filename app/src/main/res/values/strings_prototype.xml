@@ -158,7 +158,14 @@
     <string name="action_add_selected">Add %1$d to itinerary</string>
     <string name="discover_none_selected">Select spots to add</string>
     <string name="swap_title">Swap %1$s with…</string>
-    <string name="discover_added">Added %1$d stops to your itinerary</string>
+    <plurals name="discover_added">
+        <item quantity="one">Added %1$d stop to your itinerary</item>
+        <item quantity="other">Added %1$d stops to your itinerary</item>
+    </plurals>
+    <string name="discover_add_cd">Add %1$s to selection</string>
+    <string name="discover_remove_cd">Remove %1$s from selection</string>
+    <string name="discover_swap_cd">Swap for another spot</string>
+    <string name="discover_adding">Adding…</string>
     <string name="city_dialog_title">Choose a city</string>
 
     <!-- Calendar sync -->
