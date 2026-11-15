@@ -7,9 +7,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.AccessibilityDelegateCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 import com.itismob.s01.group01.tripfit.R;
 
 import java.util.ArrayList;
@@ -69,6 +74,40 @@ public class RowAdapter extends RecyclerView.Adapter<RowAdapter.RowViewHolder> {
             itemView.setOnClickListener(row.getOnClick() != null
                     ? v -> row.getOnClick().run() : null);
             itemView.setClickable(row.getOnClick() != null);
+            bindAccessibility(row);
+            bindSelected(row);
+        }
+
+        private void bindAccessibility(UiRow row) {
+            action.setContentDescription(row.getActionDescription());
+            String label = row.getClickLabel();
+            ViewCompat.setAccessibilityDelegate(itemView, label == null ? null
+                    : new AccessibilityDelegateCompat() {
+                        @Override
+                        public void onInitializeAccessibilityNodeInfo(@NonNull View host,
+                                @NonNull AccessibilityNodeInfoCompat info) {
+                            super.onInitializeAccessibilityNodeInfo(host, info);
+                            info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                                    AccessibilityNodeInfoCompat.ACTION_CLICK, label));
+                        }
+                    });
+        }
+
+        /** Selected rows get a 2dp primary outline (plus a spoken state) instead of the 1dp one. */
+        private void bindSelected(UiRow row) {
+            if (!(itemView instanceof MaterialCardView)) {
+                return;
+            }
+            MaterialCardView card = (MaterialCardView) itemView;
+            int strokeAttr = row.isSelected()
+                    ? androidx.appcompat.R.attr.colorPrimary : com.google.android.material.R.attr.colorOutline;
+            card.setStrokeColor(MaterialColors.getColor(card, strokeAttr));
+            // Math.round matches how the XML strokeWidth="1dp" resolves; a truncating cast
+            // would thin every shared row's outline by a pixel on 2.75x displays.
+            card.setStrokeWidth(Math.round(card.getResources().getDisplayMetrics().density
+                    * (row.isSelected() ? 2 : 1)));
+            ViewCompat.setStateDescription(card, row.isSelected()
+                    ? card.getContext().getString(R.string.state_selected) : null);
         }
 
         private void bindOptional(TextView view, String text) {

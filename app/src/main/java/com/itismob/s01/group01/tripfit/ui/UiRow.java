@@ -12,15 +12,39 @@ public final class UiRow {
     private final String actionLabel;
     private final Runnable onAction;
     private final Runnable onClick;
+    private final boolean selected;
+    private final String actionDescription;
+    private final String clickLabel;
 
     public UiRow(String title, String subtitle, String trailing, String actionLabel,
                  Runnable onAction, Runnable onClick) {
+        this(title, subtitle, trailing, actionLabel, onAction, onClick, false, null, null);
+    }
+
+    private UiRow(String title, String subtitle, String trailing, String actionLabel,
+                  Runnable onAction, Runnable onClick, boolean selected,
+                  String actionDescription, String clickLabel) {
         this.title = title;
         this.subtitle = subtitle;
         this.trailing = trailing;
         this.actionLabel = actionLabel;
         this.onAction = onAction;
         this.onClick = onClick;
+        this.selected = selected;
+        this.actionDescription = actionDescription;
+        this.clickLabel = clickLabel;
+    }
+
+    /** Copy marked as selected: the card gets a heavier primary outline and a TalkBack state. */
+    public UiRow withSelected(boolean isSelected) {
+        return new UiRow(title, subtitle, trailing, actionLabel, onAction, onClick, isSelected,
+                actionDescription, clickLabel);
+    }
+
+    /** Copy whose action button and card tap carry spoken labels naming what they act on. */
+    public UiRow withAccessibility(String actionDesc, String rowClickLabel) {
+        return new UiRow(title, subtitle, trailing, actionLabel, onAction, onClick, selected,
+                actionDesc, rowClickLabel);
     }
 
     /** Row with no trailing value and no action. */
@@ -61,5 +85,17 @@ public final class UiRow {
 
     public Runnable getOnClick() {
         return onClick;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public String getActionDescription() {
+        return actionDescription;
+    }
+
+    public String getClickLabel() {
+        return clickLabel;
     }
 }

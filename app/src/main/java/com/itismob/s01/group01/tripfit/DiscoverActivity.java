@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -18,6 +20,7 @@ import com.itismob.s01.group01.tripfit.ui.UiRow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,11 +37,17 @@ public class DiscoverActivity extends ScreenActivity {
     private static final int SHOWN_PER_SECTION = 3;
     private static final List<String> SUPPORTED_CITIES = Arrays.asList("Tokyo", "Manila");
 
+    private static final String STATE_CITY = "state_city";
+    private static final String STATE_SELECTED = "state_selected";
+    private static final String STATE_FAMOUS = "state_famous";
+    private static final String STATE_HIDDEN = "state_hidden";
+
     private final Set<String> selected = new LinkedHashSet<>();
     private TripRepository repository;
     private String city;
     private Section famous;
     private Section hidden;
+    private boolean isSaving;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,13 +56,40 @@ public class DiscoverActivity extends ScreenActivity {
         repository = ((TripFitApp) getApplication()).getTripRepository();
 
         String metaCity = PrototypeStore.get().meta(tripId).getCity();
-        city = SUPPORTED_CITIES.contains(metaCity) ? metaCity : SUPPORTED_CITIES.get(0);
+        String savedCity = savedInstanceState == null ? null : savedInstanceState.getString(STATE_CITY);
+        city = SUPPORTED_CITIES.contains(savedCity) ? savedCity
+                : SUPPORTED_CITIES.contains(metaCity) ? metaCity : SUPPORTED_CITIES.get(0);
 
         famous = new Section(R.id.list_famous);
         hidden = new Section(R.id.list_hidden);
         findViewById(R.id.button_change_city).setOnClickListener(v -> pickCity());
         findViewById(R.id.button_add_selected).setOnClickListener(v -> addSelected());
+        for (int id : new int[]{R.id.text_city, R.id.heading_famous, R.id.heading_hidden}) {
+            ViewCompat.setAccessibilityHeading(findViewById(id), true);
+        }
         loadCity();
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_CITY, city);
+        outState.putStringArrayList(STATE_SELECTED, new ArrayList<>(selected));
+        outState.putStringArrayList(STATE_FAMOUS, famous.shownNames());
+        outState.putStringArrayList(STATE_HIDDEN, hidden.shownNames());
+    }
+
+    private void restoreState(Bundle state) {
+        List<String> names = state.getStringArrayList(STATE_SELECTED);
+        if (names != null) {
+            selected.addAll(names);
+        }
+        famous.restore(state.getStringArrayList(STATE_FAMOUS));
+        hidden.restore(state.getStringArrayList(STATE_HIDDEN));
+        renderAll();
     }
 
     private void loadCity() {
@@ -68,12 +104,16 @@ public class DiscoverActivity extends ScreenActivity {
         famous.render();
         hidden.render();
         MaterialButton add = findViewById(R.id.button_add_selected);
-        add.setEnabled(!selected.isEmpty());
-        add.setText(selected.isEmpty() ? getString(R.string.discover_none_selected)
+        add.setEnabled(!isSaving && !selected.isEmpty());
+        add.setText(isSaving ? getString(R.string.discover_adding)
+                : selected.isEmpty() ? getString(R.string.discover_none_selected)
                 : getString(R.string.action_add_selected, selected.size()));
     }
 
     private void pickCity() {
+        if (isSaving) {
+            return;
+        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.city_dialog_title)
                 .setSingleChoiceItems(SUPPORTED_CITIES.toArray(new String[0]),
@@ -87,27 +127,44 @@ public class DiscoverActivity extends ScreenActivity {
     }
 
     private void addSelected() {
+        if (isSaving || selected.isEmpty()) {
+            return;
+        }
         int days = Math.max(1, PrototypeStore.get().meta(tripId).getDays());
-        int total = selected.size();
-        int[] remaining = {total};
-        int index = 0;
-        for (String name : selected) {
-            int day = 1 + (index++ % days);
-            repository.addItineraryItem(tripId, name, day, null, null, false, result -> {
-                if (!result.isSuccess()) {
-                    toast(R.string.error_save_failed);
-                    return;
-                }
-                remaining[0]--;
-                if (remaining[0] == 0) {
-                    finishAdding(total);
-                }
-            });
+        List<String> names = new ArrayList<>(selected);
+        int[] pending = {names.size()};
+        boolean[] failed = {false};
+        isSaving = true;
+        renderAll();
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i);
+            repository.addItineraryItem(tripId, name, 1 + (i % days), null, null, false,
+                    result -> onSaveResult(result.isSuccess(), name, names.size(), pending, failed));
+        }
+    }
+
+    /** Spots that saved leave the selection, so a retry after a failure only re-sends the rest. */
+    private void onSaveResult(boolean isOk, String name, int total, int[] pending, boolean[] failed) {
+        pending[0]--;
+        if (isOk) {
+            selected.remove(name);
+        } else if (!failed[0]) {
+            failed[0] = true;
+            toast(R.string.error_save_failed);
+        }
+        if (pending[0] > 0) {
+            return;
+        }
+        if (failed[0]) {
+            isSaving = false;
+            renderAll();
+        } else {
+            finishAdding(total);
         }
     }
 
     private void finishAdding(int total) {
-        toast(getString(R.string.discover_added, total));
+        toast(getResources().getQuantityString(R.plurals.discover_added, total, total));
         if (getIntent().getBooleanExtra(EXTRA_OPEN_ITINERARY, false)) {
             Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
@@ -134,6 +191,36 @@ public class DiscoverActivity extends ScreenActivity {
             }
         }
 
+        ArrayList<String> shownNames() {
+            ArrayList<String> names = new ArrayList<>();
+            for (MockPlace place : shown) {
+                names.add(place.getName());
+            }
+            return names;
+        }
+
+        /** Puts the named spots (in order) back into the visible slots; the rest return to the pool. */
+        void restore(@Nullable List<String> names) {
+            if (names == null) {
+                return;
+            }
+            List<MockPlace> all = new ArrayList<>(shown);
+            all.addAll(pool);
+            shown.clear();
+            for (String name : names) {
+                for (Iterator<MockPlace> it = all.iterator(); it.hasNext(); ) {
+                    MockPlace place = it.next();
+                    if (place.getName().equals(name)) {
+                        shown.add(place);
+                        it.remove();
+                        break;
+                    }
+                }
+            }
+            pool.clear();
+            pool.addAll(all);
+        }
+
         void render() {
             List<UiRow> rows = new ArrayList<>();
             for (int i = 0; i < shown.size(); i++) {
@@ -146,12 +233,19 @@ public class DiscoverActivity extends ScreenActivity {
                         null,
                         getString(isSelected ? R.string.action_added : R.string.action_add),
                         () -> toggle(place),
-                        () -> offerSwap(slot)));
+                        () -> offerSwap(slot))
+                        .withSelected(isSelected)
+                        .withAccessibility(getString(isSelected ? R.string.discover_remove_cd
+                                : R.string.discover_add_cd, place.getName()),
+                                getString(R.string.discover_swap_cd)));
             }
             adapter.submit(rows);
         }
 
         private void toggle(MockPlace place) {
+            if (isSaving) {
+                return;
+            }
             if (!selected.remove(place.getName())) {
                 selected.add(place.getName());
             }
@@ -159,7 +253,7 @@ public class DiscoverActivity extends ScreenActivity {
         }
 
         private void offerSwap(int slot) {
-            if (pool.isEmpty()) {
+            if (isSaving || pool.isEmpty()) {
                 return;
             }
             MockPlace current = shown.get(slot);
