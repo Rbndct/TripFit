@@ -9,14 +9,7 @@
     android:orientation="vertical"
     tools:context=".AddDestinationActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorSurface"
-        app:navigationIcon="@drawable/ic_arrow_back_24"
-        app:title="@string/add_destination_title"
-        app:titleTextColor="?attr/colorOnSurface" />
+    <include layout="@layout/view_toolbar" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -30,10 +23,19 @@
             android:orientation="vertical"
             android:padding="@dimen/space_md">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_search_city"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chip_group_cities"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                app:selectionRequired="true"
                 app:singleSelection="true" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -118,6 +120,7 @@
                     android:id="@+id/input_day"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
                     android:inputType="number"
                     android:maxLength="2" />
 
@@ -136,6 +139,7 @@
                     android:id="@+id/input_duration"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
                     android:inputType="number"
                     android:maxLength="4" />
 
@@ -156,6 +160,7 @@
                 android:layout_marginTop="@dimen/space_md"
                 android:hint="@string/field_time_hint"
                 android:visibility="gone"
+                app:endIconContentDescription="@string/select_time"
                 app:endIconDrawable="@drawable/ic_schedule_24"
                 app:endIconMode="custom"
                 tools:visibility="visible">
@@ -165,7 +170,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:cursorVisible="false"
-                    android:focusable="false" />
+                    android:focusable="false"
+                    android:fontFamily="monospace" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
