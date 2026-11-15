@@ -45,6 +45,8 @@
                     android:id="@+id/input_duration"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionDone"
                     android:inputType="number"
                     android:maxLength="4" />
 
@@ -63,12 +65,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/field_time_hint"
-                android:visibility="gone">
+                android:visibility="gone"
+                app:endIconContentDescription="@string/select_time"
+                app:endIconDrawable="@drawable/ic_schedule_24"
+                app:endIconMode="custom">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/input_time"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:cursorVisible="false"
                     android:focusable="false"
                     android:fontFamily="monospace"
                     android:inputType="none" />
