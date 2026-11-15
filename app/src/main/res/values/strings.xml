@@ -70,7 +70,10 @@
 
     <!-- Map picker screen -->
     <string name="map_picker_title">Drop a pin</string>
-    <string name="map_picker_marker_hint">Drag to the exact spot</string>
+    <string name="map_picker_marker_hint">Tap the map to place the pin, or hold the pin and drag it to the exact spot.</string>
+    <string name="map_picker_map_cd">Map. Tap to place the pin.</string>
+    <string name="map_picker_coords">%1$.5f, %2$.5f</string>
+    <string name="map_picker_finding">Finding place…</string>
     <string name="action_use_location">Use this location</string>
     <string name="map_picker_fallback_name">Pinned location</string>
 </resources>
