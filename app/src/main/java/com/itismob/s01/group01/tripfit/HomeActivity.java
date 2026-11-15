@@ -2,11 +2,15 @@ package com.itismob.s01.group01.tripfit;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -27,8 +31,12 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        applyShellSystemBars();
+        View appBar = findViewById(R.id.appbar_home);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.home_root), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // The navy header runs under the status bar, so it absorbs the top inset itself.
+            appBar.setPadding(0, systemBars.top, 0, 0);
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
             return insets;
         });
@@ -48,6 +56,14 @@ public class HomeActivity extends AppCompatActivity {
 
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_new_trip);
         fab.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, NewTripActivity.class)));
+    }
+
+    /** Keeps the status bar on the fixed navy shell with light icons, in both light and dark themes. */
+    @SuppressWarnings("deprecation") // no-op once edge-to-edge is enforced (API 35+); needed below that
+    private void applyShellSystemBars() {
+        Window window = getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.ticket_carrier_navy));
+        WindowCompat.getInsetsController(window, window.getDecorView()).setAppearanceLightStatusBars(false);
     }
 
     private void openTrip(String tripId) {
