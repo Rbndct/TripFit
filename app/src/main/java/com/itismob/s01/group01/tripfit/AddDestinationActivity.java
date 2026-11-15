@@ -9,16 +9,15 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -46,7 +45,7 @@ import java.util.UUID;
  * searching our pipeline-seeded {@code places} database instead of free text only.
  * Validates input, then persists the stop to Room via {@link AddDestinationViewModel}.
  */
-public class AddDestinationActivity extends AppCompatActivity {
+public class AddDestinationActivity extends ScreenActivity {
 
     private static final long SEARCH_DEBOUNCE_MS = 350;
 
@@ -60,10 +59,9 @@ public class AddDestinationActivity extends AppCompatActivity {
     private TextInputEditText inputSearch;
     private MaterialSwitch switchBooked;
     private ChipGroup chipGroupCities;
-    private View searchEmptyState;
+    private TextView searchEmptyState;
     private AddDestinationViewModel viewModel;
     private PlaceSearchAdapter searchAdapter;
-    private String tripId;
     private final Set<String> existingNames = new HashSet<>();
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
@@ -77,17 +75,12 @@ public class AddDestinationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_destination);
-
-        tripId = getIntent().getStringExtra(HomeActivity.EXTRA_TRIP_ID);
+        setScreen(R.layout.activity_add_destination, R.string.add_destination_title);
 
         TripFitApp app = (TripFitApp) getApplication();
         viewModel = new ViewModelProvider(this,
                 new AddDestinationViewModel.Factory(app.getTripRepository()))
                 .get(AddDestinationViewModel.class);
-
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
         layoutName = findViewById(R.id.layout_name);
         layoutDay = findViewById(R.id.layout_day);
@@ -134,6 +127,8 @@ public class AddDestinationActivity extends AppCompatActivity {
             List<PlaceDto> places = result.isSuccess() ? result.getData() : Collections.emptyList();
             searchAdapter.submitPlaces(places);
             boolean hasQuery = inputSearch.getText() != null && inputSearch.getText().length() > 0;
+            searchEmptyState.setText(result.isSuccess()
+                    ? R.string.search_empty_state : R.string.search_error);
             searchEmptyState.setVisibility(hasQuery && places.isEmpty() ? View.VISIBLE : View.GONE);
         });
 
@@ -280,30 +275,30 @@ public class AddDestinationActivity extends AppCompatActivity {
     }
 
     private void attemptSave() {
-        boolean valid = true;
+        View firstInvalid = null;
 
         if (TextUtils.isEmpty(safeText(inputName))) {
             layoutName.setError(getString(R.string.error_name_required));
-            valid = false;
+            firstInvalid = inputName;
         } else {
             layoutName.setError(null);
         }
 
-        if (TextUtils.isEmpty(safeText(inputDay))) {
-            layoutDay.setError(getString(R.string.error_day_required));
-            valid = false;
-        } else {
-            layoutDay.setError(null);
+        String dayError = validateDay();
+        layoutDay.setError(dayError);
+        if (dayError != null && firstInvalid == null) {
+            firstInvalid = inputDay;
         }
 
         if (switchBooked.isChecked() && pickedHour < 0) {
             layoutTime.setError(getString(R.string.error_time_required));
-            valid = false;
+            firstInvalid = firstInvalid == null ? inputTime : firstInvalid;
         } else if (!switchBooked.isChecked()) {
             layoutTime.setError(null);
         }
 
-        if (!valid) {
+        if (firstInvalid != null) {
+            firstInvalid.requestFocus();
             return;
         }
 
@@ -318,6 +313,16 @@ public class AddDestinationActivity extends AppCompatActivity {
             return;
         }
         persist(name);
+    }
+
+    /** Returns an error message for the day field, or null when it holds a day of 1 or more. */
+    @Nullable
+    private String validateDay() {
+        String text = safeText(inputDay);
+        if (TextUtils.isEmpty(text)) {
+            return getString(R.string.error_day_required);
+        }
+        return Integer.parseInt(text) < 1 ? getString(R.string.error_day_invalid) : null;
     }
 
     private void observeExistingNames(TripFitApp app) {
