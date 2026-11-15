@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Itinerary toolbar only: the stock overflow button measures 40dp wide, below the 48dp target. -->
+    <style name="ThemeOverlay.TripFit.ItineraryToolbar" parent="">
+        <item name="actionOverflowButtonStyle">@style/Widget.TripFit.OverflowButton</item>
+    </style>
+
+    <style name="Widget.TripFit.OverflowButton" parent="Widget.AppCompat.ActionButton.Overflow">
+        <item name="android:minWidth">48dp</item>
+    </style>
+</resources>

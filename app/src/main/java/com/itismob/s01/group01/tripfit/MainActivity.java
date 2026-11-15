@@ -5,14 +5,17 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -56,15 +59,20 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
     private TextView daySummary;
     private TextView weatherBanner;
     private View emptyState;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        applyShellSystemBars();
+        View appBar = findViewById(R.id.appbar_itinerary);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            // The navy header runs under the status bar, so it absorbs the top inset itself.
+            appBar.setPadding(0, systemBars.top, 0, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
             return insets;
         });
 
@@ -90,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         });
         bindSubtitle();
 
-        RecyclerView recyclerView = findViewById(R.id.recycler_itinerary);
+        recyclerView = findViewById(R.id.recycler_itinerary);
         recyclerView.setAdapter(adapter);
         viewModel.getItems().observe(this, items -> {
             allItems = items;
@@ -105,6 +113,14 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         fab.setOnClickListener(v -> open(AddDestinationActivity.class));
         findViewById(R.id.button_empty_discover).setOnClickListener(v -> open(DiscoverActivity.class));
         weatherBanner.setOnClickListener(v -> showWeatherDialog());
+    }
+
+    /** Navy status bar with light icons, matching Home and every ScreenActivity. */
+    private void applyShellSystemBars() {
+        Window window = getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.ticket_carrier_navy));
+        WindowCompat.getInsetsController(window, window.getDecorView())
+                .setAppearanceLightStatusBars(false);
     }
 
     private void setUpToolbar() {
@@ -210,7 +226,8 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         int day = selectedDay;
         int count = MockData.isRainy(day) ? outdoorFlexibleStops(day).size() : 0;
         weatherBanner.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
-        weatherBanner.setText(getString(R.string.weather_banner, day, count));
+        weatherBanner.setText(getResources().getQuantityString(
+                R.plurals.weather_banner, count, day, count));
     }
 
     private void showWeatherDialog() {
@@ -243,7 +260,8 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
             repository.deleteItineraryItem(outdoor.get(i).item.getId(), report);
         }
         Snackbar.make(findViewById(R.id.main),
-                getString(R.string.weather_swapped, outdoor.size()), Snackbar.LENGTH_SHORT).show();
+                getResources().getQuantityString(R.plurals.weather_swapped, outdoor.size(),
+                        outdoor.size()), Snackbar.LENGTH_SHORT).show();
     }
 
     // ---- rendering ----
@@ -276,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
                 selectedDay = day;
                 renderDayTabs();
                 renderSelectedDayStops();
+                recyclerView.scrollToPosition(0);
             });
             dayTabContainer.addView(tab);
         }
@@ -286,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
                 ? R.drawable.bg_day_tab_selected : R.drawable.bg_day_tab_unselected);
         tab.setTextColor(getColor(selected
                 ? R.color.ticket_carrier_navy : R.color.on_ticket_carrier));
+        ViewCompat.setStateDescription(tab, selected ? getString(R.string.state_selected) : null);
     }
 
     private void renderSelectedDayStops() {
@@ -302,7 +322,8 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         }
         adapter.submitRows(rows);
         emptyState.setVisibility(rows.isEmpty() ? View.VISIBLE : View.GONE);
-        daySummary.setText(getString(R.string.day_summary, rows.size(), travelMin));
+        daySummary.setText(getResources().getQuantityString(
+                R.plurals.day_summary, rows.size(), rows.size(), travelMin));
         renderWeatherBanner();
     }
 }
