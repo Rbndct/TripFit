@@ -87,8 +87,11 @@
     <string name="optimize_title">Optimize route</string>
     <string name="optimize_summary">Reordering saves about %1$d min of travel</string>
     <string name="optimize_summary_none">Your route is already efficient</string>
-    <string name="optimize_day_detail">%1$.1f km → %2$.1f km</string>
-    <string name="optimize_order">New order: %1$s</string>
+    <string name="optimize_summary_small">Reordering saves a little travel time</string>
+    <string name="optimize_day_distance">%1$.1f km</string>
+    <string name="optimize_order">New order: %1$s\nWas %2$.1f km</string>
+    <string name="optimize_order_same">Already the shortest order: %1$s</string>
+    <string name="optimize_applied">Route order updated</string>
     <string name="optimize_locked_note">Booked stops keep their fixed time and position.</string>
     <string name="action_apply_order">Confirm new order</string>
     <string name="action_keep_current">Keep current order</string>
