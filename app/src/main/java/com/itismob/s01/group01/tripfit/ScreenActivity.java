@@ -1,13 +1,16 @@
 package com.itismob.s01.group01.tripfit;
 
 import android.view.View;
+import android.view.Window;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
@@ -24,6 +27,7 @@ public abstract class ScreenActivity extends AppCompatActivity {
     protected void setScreen(@LayoutRes int layout, @StringRes int titleRes) {
         EdgeToEdge.enable(this);
         setContentView(layout);
+        applyShellSystemBars();
         View content = findViewById(android.R.id.content);
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
             Insets bars = insets.getInsets(
@@ -35,6 +39,14 @@ public abstract class ScreenActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(titleRes);
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+    }
+
+    /** Keeps the status bar on the fixed navy shell with light icons, in both light and dark themes. */
+    @SuppressWarnings("deprecation") // no-op once edge-to-edge is enforced (API 35+); needed below that
+    private void applyShellSystemBars() {
+        Window window = getWindow();
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.ticket_carrier_navy));
+        WindowCompat.getInsetsController(window, window.getDecorView()).setAppearanceLightStatusBars(false);
     }
 
     protected void toast(@StringRes int messageRes) {

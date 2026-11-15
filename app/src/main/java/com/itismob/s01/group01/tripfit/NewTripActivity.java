@@ -1,14 +1,18 @@
 package com.itismob.s01.group01.tripfit;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -34,9 +38,13 @@ import java.util.concurrent.TimeUnit;
 public class NewTripActivity extends ScreenActivity {
 
     private static final int DEFAULT_TRIP_DAYS = 3;
+    private static final String STATE_DATES_LABEL = "dates_label";
+    private static final String STATE_TRIP_DAYS = "trip_days";
 
     private TextInputLayout layoutName;
     private TextInputLayout layoutCity;
+    private TextInputLayout layoutDates;
+    private MaterialButton buttonCreate;
     private TextInputEditText inputName;
     private TextInputEditText inputDates;
     private MaterialAutoCompleteTextView inputCity;
@@ -57,6 +65,8 @@ public class NewTripActivity extends ScreenActivity {
 
         layoutName = findViewById(R.id.layout_trip_name);
         layoutCity = findViewById(R.id.layout_city);
+        layoutDates = findViewById(R.id.layout_dates);
+        buttonCreate = findViewById(R.id.button_create_trip);
         inputName = findViewById(R.id.input_trip_name);
         inputDates = findViewById(R.id.input_dates);
         inputCity = findViewById(R.id.input_city);
@@ -71,10 +81,38 @@ public class NewTripActivity extends ScreenActivity {
         inputCurrency.setText(PrototypeStore.get().getDefaultHomeCurrency(), false);
         togglePlanMode.check(R.id.button_plan_manual);
 
+        applyLabelTypefaces();
+        restoreDates(savedInstanceState);
+
         inputDates.setOnClickListener(v -> pickDates());
-        findViewById(R.id.layout_dates).setOnClickListener(v -> pickDates());
-        findViewById(R.id.button_create_trip).setOnClickListener(v -> attemptCreate());
+        layoutDates.setOnClickListener(v -> pickDates());
+        layoutDates.setEndIconOnClickListener(v -> pickDates());
+        inputName.addTextChangedListener(new ErrorClearer(layoutName));
+        inputCity.setOnItemClickListener((parent, view, position, id) -> layoutCity.setError(null));
+        buttonCreate.setOnClickListener(v -> attemptCreate());
         viewModel.getCreateResult().observe(this, this::onCreateResult);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_DATES_LABEL, datesLabel);
+        outState.putInt(STATE_TRIP_DAYS, tripDays);
+    }
+
+    /** Monospace is for the values (dates, currency code); hints, helper and errors stay Roboto. */
+    private void applyLabelTypefaces() {
+        layoutDates.setTypeface(Typeface.DEFAULT);
+        ((TextInputLayout) findViewById(R.id.layout_currency)).setTypeface(Typeface.DEFAULT);
+    }
+
+    private void restoreDates(@Nullable Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            datesLabel = savedInstanceState.getString(STATE_DATES_LABEL, "");
+            tripDays = savedInstanceState.getInt(STATE_TRIP_DAYS, DEFAULT_TRIP_DAYS);
+        }
+        layoutDates.setHelperText(datesLabel.isEmpty()
+                ? getString(R.string.field_dates_helper, DEFAULT_TRIP_DAYS) : null);
     }
 
     private void pickDates() {
@@ -89,6 +127,7 @@ public class NewTripActivity extends ScreenActivity {
                     + format.format(new Date(range.second));
             tripDays = (int) TimeUnit.MILLISECONDS.toDays(range.second - range.first) + 1;
             inputDates.setText(datesLabel);
+            layoutDates.setHelperText(null);
         });
         picker.show(getSupportFragmentManager(), "date_range");
     }
@@ -100,8 +139,10 @@ public class NewTripActivity extends ScreenActivity {
                 ? getString(R.string.error_trip_name_required) : null);
         layoutCity.setError(TextUtils.isEmpty(city) ? getString(R.string.error_city_required) : null);
         if (TextUtils.isEmpty(name) || TextUtils.isEmpty(city)) {
+            (TextUtils.isEmpty(name) ? inputName : inputCity).requestFocus();
             return;
         }
+        buttonCreate.setEnabled(false);
         viewModel.createTrip(name);
     }
 
@@ -110,6 +151,7 @@ public class NewTripActivity extends ScreenActivity {
             return;
         }
         if (!result.isSuccess()) {
+            buttonCreate.setEnabled(true);
             toast(R.string.error_create_trip_failed);
             return;
         }
@@ -123,5 +165,27 @@ public class NewTripActivity extends ScreenActivity {
         intent.putExtra(DiscoverActivity.EXTRA_OPEN_ITINERARY, discover);
         startActivity(intent);
         finish();
+    }
+
+    /** Clears a field's error as soon as the user edits it. */
+    private static final class ErrorClearer implements TextWatcher {
+        private final TextInputLayout layout;
+
+        ErrorClearer(TextInputLayout layout) {
+            this.layout = layout;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            layout.setError(null);
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+        }
     }
 }
