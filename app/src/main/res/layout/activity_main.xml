@@ -9,6 +9,7 @@
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar_itinerary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/ticket_carrier_navy"
@@ -25,6 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/ticket_carrier_navy"
+                android:theme="@style/ThemeOverlay.TripFit.ItineraryToolbar"
                 app:navigationContentDescription="@string/cd_back"
                 app:navigationIcon="@drawable/ic_arrow_back_24"
                 app:navigationIconTint="@color/on_ticket_carrier" />
