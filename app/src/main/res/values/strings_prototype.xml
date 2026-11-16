@@ -144,7 +144,13 @@
     <string name="filter_fits_budget">Fits my budget</string>
     <string name="suggestion_subtitle">%1$s · ★ %2$.1f · %3$.1f km · %4$s</string>
     <string name="suggestions_budget_hint">%1$s left in your %2$s budget</string>
-    <string name="suggestions_empty">Nothing fits your remaining budget. Try turning off the filter.</string>
+    <string name="suggestions_empty">Nothing fits your remaining budget right now.</string>
+    <string name="suggestions_show_all">Show all places</string>
+    <string name="suggestions_budget_used_up">Your %1$s budget is used up</string>
+    <string name="suggestions_target_day">Adding to Day %1$d</string>
+    <string name="suggestion_subtitle_over">%1$s · ★ %2$.1f · %3$.1f km · %4$s · Over budget</string>
+    <string name="suggestion_add_cd">Add %1$s to Day %2$d</string>
+    <string name="suggestion_add_failed">Could not add %1$s. Try again.</string>
     <string name="suggestion_added">%1$s added to Day %2$d</string>
 
     <!-- Discover -->
