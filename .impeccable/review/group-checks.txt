@@ -1,1 +1,1 @@
-TOUCH_TARGET  88x30dp < 48dp  Vote
+TOUCH_TARGET  88x30dp < 48dp  Button 'Vote'  [second row clipped by the screen/nav-bar edge, y=2072-2154px; first Vote button is 88x48dp]
