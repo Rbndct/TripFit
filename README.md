@@ -165,19 +165,31 @@ The app is a **clickable UI prototype**. Every backlog feature has a screen and 
 <br>
 
 ```
-app/src/main/java/com/itismob/s01/group01/tripfit/
-├── *Activity.java      one Activity per screen; ScreenActivity is the shared base (navy toolbar, insets)
-├── data/               repository, Room database/DAOs/entities, Supabase API, offline search data
-├── viewmodel/          ViewModels for Home, Itinerary, New Trip, Add Destination
-├── ui/                 adapters, list rows, dialogs, custom views (ticket perforation, barcode)
-└── prototype/          logic and demo data for features without a backend yet
-                        (budget math, route ordering, scheduling, currency, PrototypeStore)
-app/src/debug/          debug-only screen launcher used for screenshot capture
-app/src/test/           JUnit unit tests
-pipeline/               Python place-data ingestion
-supabase/               database migrations and the ors-proxy Edge Function
-docs/                   proposal, backlog, API integration plan, developer handoff
+TripFit/
+├── app/                  Android app
+│   └── src/
+│       ├── main/         app source and resources
+│       ├── debug/        debug-only screen launcher (never in release builds)
+│       └── test/         JUnit unit tests
+├── pipeline/             Python place-data ingestion
+├── supabase/             database migrations and the ors-proxy Edge Function
+├── docs/                 proposal, backlog, API plan, developer handoff
+└── .github/workflows/    weekly ingestion job
 ```
+
+App code lives in `app/src/main/java/com/itismob/s01/group01/tripfit/`:
+
+| Looking for | Where |
+|---|---|
+| A screen | `<Name>Activity.java` in the package root, e.g. `BudgetActivity.java` |
+| Shared screen base (navy toolbar, insets) | `ScreenActivity.java` |
+| Screen state | `viewmodel/` |
+| Lists, dialogs, custom views | `ui/` |
+| Database (Room entities, DAOs) | `data/local/` |
+| Supabase API calls | `data/remote/`, `data/RemoteDataSource.java` |
+| Single entry point for data | `data/TripRepository.java` |
+| Logic and demo data for features without a backend yet | `prototype/` |
+| Layouts, strings, colors (light and dark) | `app/src/main/res/` |
 
 </details>
 
