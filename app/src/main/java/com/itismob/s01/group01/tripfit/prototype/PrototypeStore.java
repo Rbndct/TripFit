@@ -66,6 +66,12 @@ public final class PrototypeStore {
         instance = new PrototypeStore(new PrefsKeyValueStorage(context), true);
     }
 
+    /** Test seam: drops the shared instance so the next {@link #get()} starts empty. */
+    @androidx.annotation.VisibleForTesting
+    public static synchronized void resetForTesting() {
+        instance = null;
+    }
+
     public static PrototypeStore get() {
         PrototypeStore current = instance;
         if (current == null) {
@@ -109,6 +115,11 @@ public final class PrototypeStore {
             return new TripMeta(DEFAULT_CITY, "", DEFAULT_TRIP_DAYS, getDefaultHomeCurrency());
         }
         return TripDocMapper.fromRec(rec, DEFAULT_CITY, DEFAULT_TRIP_DAYS, getDefaultHomeCurrency());
+    }
+
+    /** True once trip details were saved for this trip (as opposed to the defaults of {@link #meta}). */
+    public synchronized boolean hasMeta(String tripId) {
+        return docs.trip(tripId).meta != null;
     }
 
     public synchronized void setMeta(String tripId, TripMeta meta) {
@@ -157,16 +168,27 @@ public final class PrototypeStore {
     public synchronized BudgetSettings budget(String tripId) {
         TripDoc.BudgetRec rec = docs.trip(tripId).budget;
         BudgetSettings saved = rec == null ? null : TripDocMapper.fromRec(rec);
-        if (saved != null) {
-            return saved;
-        }
         TripMeta meta = meta(tripId);
+        if (saved != null) {
+            return docs.trip(tripId).meta == null ? saved : withTripCurrencies(saved, meta);
+        }
         return defaultBudget(meta.getHomeCurrency(), MockData.currencyFor(meta.getCity()));
     }
 
+    /** Saves the budget; the trip's meta stays the single source of the home currency. */
     public synchronized void setBudget(String tripId, BudgetSettings settings) {
-        docs.trip(tripId).budget = TripDocMapper.toRec(settings);
+        TripDoc doc = docs.trip(tripId);
+        doc.budget = TripDocMapper.toRec(settings);
+        if (doc.meta != null) {
+            doc.meta.homeCurrency = settings.getHomeCurrency();
+        }
         docs.saveTrip(tripId);
+    }
+
+    /** Home currency from the trip's meta, local currency from its city. */
+    private static BudgetSettings withTripCurrencies(BudgetSettings saved, TripMeta meta) {
+        return new BudgetSettings(meta.getHomeCurrency(), MockData.currencyFor(meta.getCity()),
+                saved.getAmount(), saved.isPerDay(), saved.getCategoryLimits());
     }
 
     /** Expenses newest-first, re-converted to the trip's current home currency. */

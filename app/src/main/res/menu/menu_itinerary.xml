@@ -20,6 +20,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_trip_settings"
+        android:title="@string/action_trip_settings"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_discover"
         android:title="@string/action_discover"
         app:showAsAction="never" />

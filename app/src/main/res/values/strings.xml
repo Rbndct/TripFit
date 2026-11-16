@@ -45,9 +45,27 @@
     <string name="home_greeting">Hi, Traveler</string>
     <string name="home_subtitle">Plan your next adventure</string>
     <string name="home_your_trips">Your Trips</string>
-    <string name="trip_days_count">%1$d days</string>
-    <string name="trip_stops_count">%1$d stops</string>
-    <string name="ticket_days_stops">%1$d DAYS · %2$d STOPS</string>
+    <plurals name="trip_days_count">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="trip_stops_count">
+        <item quantity="one">%1$d stop</item>
+        <item quantity="other">%1$d stops</item>
+    </plurals>
+    <plurals name="ticket_days">
+        <item quantity="one">%1$d DAY</item>
+        <item quantity="other">%1$d DAYS</item>
+    </plurals>
+    <plurals name="ticket_stops">
+        <item quantity="one">%1$d STOP</item>
+        <item quantity="other">%1$d STOPS</item>
+    </plurals>
+    <string name="ticket_counts_joiner">%1$s · %2$s</string>
+    <string name="home_card_city_sample">%1$s · Sample trip</string>
+    <string name="home_card_sample_only">Sample trip</string>
+    <string name="home_card_details">Starts %1$s · Budget %2$s</string>
+    <string name="home_card_budget_only">Budget %1$s</string>
     <string name="trip_status_draft">DRAFT</string>
     <string name="trip_status_planned">PLANNED</string>
     <string name="new_trip">New Trip</string>
@@ -57,7 +75,7 @@
     <string name="new_trip_title">New trip</string>
     <string name="field_trip_name_hint">Trip name</string>
     <string name="action_create_trip">Create trip</string>
-    <string name="error_trip_name_required">Enter a trip name</string>
+    <string name="error_trip_name_required">Give your trip a name</string>
     <string name="error_create_trip_failed">Could not create trip</string>
 
     <!-- Destination search -->

@@ -11,6 +11,9 @@ import com.itismob.s01.group01.tripfit.data.local.entity.PlaceEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
+import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.TripDates;
+import com.itismob.s01.group01.tripfit.prototype.TripMeta;
 
 import android.util.Log;
 
@@ -22,6 +25,8 @@ public class TripRepositoryImpl implements TripRepository {
 
     /** Fixed id so the Phase 0 seed trip is idempotent across app restarts. */
     public static final String SEED_TRIP_ID = "seed-trip-tokyo";
+    private static final String SEED_START_DATE = "2026-12-01";
+    private static final int SEED_DAYS = 2;
     private static final String TAG = "TripRepository";
     private static final int PLACE_SEARCH_LIMIT = 25;
 
@@ -110,10 +115,33 @@ public class TripRepositoryImpl implements TripRepository {
         executors.diskIO().execute(() -> {
             try {
                 String tripId = UUID.randomUUID().toString();
-                database.tripDao().insert(new TripEntity(tripId, null, name, null, null, "USD", null));
+                database.tripDao().insert(new TripEntity(tripId, null, name, null, null, null, null));
                 deliver(callback, Result.success(tripId));
             } catch (RuntimeException e) {
                 deliver(callback, Result.error("Could not create trip: " + e.getMessage()));
+            }
+        });
+    }
+
+    @Override
+    public void renameTrip(String tripId, String name, Result.Callback<Void> callback) {
+        executors.diskIO().execute(() -> {
+            try {
+                database.tripDao().updateName(tripId, name);
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error("Could not rename trip: " + e.getMessage()));
+            }
+        });
+    }
+
+    @Override
+    public void maxStopDay(String tripId, Result.Callback<Integer> callback) {
+        executors.diskIO().execute(() -> {
+            try {
+                deliver(callback, Result.success(database.itineraryItemDao().maxDaySync(tripId)));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error("Could not read stops: " + e.getMessage()));
             }
         });
     }
@@ -124,13 +152,16 @@ public class TripRepositoryImpl implements TripRepository {
             try {
                 if (database.tripDao().countSync() == 0) {
                     database.tripDao().insert(new TripEntity(
-                            SEED_TRIP_ID, null, "Tokyo Trip", null, null, "USD", null));
+                            SEED_TRIP_ID, null, "Tokyo Trip", null, null, null, null));
                     insertSeedStop("Senso-ji Temple", 1, 0, 45, false, null);
                     insertSeedStop("Nakamise Shopping Street", 1, 1, 30, false, null);
                     insertSeedStop("Tokyo Skytree", 1, 2, null, true, "18:00");
                     insertSeedStop("Meiji Shrine", 2, 0, 40, false, null);
                     insertSeedStop("Shibuya Crossing", 2, 1, 20, false, null);
                     insertSeedStop("teamLab Planets", 2, 2, null, true, "15:30");
+                }
+                if (database.tripDao().countByIdSync(SEED_TRIP_ID) > 0) {
+                    seedStoreState();
                 }
                 deliver(callback, Result.success(null));
             } catch (RuntimeException e) {
@@ -217,6 +248,17 @@ public class TripRepositoryImpl implements TripRepository {
                 deliver(callback, Result.error("Could not reorder stops: " + e.getMessage()));
             }
         });
+    }
+
+    /** Gives the sample trip its details and sample flag in the store, once (keeps later edits). */
+    private void seedStoreState() {
+        PrototypeStore store = PrototypeStore.get();
+        if (!store.hasMeta(SEED_TRIP_ID)) {
+            store.setMeta(SEED_TRIP_ID, new TripMeta("Tokyo",
+                    TripDates.label(SEED_START_DATE, SEED_DAYS), SEED_DAYS,
+                    store.getDefaultHomeCurrency(), SEED_START_DATE));
+            store.setSample(SEED_TRIP_ID, true);
+        }
     }
 
     private void insertSeedStop(String name, int day, int position, Integer durationMin,

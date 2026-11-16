@@ -66,6 +66,12 @@ public class HomeActivity extends AppCompatActivity {
         WindowCompat.getInsetsController(window, window.getDecorView()).setAppearanceLightStatusBars(false);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        viewModel.refresh(); // trip details and budgets live in the store, which Room does not observe
+    }
+
     private void openTrip(String tripId) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra(EXTRA_TRIP_ID, tripId);

@@ -16,7 +16,11 @@ public interface TripDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(TripEntity trip);
 
-    @Query("SELECT * FROM trips ORDER BY name")
+    /**
+     * Newest first. Trips have no creation timestamp, so insertion order (rowid) stands in; that
+     * only holds while trips are never REPLACE-inserted (a REPLACE assigns a new rowid).
+     */
+    @Query("SELECT * FROM trips ORDER BY rowid DESC")
     LiveData<List<TripEntity>> observeAll();
 
     @Query("SELECT * FROM trips WHERE id = :tripId")
@@ -24,4 +28,11 @@ public interface TripDao {
 
     @Query("SELECT COUNT(*) FROM trips")
     int countSync();
+
+    @Query("SELECT COUNT(*) FROM trips WHERE id = :tripId")
+    int countByIdSync(String tripId);
+
+    /** Renames a trip in place. Never edit a trip through {@link #insert}: REPLACE deletes its stops. */
+    @Query("UPDATE trips SET name = :name WHERE id = :tripId")
+    void updateName(String tripId, String name);
 }

@@ -44,7 +44,9 @@ public class OptimizeActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_optimize, R.string.optimize_title);
+        if (!setScreen(R.layout.activity_optimize, R.string.optimize_title)) {
+            return;
+        }
         repository = ((TripFitApp) getApplication()).getTripRepository();
 
         ((RecyclerView) findViewById(R.id.list_days)).setAdapter(adapter);

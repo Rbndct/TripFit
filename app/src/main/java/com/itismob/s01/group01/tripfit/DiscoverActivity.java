@@ -52,7 +52,9 @@ public class DiscoverActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_discover, R.string.discover_title);
+        if (!setScreen(R.layout.activity_discover, R.string.discover_title)) {
+            return;
+        }
         repository = ((TripFitApp) getApplication()).getTripRepository();
 
         String metaCity = PrototypeStore.get().meta(tripId).getCity();

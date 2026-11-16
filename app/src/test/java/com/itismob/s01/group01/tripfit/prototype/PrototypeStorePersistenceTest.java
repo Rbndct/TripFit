@@ -431,4 +431,35 @@ public class PrototypeStorePersistenceTest {
         assertEquals(first, fresh.expenses("i").get(0).getId());
         assertEquals(first, reload().expenses("i").get(0).getId());
     }
+
+    @Test
+    public void hasMeta_falseUntilSet() {
+        assertFalse(store.hasMeta("fresh"));
+        store.setMeta("fresh", new TripMeta("Manila", "", 3, "PHP", "2026-12-01"));
+        assertTrue(reload().hasMeta("fresh"));
+    }
+
+    @Test
+    public void budget_homeCurrencyFollowsTripMeta() {
+        store.setMeta("t9", new TripMeta("Tokyo", "", 3, "PHP", "2026-12-01"));
+        store.setBudget("t9", new BudgetSettings("PHP", "JPY", 15000, false,
+                BudgetMath.defaultLimits(15000)));
+
+        store.setMeta("t9", new TripMeta("Manila", "", 3, "USD", "2026-12-01"));
+
+        BudgetSettings loaded = reload().budget("t9");
+        assertEquals("USD", loaded.getHomeCurrency());
+        assertEquals("PHP", loaded.getLocalCurrency());
+        assertEquals(15000.0, loaded.getAmount(), 0.0);
+    }
+
+    @Test
+    public void setBudget_syncsHomeCurrencyBackIntoMeta() {
+        store.setMeta("t8", new TripMeta("Tokyo", "", 3, "PHP", "2026-12-01"));
+
+        store.setBudget("t8", new BudgetSettings("EUR", "JPY", 500, true,
+                BudgetMath.defaultLimits(500)));
+
+        assertEquals("EUR", reload().meta("t8").getHomeCurrency());
+    }
 }

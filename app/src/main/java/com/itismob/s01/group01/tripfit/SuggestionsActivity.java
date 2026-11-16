@@ -54,7 +54,9 @@ public class SuggestionsActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_suggestions, R.string.suggestions_title);
+        if (!setScreen(R.layout.activity_suggestions, R.string.suggestions_title)) {
+            return;
+        }
         repository = ((TripFitApp) getApplication()).getTripRepository();
         targetDay = getIntent().getIntExtra(EXTRA_DAY, 1);
 

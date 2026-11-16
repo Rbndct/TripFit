@@ -33,7 +33,7 @@
                     android:id="@+id/input_trip_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
+                    android:imeOptions="actionNext"
                     android:inputType="textCapWords"
                     android:maxLength="60" />
 
@@ -45,7 +45,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_sm"
-                android:hint="@string/field_city_hint">
+                android:hint="@string/field_city_hint"
+                app:helperText="@string/field_city_helper">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/input_city"
@@ -70,9 +71,30 @@
                     android:id="@+id/input_dates"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:focusable="false"
+                    android:digits="0123456789-"
                     android:fontFamily="monospace"
-                    android:inputType="none" />
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:maxLength="10" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_days"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:hint="@string/field_days_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_days"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:maxLength="3" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -92,6 +114,49 @@
                     android:inputType="none" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_budget"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:hint="@string/field_budget_home_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_budget"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionDone"
+                    android:inputType="numberDecimal"
+                    android:maxLength="12" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switch_daily_budget"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:minHeight="56dp"
+                android:text="@string/switch_daily_budget" />
+
+            <TextView
+                android:id="@+id/text_edit_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:text="@string/trip_edit_note"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/plan_mode_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
@@ -126,6 +191,8 @@
                     android:text="@string/plan_mode_discover" />
 
             </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_create_trip"

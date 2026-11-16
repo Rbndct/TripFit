@@ -51,7 +51,9 @@ public class CalendarSyncActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_calendar_sync, R.string.calendar_title);
+        if (!setScreen(R.layout.activity_calendar_sync, R.string.calendar_title)) {
+            return;
+        }
         ((RecyclerView) findViewById(R.id.list_events)).setAdapter(adapter);
         ViewCompat.setAccessibilityHeading(findViewById(R.id.text_events_header), true);
         syncButton = findViewById(R.id.button_sync);

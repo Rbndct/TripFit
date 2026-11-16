@@ -43,7 +43,9 @@ public class GroupActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_group, R.string.group_title);
+        if (!setScreen(R.layout.activity_group, R.string.group_title)) {
+            return;
+        }
 
         ((TextView) findViewById(R.id.text_invite_code)).setText(INVITE_CODE);
         findViewById(R.id.button_copy_code).setOnClickListener(v -> copyCode());

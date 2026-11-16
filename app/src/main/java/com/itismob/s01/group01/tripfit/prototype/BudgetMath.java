@@ -45,4 +45,24 @@ public final class BudgetMath {
         }
         return (int) Math.max(0, Math.min(100, Math.round(spent / limit * 100)));
     }
+
+    /**
+     * Default category limits for a new budget: Food 30%, Activities 40%, Transport 20%, Other
+     * 10%, each rounded to two decimals. Other takes the remainder so the parts sum to the total.
+     */
+    public static Map<Category, Double> defaultLimits(double total) {
+        double food = round2(total * 0.30);
+        double activities = round2(total * 0.40);
+        double transport = round2(total * 0.20);
+        Map<Category, Double> limits = new EnumMap<>(Category.class);
+        limits.put(Category.FOOD, food);
+        limits.put(Category.ACTIVITIES, activities);
+        limits.put(Category.TRANSPORT, transport);
+        limits.put(Category.OTHER, round2(total - food - activities - transport));
+        return limits;
+    }
+
+    private static double round2(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
 }
