@@ -218,8 +218,16 @@
     <string name="action_export_pdf">Export PDF</string>
     <string name="action_share_summary">Share summary</string>
     <string name="summary_share_subject">TripFit itinerary: %1$s</string>
-    <string name="pdf_failed">Could not create the PDF</string>
-    <string name="summary_empty">No stops to summarize yet.</string>
+    <string name="pdf_failed">Could not create the PDF. Try again.</string>
+    <string name="summary_exporting">Preparing PDF…</string>
+    <string name="summary_spent_label">Spent</string>
+    <string name="summary_spent_value">%1$s of %2$s</string>
+    <string name="summary_spent_only">%1$s spent</string>
+    <plurals name="summary_stop_count">
+        <item quantity="one">%1$d stop</item>
+        <item quantity="other">%1$d stops</item>
+    </plurals>
+    <string name="summary_empty">No stops yet. Add places on the itinerary and they will appear here.</string>
 
     <!-- Group trip -->
     <string name="group_title">Group trip</string>
