@@ -3,18 +3,23 @@ package com.itismob.s01.group01.tripfit;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.TextView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.itismob.s01.group01.tripfit.data.AppExecutors;
-import com.itismob.s01.group01.tripfit.data.NominatimReverseGeocoder;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.events.MapEventsReceiver;
+import org.osmdroid.views.overlay.MapEventsOverlay;
+import org.osmdroid.views.overlay.CopyrightOverlay;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 
 import java.io.File;
 
@@ -35,7 +40,7 @@ public class MapPickerActivity extends AppCompatActivity {
 
     private MapView mapView;
     private Marker marker;
-    private final NominatimReverseGeocoder geocoder = new NominatimReverseGeocoder();
+    private TextView coordinates;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,15 +52,24 @@ public class MapPickerActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_picker);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.map_picker_root), (v, insets) -> {
+            androidx.core.graphics.Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return insets;
+        });
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 
-        double cityLat = getIntent().getDoubleExtra(EXTRA_CITY_LAT, 0);
-        double cityLng = getIntent().getDoubleExtra(EXTRA_CITY_LNG, 0);
+        double cityLat = savedInstanceState != null ? savedInstanceState.getDouble("pin_lat")
+                : getIntent().getDoubleExtra(EXTRA_CITY_LAT, 14.5995);
+        double cityLng = savedInstanceState != null ? savedInstanceState.getDouble("pin_lng")
+                : getIntent().getDoubleExtra(EXTRA_CITY_LNG, 120.9842);
         GeoPoint center = new GeoPoint(cityLat, cityLng);
 
         mapView = findViewById(R.id.map_view);
+        coordinates = findViewById(R.id.text_map_coordinates);
+        mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(DEFAULT_ZOOM);
         mapView.getController().setCenter(center);
@@ -65,7 +79,24 @@ public class MapPickerActivity extends AppCompatActivity {
         marker.setDraggable(true);
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
         marker.setTitle(getString(R.string.map_picker_marker_hint));
+        mapView.getOverlays().add(new MapEventsOverlay(new MapEventsReceiver() {
+            @Override public boolean singleTapConfirmedHelper(GeoPoint point) {
+                movePin(point);
+                return true;
+            }
+            @Override public boolean longPressHelper(GeoPoint point) {
+                movePin(point);
+                return true;
+            }
+        }));
+        marker.setOnMarkerDragListener(new Marker.OnMarkerDragListener() {
+            @Override public void onMarkerDrag(Marker item) { updateCoordinates(); }
+            @Override public void onMarkerDragStart(Marker item) { item.closeInfoWindow(); }
+            @Override public void onMarkerDragEnd(Marker item) { updateCoordinates(); }
+        });
         mapView.getOverlays().add(marker);
+        mapView.getOverlays().add(new CopyrightOverlay(this));
+        updateCoordinates();
 
         findViewById(R.id.button_use_location).setOnClickListener(v -> confirmLocation());
     }
@@ -75,17 +106,37 @@ public class MapPickerActivity extends AppCompatActivity {
         double lat = position.getLatitude();
         double lng = position.getLongitude();
 
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            String name = geocoder.reverseGeocode(lat, lng);
-            AppExecutors.getInstance().mainThread().execute(() -> {
-                Intent result = new Intent();
-                result.putExtra(EXTRA_RESULT_LAT, lat);
-                result.putExtra(EXTRA_RESULT_LNG, lng);
-                result.putExtra(EXTRA_RESULT_NAME, name);
-                setResult(RESULT_OK, result);
-                finish();
-            });
-        });
+        Intent result = new Intent();
+        result.putExtra(EXTRA_RESULT_LAT, lat);
+        result.putExtra(EXTRA_RESULT_LNG, lng);
+        result.putExtra(EXTRA_RESULT_NAME, String.format(java.util.Locale.US,
+                "Pinned location (%.5f, %.5f)", lat, lng));
+        setResult(RESULT_OK, result);
+        finish();
+    }
+
+    private void movePin(GeoPoint point) {
+        marker.setPosition(point);
+        marker.closeInfoWindow();
+        updateCoordinates();
+        mapView.invalidate();
+    }
+
+    private void updateCoordinates() {
+        coordinates.setText(String.format(java.util.Locale.US,
+                "Tap the map or hold and drag the pin\nSelected: %.5f, %.5f\nMap tiles need internet; pin selection does not.",
+                marker.getPosition().getLatitude(), marker.getPosition().getLongitude()));
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putDouble("pin_lat", marker.getPosition().getLatitude());
+        state.putDouble("pin_lng", marker.getPosition().getLongitude());
+        super.onSaveInstanceState(state);
+    }
+
+    @Override protected void onDestroy() {
+        if (mapView != null) mapView.onDetach();
+        super.onDestroy();
     }
 
     @Override

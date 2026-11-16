@@ -17,6 +17,14 @@
         app:title="@string/map_picker_title"
         app:titleTextColor="?attr/colorOnSurface" />
 
+    <TextView
+        android:id="@+id/text_map_coordinates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="@string/map_picker_marker_hint"
+        android:textColor="?attr/colorOnSurface" />
+
     <org.osmdroid.views.MapView
         android:id="@+id/map_view"
         android:layout_width="match_parent"
