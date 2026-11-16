@@ -22,6 +22,7 @@
         <activity android:name=".prototype.DiscoverActivity" android:exported="false" />
         <activity android:name=".prototype.BudgetActivity" android:exported="false" />
         <activity android:name=".prototype.WeatherActivity" android:exported="false" />
+        <activity android:name=".prototype.GroupActivity" android:exported="false" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
