@@ -1,130 +1,223 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.data.TripRepositoryImpl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
 /**
- * Session-only, in-memory state for the UI prototype's not-yet-backed features (expenses, budget
- * setup, per-leg modes, journal, votes, calendar sync). Everything resets when the process dies;
- * real persistence replaces this once the backend lands. Main-thread access only.
+ * Persistent state for the prototype's not-yet-Room-backed features (expenses, budget setup, trip
+ * meta, per-leg modes and buffers, journal, per-trip votes and members, weather, calendar sync,
+ * per-item details). One JSON document per trip id plus one global document, kept in a
+ * {@link KeyValueStorage} (SharedPreferences file {@code trippings_store_v2} in the app).
+ *
+ * <p>Call {@link #init(Context)} once from {@code Application.onCreate}. Without it {@link #get()}
+ * falls back to non-persistent in-memory storage. Every public method is synchronized, so it is
+ * safe from the main thread and from callbacks; writes use SharedPreferences {@code apply()}.
+ * Collections returned are unmodifiable copies.
  */
 public final class PrototypeStore {
 
-    private static final PrototypeStore INSTANCE = new PrototypeStore();
+    /** Vote scope used by the legacy trip-less vote methods. */
+    public static final String DEFAULT_VOTE_SCOPE = "default";
+
     private static final String DEFAULT_CITY = "Tokyo";
+    private static final String DEFAULT_HOME_CURRENCY = "PHP";
+    private static final String SELF_MEMBER = "You";
+    private static final String SAMPLE_MEMBER = "Alex (sample)";
     private static final int DEFAULT_BUFFER_MIN = 15;
     private static final int DEFAULT_TRIP_DAYS = 2;
     private static final double BASE_BUDGET_PHP = 15000;
+    private static final String SEED_JOURNAL_ID = "seed-journal-1";
 
-    private final Map<String, List<Expense>> expenses = new HashMap<>();
-    private final Map<String, BudgetSettings> budgets = new HashMap<>();
-    private final Map<String, TripMeta> metas = new HashMap<>();
-    private final Map<String, TravelMode> legModes = new HashMap<>();
-    private final Map<String, List<JournalEntry>> journals = new HashMap<>();
-    private final Set<String> myVotes = new HashSet<>();
-    private final Set<String> syncedTrips = new HashSet<>();
-    private String defaultHomeCurrency = "PHP";
-    private int bufferMin = DEFAULT_BUFFER_MIN;
+    private static volatile PrototypeStore instance;
 
-    private PrototypeStore() { }
+    private final DocumentStore docs;
+    private final boolean persistent;
+
+    private PrototypeStore(KeyValueStorage storage, boolean persistent) {
+        this.docs = new DocumentStore(storage);
+        this.persistent = persistent;
+    }
+
+    /** Test seam: a store over the given storage; a second one over the same storage reloads. */
+    static PrototypeStore forStorage(KeyValueStorage storage) {
+        return new PrototypeStore(storage, false);
+    }
+
+    /**
+     * Switches the app to persistent storage. Call before anything else uses the store. A no-op
+     * when a persistent store already exists, so cached data is never discarded.
+     */
+    public static synchronized void init(Context context) {
+        if (instance != null && instance.persistent) {
+            return;
+        }
+        instance = new PrototypeStore(new PrefsKeyValueStorage(context), true);
+    }
 
     public static PrototypeStore get() {
-        return INSTANCE;
+        PrototypeStore current = instance;
+        if (current == null) {
+            synchronized (PrototypeStore.class) {
+                if (instance == null) {
+                    instance = new PrototypeStore(new InMemoryKeyValueStorage(), false);
+                }
+                current = instance;
+            }
+        }
+        return current;
     }
 
     // ---- settings ----
 
-    public String getDefaultHomeCurrency() {
-        return defaultHomeCurrency;
+    public synchronized String getDefaultHomeCurrency() {
+        String code = docs.global().homeCurrency;
+        return code != null ? code : DEFAULT_HOME_CURRENCY;
     }
 
-    public void setDefaultHomeCurrency(String code) {
-        defaultHomeCurrency = code;
+    public synchronized void setDefaultHomeCurrency(String code) {
+        docs.global().homeCurrency = code;
+        docs.saveGlobal();
     }
 
-    public int getBufferMin() {
-        return bufferMin;
+    public synchronized int getBufferMin() {
+        Integer minutes = docs.global().bufferMin;
+        return minutes != null ? minutes : DEFAULT_BUFFER_MIN;
     }
 
-    public void setBufferMin(int minutes) {
-        bufferMin = minutes;
+    public synchronized void setBufferMin(int minutes) {
+        docs.global().bufferMin = minutes;
+        docs.saveGlobal();
     }
 
-    // ---- trip meta ----
+    // ---- trip meta, sample flag, members, weather ----
 
-    public TripMeta meta(String tripId) {
-        TripMeta meta = metas.get(tripId);
-        return meta != null ? meta : new TripMeta(DEFAULT_CITY, "", DEFAULT_TRIP_DAYS, defaultHomeCurrency);
+    public synchronized TripMeta meta(String tripId) {
+        TripDoc.MetaRec rec = docs.trip(tripId).meta;
+        if (rec == null) {
+            return new TripMeta(DEFAULT_CITY, "", DEFAULT_TRIP_DAYS, getDefaultHomeCurrency());
+        }
+        return TripDocMapper.fromRec(rec, DEFAULT_CITY, DEFAULT_TRIP_DAYS, getDefaultHomeCurrency());
     }
 
-    public void setMeta(String tripId, TripMeta meta) {
-        metas.put(tripId, meta);
+    public synchronized void setMeta(String tripId, TripMeta meta) {
+        docs.trip(tripId).meta = TripDocMapper.toRec(meta);
+        docs.saveTrip(tripId);
+    }
+
+    /** True for the seeded demo trip or any trip flagged with {@link #setSample}. */
+    public synchronized boolean isSample(String tripId) {
+        return TripRepositoryImpl.SEED_TRIP_ID.equals(tripId) || docs.trip(tripId).sample;
+    }
+
+    public synchronized void setSample(String tripId, boolean sample) {
+        docs.trip(tripId).sample = sample;
+        docs.saveTrip(tripId);
+    }
+
+    /** Member names; a new trip has just "You", the sample trip also has "Alex (sample)". */
+    public synchronized List<String> members(String tripId) {
+        List<String> saved = docs.trip(tripId).members;
+        if (saved != null) {
+            return Collections.unmodifiableList(new ArrayList<>(saved));
+        }
+        return isSample(tripId)
+                ? Collections.unmodifiableList(Arrays.asList(SELF_MEMBER, SAMPLE_MEMBER))
+                : Collections.singletonList(SELF_MEMBER);
+    }
+
+    public synchronized void setMembers(String tripId, List<String> names) {
+        docs.trip(tripId).members = new ArrayList<>(names);
+        docs.saveTrip(tripId);
+    }
+
+    /** Per-day weather labels; empty when none were set. */
+    public synchronized List<String> weather(String tripId) {
+        return Collections.unmodifiableList(new ArrayList<>(docs.trip(tripId).weather));
+    }
+
+    public synchronized void setWeather(String tripId, List<String> perDay) {
+        docs.trip(tripId).weather = new ArrayList<>(perDay);
+        docs.saveTrip(tripId);
     }
 
     // ---- budget & expenses ----
 
-    public BudgetSettings budget(String tripId) {
-        BudgetSettings existing = budgets.get(tripId);
-        if (existing != null) {
-            return existing;
+    public synchronized BudgetSettings budget(String tripId) {
+        TripDoc.BudgetRec rec = docs.trip(tripId).budget;
+        BudgetSettings saved = rec == null ? null : TripDocMapper.fromRec(rec);
+        if (saved != null) {
+            return saved;
         }
         TripMeta meta = meta(tripId);
         return defaultBudget(meta.getHomeCurrency(), MockData.currencyFor(meta.getCity()));
     }
 
-    public void setBudget(String tripId, BudgetSettings settings) {
-        budgets.put(tripId, settings);
+    public synchronized void setBudget(String tripId, BudgetSettings settings) {
+        docs.trip(tripId).budget = TripDocMapper.toRec(settings);
+        docs.saveTrip(tripId);
     }
 
     /** Expenses newest-first, re-converted to the trip's current home currency. */
-    public List<Expense> expenses(String tripId) {
-        seedExpensesIfNeeded(tripId);
+    public synchronized List<Expense> expenses(String tripId) {
+        List<TripDoc.ExpenseRec> recs = seededExpenses(tripId);
         String home = budget(tripId).getHomeCurrency();
         List<Expense> converted = new ArrayList<>();
-        for (Expense expense : expenses.get(tripId)) {
-            converted.add(new Expense(expense.getTitle(), expense.getCategory(),
-                    expense.getAmountLocal(), expense.getLocalCurrency(),
-                    CurrencyRates.convert(expense.getAmountLocal(), expense.getLocalCurrency(), home)));
+        for (TripDoc.ExpenseRec rec : recs) {
+            converted.add(toExpense(rec, home));
         }
-        return converted;
+        return Collections.unmodifiableList(converted);
     }
 
     /** Logs an expense entered in the trip's local currency, converting it to home currency. */
-    public Expense addExpense(String tripId, String title, Category category, double amountLocal,
-                              String localCurrency) {
-        BudgetSettings budget = budget(tripId);
+    public synchronized Expense addExpense(String tripId, String title, Category category,
+                                           double amountLocal, String localCurrency) {
+        String home = budget(tripId).getHomeCurrency();
         Expense expense = new Expense(title, category, amountLocal, localCurrency,
-                CurrencyRates.convert(amountLocal, localCurrency, budget.getHomeCurrency()));
-        seedExpensesIfNeeded(tripId);
-        expenses.get(tripId).add(0, expense);
+                CurrencyRates.convert(amountLocal, localCurrency, home));
+        seededExpenses(tripId).add(0, TripDocMapper.toRec(expense));
+        docs.saveTrip(tripId);
         return expense;
     }
 
-    private void seedExpensesIfNeeded(String tripId) {
-        if (expenses.containsKey(tripId)) {
-            return;
-        }
-        List<Expense> list = new ArrayList<>();
-        if (TripRepositoryImpl.SEED_TRIP_ID.equals(tripId)) {
-            String home = budget(tripId).getHomeCurrency();
-            list.add(seedExpense("Suica top-up", Category.TRANSPORT, 2000, home));
-            list.add(seedExpense("teamLab Planets tickets", Category.ACTIVITIES, 3800, home));
-            list.add(seedExpense("Sushi lunch", Category.FOOD, 8500, home));
-            list.add(seedExpense("Ramen dinner", Category.FOOD, 3000, home));
-        }
-        expenses.put(tripId, list);
+    private static Expense toExpense(TripDoc.ExpenseRec rec, String home) {
+        return new Expense(rec.id != null ? rec.id : UUID.randomUUID().toString(), rec.title,
+                TripDocMapper.parseCategory(rec.category), rec.amountLocal, rec.localCurrency,
+                CurrencyRates.convert(rec.amountLocal, rec.localCurrency, home));
     }
 
-    private Expense seedExpense(String title, Category category, double jpy, String home) {
-        return new Expense(title, category, jpy, "JPY", CurrencyRates.convert(jpy, "JPY", home));
+    /** The trip's live expense records, seeding (and saving) the sample trip on first access. */
+    private List<TripDoc.ExpenseRec> seededExpenses(String tripId) {
+        TripDoc doc = docs.trip(tripId);
+        if (doc.expenses == null) {
+            doc.expenses = new ArrayList<>();
+            if (TripRepositoryImpl.SEED_TRIP_ID.equals(tripId)) {
+                String home = budget(tripId).getHomeCurrency();
+                doc.expenses.add(seedExpense("Suica top-up", Category.TRANSPORT, 2000, home));
+                doc.expenses.add(seedExpense("teamLab Planets tickets", Category.ACTIVITIES, 3800, home));
+                doc.expenses.add(seedExpense("Sushi lunch", Category.FOOD, 8500, home));
+                doc.expenses.add(seedExpense("Ramen dinner", Category.FOOD, 3000, home));
+            }
+            docs.saveTrip(tripId);
+        }
+        return doc.expenses;
+    }
+
+    private static TripDoc.ExpenseRec seedExpense(String title, Category category, double jpy,
+                                                  String home) {
+        return TripDocMapper.toRec(new Expense(title, category, jpy, "JPY",
+                CurrencyRates.convert(jpy, "JPY", home)));
     }
 
     private BudgetSettings defaultBudget(String home, String local) {
@@ -142,15 +235,44 @@ public final class PrototypeStore {
         return Math.max(100, Math.round(converted / 100.0) * 100.0);
     }
 
-    // ---- per-leg transport ----
+    // ---- per-leg transport, per-stop buffers, per-item details ----
 
-    public TravelMode legMode(String itemId, double km) {
-        TravelMode mode = legModes.get(itemId);
+    public synchronized TravelMode legMode(String itemId, double km) {
+        TravelMode mode = TripDocMapper.parseMode(docs.global().legModes.get(itemId));
         return mode != null ? mode : TravelMode.suggestFor(km);
     }
 
-    public void setLegMode(String itemId, TravelMode mode) {
-        legModes.put(itemId, mode);
+    public synchronized void setLegMode(String itemId, TravelMode mode) {
+        docs.global().legModes.put(itemId, mode.name());
+        docs.saveGlobal();
+    }
+
+    /** Per-stop buffer minutes, or null when the stop uses the global buffer. */
+    @Nullable
+    public synchronized Integer stopBuffer(String itemId) {
+        return docs.global().stopBuffers.get(itemId);
+    }
+
+    public synchronized void setStopBuffer(String itemId, int minutes) {
+        docs.global().stopBuffers.put(itemId, minutes);
+        docs.saveGlobal();
+    }
+
+    /** Cost, currency, category and outdoor flag for an itinerary item, or null if never set. */
+    @Nullable
+    public synchronized ItemDetails itemDetails(String itemId) {
+        return docs.global().itemDetails.get(itemId);
+    }
+
+    public synchronized void setItemDetails(String itemId, ItemDetails details) {
+        docs.global().itemDetails.put(itemId, details);
+        docs.saveGlobal();
+    }
+
+    public synchronized void removeItemDetails(String itemId) {
+        if (docs.global().itemDetails.remove(itemId) != null) {
+            docs.saveGlobal();
+        }
     }
 
     /** Deterministic fake leg distance (km) from an item id, standing in for the Matrix API. */
@@ -160,50 +282,78 @@ public final class PrototypeStore {
 
     // ---- journal ----
 
-    public List<JournalEntry> journal(String tripId) {
-        if (!journals.containsKey(tripId)) {
-            List<JournalEntry> seed = new ArrayList<>();
-            if (TripRepositoryImpl.SEED_TRIP_ID.equals(tripId)) {
-                seed.add(new JournalEntry(1, "Senso-ji Temple",
-                        "Got there early — no crowds. Drew an omikuji fortune: small blessing.",
-                        true));
-            }
-            journals.put(tripId, seed);
+    /** Entries newest-first. */
+    public synchronized List<JournalEntry> journal(String tripId) {
+        List<JournalEntry> entries = new ArrayList<>();
+        for (TripDoc.JournalRec rec : seededJournal(tripId)) {
+            entries.add(TripDocMapper.fromRec(rec));
         }
-        return new ArrayList<>(journals.get(tripId));
+        return Collections.unmodifiableList(entries);
     }
 
-    public void addJournalEntry(String tripId, JournalEntry entry) {
-        List<JournalEntry> current = journal(tripId);
-        current.add(0, entry);
-        journals.put(tripId, current);
+    public synchronized void addJournalEntry(String tripId, JournalEntry entry) {
+        seededJournal(tripId).add(0, TripDocMapper.toRec(entry));
+        docs.saveTrip(tripId);
     }
 
-    // ---- group votes ----
+    private List<TripDoc.JournalRec> seededJournal(String tripId) {
+        TripDoc doc = docs.trip(tripId);
+        if (doc.journal == null) {
+            doc.journal = new ArrayList<>();
+            if (TripRepositoryImpl.SEED_TRIP_ID.equals(tripId)) {
+                doc.journal.add(TripDocMapper.toRec(new JournalEntry(SEED_JOURNAL_ID, 1,
+                        "Senso-ji Temple", null,
+                        "Got there early — no crowds. Drew an omikuji fortune: small blessing.",
+                        true, null)));
+            }
+            docs.saveTrip(tripId);
+        }
+        return doc.journal;
+    }
+
+    // ---- group votes (per trip) ----
 
     /** Demo vote tally: a stable 2-4 base per destination plus the user's own vote. */
-    public int voteCount(String destination) {
+    public synchronized int voteCount(String tripId, String destination) {
         int base = 2 + Math.abs(destination.hashCode()) % 3;
-        return base + (myVotes.contains(destination) ? 1 : 0);
+        return base + (docs.trip(tripId).votes.contains(destination) ? 1 : 0);
     }
 
-    public boolean hasVoted(String destination) {
-        return myVotes.contains(destination);
+    public synchronized boolean hasVoted(String tripId, String destination) {
+        return docs.trip(tripId).votes.contains(destination);
     }
 
-    public void toggleVote(String destination) {
-        if (!myVotes.remove(destination)) {
-            myVotes.add(destination);
+    public synchronized void toggleVote(String tripId, String destination) {
+        List<String> votes = docs.trip(tripId).votes;
+        if (!votes.remove(destination)) {
+            votes.add(destination);
         }
+        docs.saveTrip(tripId);
+    }
+
+    /** Legacy trip-less form; scoped to {@link #DEFAULT_VOTE_SCOPE}. */
+    public int voteCount(String destination) {
+        return voteCount(DEFAULT_VOTE_SCOPE, destination);
+    }
+
+    /** Legacy trip-less form; scoped to {@link #DEFAULT_VOTE_SCOPE}. */
+    public boolean hasVoted(String destination) {
+        return hasVoted(DEFAULT_VOTE_SCOPE, destination);
+    }
+
+    /** Legacy trip-less form; scoped to {@link #DEFAULT_VOTE_SCOPE}. */
+    public void toggleVote(String destination) {
+        toggleVote(DEFAULT_VOTE_SCOPE, destination);
     }
 
     // ---- calendar sync ----
 
-    public boolean isSynced(String tripId) {
-        return syncedTrips.contains(tripId);
+    public synchronized boolean isSynced(String tripId) {
+        return docs.trip(tripId).synced;
     }
 
-    public void markSynced(String tripId) {
-        syncedTrips.add(tripId);
+    public synchronized void markSynced(String tripId) {
+        docs.trip(tripId).synced = true;
+        docs.saveTrip(tripId);
     }
 }
