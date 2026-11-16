@@ -33,11 +33,21 @@ public abstract class PrototypeActivity extends AppCompatActivity {
     }
     protected void page(String title,String subtitle,boolean back) {
         root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(PAPER);
-        root.setFitsSystemWindows(true); setContentView(root);
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
         ViewCompat.setOnApplyWindowInsetsListener(root,(v,insets)->{
             androidx.core.graphics.Insets bars=insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(bars.left,bars.top,bars.right,bars.bottom); return insets;
         });
+        WindowInsetsCompat existing=ViewCompat.getRootWindowInsets(getWindow().getDecorView());
+        if(existing!=null) {
+            androidx.core.graphics.Insets bars=existing.getInsets(WindowInsetsCompat.Type.systemBars());
+            root.setPadding(bars.left,bars.top,bars.right,bars.bottom);
+        }
+        setContentView(root);
+        LinearLayout screenRoot=root;
+        screenRoot.post(()->ViewCompat.requestApplyInsets(screenRoot));
+        androidx.core.view.WindowInsetsControllerCompat controller=new androidx.core.view.WindowInsetsControllerCompat(getWindow(),root);
+        controller.setAppearanceLightStatusBars(true); controller.setAppearanceLightNavigationBars(true);
         LinearLayout header=column(); header.setPadding(dp(20),dp(12),dp(20),dp(18)); header.setBackgroundColor(NAVY); root.addView(header);
         LinearLayout heading=row(); header.addView(heading);
         if(back) {
