@@ -32,11 +32,11 @@ public class BudgetActivity extends PrototypeActivity {
             label(card,money(limit-used,trip.homeCurrency)+" remaining of "+money(limit,trip.homeCurrency)+(used>limit?" · Over budget":""));
         }
         title("Set your limits");
-        TextInputEditText total=field(content,"Budget ("+trip.homeCurrency+")",String.valueOf(trip.budget),DECIMAL);
+        TextInputEditText total=field(content,"Budget ("+trip.homeCurrency+")",plainAmount(trip.budget),DECIMAL);
         CheckBox daily=check(content,"Daily budget and daily category limits",trip.dailyBudget);
         TextInputEditText[] categories=new TextInputEditText[4];
         double[] limits={trip.foodBudget,trip.activityBudget,trip.transportBudget,trip.otherBudget};
-        for(int i=0;i<4;i++) categories[i]=field(content,CATEGORIES[i]+" limit",String.valueOf(limits[i]),DECIMAL);
+        for(int i=0;i<4;i++) categories[i]=field(content,CATEGORIES[i]+" limit",plainAmount(limits[i]),DECIMAL);
         button(content,"Save budget limits",()->{
             try {
                 double amount=number(total,1,100000000), sum=0; double[] values=new double[4];

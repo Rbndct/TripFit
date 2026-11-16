@@ -26,7 +26,7 @@ public final class TripExport {
                 text.append("Stay ").append(stop.duration).append(" min; ");
                 if(previous==null) text.append("start of day\n");
                 else text.append(RoutePreview.mode(previous,stop)).append(" ~").append(slot.travel).append(" min incoming travel + ").append(stop.buffer).append(" min buffer\n");
-                text.append(String.format(Locale.US,"Estimate: %s %.0f (≈ %s %.0f)\n",trip.costCurrency(stop),stop.cost,trip.homeCurrency,trip.convertedCost(stop)));
+                text.append(String.format(Locale.US,"Estimate: %s %.2f (≈ %s %.2f)\n",trip.costCurrency(stop),stop.cost,trip.homeCurrency,trip.convertedCost(stop)));
                 if(stop.hasLocation) text.append(String.format(Locale.US,"Pin: %.5f, %.5f\n",stop.lat,stop.lng));
                 text.append("\n"); previous=stop;
             }
@@ -35,12 +35,12 @@ public final class TripExport {
         double planned=0,actual=0;
         for(DraftTrip.Stop stop:trip.stops) planned+=trip.convertedCost(stop);
         for(DraftTrip.Expense expense:trip.expenses) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
-        text.append(String.format(Locale.US,"BUDGET (%s)\nTrip limit: %.0f\nEstimated stops: %.0f\nLogged expenses: %.0f\nRemaining after expenses: %.0f\n",trip.homeCurrency,trip.totalBudget(),planned,actual,trip.totalBudget()-actual));
+        text.append(String.format(Locale.US,"BUDGET (%s)\nTrip limit: %.2f\nEstimated stops: %.2f\nLogged expenses: %.2f\nRemaining after expenses: %.2f\n",trip.homeCurrency,trip.totalBudget(),planned,actual,trip.totalBudget()-actual));
         for(String category:new String[]{"Food","Activities","Transport","Other"}) {
             double categoryPlanned=0,categoryActual=0;
             for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) categoryPlanned+=trip.convertedCost(stop);
             for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) categoryActual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
-            text.append(String.format(Locale.US,"%s: limit %.0f / planned %.0f / logged %.0f\n",category,trip.categoryBudget(category),categoryPlanned,categoryActual));
+            text.append(String.format(Locale.US,"%s: limit %.2f / planned %.2f / logged %.2f\n",category,trip.categoryBudget(category),categoryPlanned,categoryActual));
         }
         text.append("\nRates: 1 JPY = 0.38 PHP; 1 USD = 58 PHP; 1 EUR = 63 PHP (samples, not live).\nTravel leg costs must be estimated manually in Transport.\n");
         return text.toString();

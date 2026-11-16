@@ -48,7 +48,7 @@ public class StopEditorActivity extends PrototypeActivity {
                 DemoCatalog.Place p=matches.get(index); stop.lat=p.lat; stop.lng=p.lng; stop.hasLocation=true;
                 stop.address=p.name+", "+p.city; stop.outdoor=p.outdoor; stop.category=p.category;
                 stop.currency=p.city.equals("Tokyo")?"JPY":"PHP";
-                name.setText(p.name); duration.setText(String.valueOf(p.minutes)); cost.setText(String.valueOf(p.price));
+                name.setText(p.name); duration.setText(String.valueOf(p.minutes)); cost.setText(plainAmount(p.price));
                 priceCurrency.setSelection(stop.currency.equals("JPY")?1:0);
                 category.setSelection(p.category.equals("Food")?1:0); outdoor.setChecked(p.outdoor); updateLocation();
             }).show();

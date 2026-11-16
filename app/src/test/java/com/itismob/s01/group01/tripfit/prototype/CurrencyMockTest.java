@@ -23,8 +23,22 @@ public class CurrencyMockTest {
     }
 
     @Test
-    public void format_usesSymbolAndThousandsSeparator() {
-        assertEquals("₱1,234", CurrencyMock.format(1234.4, "PHP"));
-        assertEquals("¥3,000", CurrencyMock.format(3000, "JPY"));
+    public void format_usesSymbolThousandsSeparatorAndTwoDecimals() {
+        assertEquals("₱1,234.40", CurrencyMock.format(1234.4, "PHP"));
+        assertEquals("¥3,000.00", CurrencyMock.format(3000, "JPY"));
+    }
+
+    @Test
+    public void format_alwaysShowsExactlyTwoDecimals() {
+        assertEquals("₱0.00", CurrencyMock.format(0, "PHP"));
+        assertEquals("$1,234.50", CurrencyMock.format(1234.5, "USD"));
+        assertEquals("€0.99", CurrencyMock.format(0.994, "EUR"));
+        assertEquals("€1.00", CurrencyMock.format(0.996, "EUR"));
+    }
+
+    @Test
+    public void format_roundsLongConvertedAmountsToTwoDecimals() {
+        // 1200 JPY at the demo rates is 448.0, but a live cross rate gives long fractions.
+        assertEquals("₱478.60", CurrencyMock.format(478.5984375, "PHP"));
     }
 }

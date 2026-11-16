@@ -66,8 +66,8 @@ public class CurrencyRatesTest {
     public void format_usesTheKnownSymbolOrTheCode() {
         CurrencyRates.update(liveSnapshot());
 
-        assertEquals("₱1,234", CurrencyRates.format(1234.4, "PHP"));
-        assertEquals("CHF 3,000", CurrencyRates.format(3000, "CHF"));
+        assertEquals("₱1,234.40", CurrencyRates.format(1234.4, "PHP"));
+        assertEquals("CHF 3,000.00", CurrencyRates.format(3000, "CHF"));
     }
 
     @Test
