@@ -62,15 +62,18 @@ public class DiscoverActivity extends PrototypeActivity {
         if(count==0) notice("No sample places match these filters. Try all places, turn off the budget filter or add your own stop from the itinerary.");
     }
     private double remaining(String category) {
-        double planned=0; for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) planned+=RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency);
+        double planned=0; for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) planned+=trip.convertedCost(stop);
         double actual=0; for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
         return trip.categoryBudget(category)-Math.max(planned,actual);
     }
     private void suggestedPlan() {
         List<DemoCatalog.Place> picks=new ArrayList<>();
-        for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) {
-            boolean duplicate=false; for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) duplicate=true;
-            if(!duplicate && !place.category.equals("Food") && picks.size()<5) picks.add(place);
+        for(boolean hidden:new boolean[]{false,true}) {
+            int limit=hidden?2:3, added=0;
+            for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) {
+                boolean duplicate=false; for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) duplicate=true;
+                if(!duplicate && place.hidden==hidden && !place.category.equals("Food") && added<limit) { picks.add(place); added++; }
+            }
         }
         if(picks.isEmpty()) { toast("These sample attractions are already in your trip. Try adding a place manually."); return; }
         String[] names=new String[picks.size()]; boolean[] checked=new boolean[picks.size()];
@@ -85,6 +88,7 @@ public class DiscoverActivity extends PrototypeActivity {
             }).show();
     }
     private void swap(DemoCatalog.Place place) {
+        for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) { toast("This place is already in your itinerary."); return; }
         List<DraftTrip.Stop> flexible=new ArrayList<>(); List<String> names=new ArrayList<>();
         for(DraftTrip.Stop stop:trip.stops) if(!stop.booked) { flexible.add(stop); names.add("Day "+stop.day+" · "+stop.name); }
         if(flexible.isEmpty()) { toast("No flexible stops to swap. Booked activities stay protected."); return; }

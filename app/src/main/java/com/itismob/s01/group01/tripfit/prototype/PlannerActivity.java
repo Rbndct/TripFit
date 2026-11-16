@@ -24,6 +24,11 @@ public class PlannerActivity extends PrototypeActivity {
         label(overview,"Trip budget · "+trip.startDate+" onward");
         button(overview,"Trip settings",()->open(TripSetupActivity.class));
         button(content,"Discover places & ready-made plans",()->openFeature("DiscoverActivity"));
+        ChipGroup tools=new ChipGroup(this);
+        String[] labels={"Budget","Weather","Calendar & export","Group","Journal"};
+        String[] screens={"BudgetActivity","WeatherActivity","SummaryActivity","GroupActivity","JournalActivity"};
+        for(int i=0;i<labels.length;i++) { final String screen=screens[i]; Chip chip=new Chip(this); chip.setText(labels[i]); chip.setOnClickListener(v->openFeature(screen)); tools.addView(chip); }
+        content.addView(tools);
         ChipGroup tabs=new ChipGroup(this); tabs.setSingleSelection(true); tabs.setSelectionRequired(true);
         for(int day=1;day<=trip.days;day++) { final int pick=day; Chip chip=new Chip(this); chip.setText("Day "+day); chip.setCheckable(true); chip.setChecked(day==selectedDay); chip.setOnClickListener(v->{selectedDay=pick;render();}); tabs.addView(chip); }
         content.addView(tabs);
@@ -40,7 +45,7 @@ public class PlannerActivity extends PrototypeActivity {
             LinearLayout card=card(content);
             label(card,RoutePreview.time(slot.start)+" – "+RoutePreview.time(slot.end)+(stop.booked?"   • BOOKED / FIXED":"   • FLEXIBLE"));
             card.addView(text(stop.name,19,INK));
-            label(card,stop.category+" · "+stop.duration+" min · "+money(RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency),trip.homeCurrency)+" estimate");
+            label(card,stop.category+" · "+stop.duration+" min · "+money(trip.convertedCost(stop),trip.homeCurrency)+" estimate");
             if(stop.hasLocation) label(card,String.format(java.util.Locale.US,"%.5f, %.5f",stop.lat,stop.lng));
             else label(card,"No map pin yet · travel uses a 20 min placeholder");
             if(slot.conflict) { TextView warning=text("Schedule conflict: check travel time, booked blocks or the 20:00 day limit.",14,0xffa33232); card.addView(warning); }
@@ -52,6 +57,9 @@ public class PlannerActivity extends PrototypeActivity {
         button(content,"Preview a shorter route",()->{
             List<RoutePreview.Slot> optimized=RoutePreview.day(trip,selectedDay,true);
             StringBuilder description=new StringBuilder("Estimated route order; booked times remain fixed.\n\n");
+            int before=0,after=0; for(RoutePreview.Slot slot:slots) before+=slot.travel;
+            for(RoutePreview.Slot slot:optimized) after+=slot.travel;
+            description.append("Incoming travel: ~").append(before).append(" min current / ~").append(after).append(" min preview.\n\n");
             for(RoutePreview.Slot slot:optimized) description.append(RoutePreview.time(slot.start)).append("  ").append(slot.stop.name).append(slot.conflict?" ⚠":"").append("\n");
             new MaterialAlertDialogBuilder(this).setTitle("Route preview").setMessage(description.toString())
                 .setNegativeButton("Keep current",null).setPositiveButton("Apply order",(d,w)->{

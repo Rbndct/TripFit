@@ -18,7 +18,9 @@ public class StopEditorActivity extends PrototypeActivity {
     private DraftTrip.Stop stop;
     private boolean editing;
     private TextView location;
-    private TextInputEditText name, duration, cost;
+    private TextInputEditText name, duration, cost, day, buffer;
+    private Spinner transport, priceCurrency;
+    private CheckBox booked;
     private ActivityResultLauncher<Intent> mapPicker;
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state); if(trip==null) { finish(); return; }
@@ -26,6 +28,7 @@ public class StopEditorActivity extends PrototypeActivity {
         for(DraftTrip.Stop item:trip.stops) if(item.id.equals(id)) { stop=item; editing=true; }
         if(stop==null) { stop=new DraftTrip.Stop(); stop.day=getIntent().getIntExtra("day",1); }
         if(state!=null) { stop=new com.google.gson.Gson().fromJson(state.getString("draft"),DraftTrip.Stop.class); }
+        if(stop.currency.isEmpty()) stop.currency=trip.localCurrency();
         mapPicker=registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),result->{
             if(result.getResultCode()!=Activity.RESULT_OK || result.getData()==null) return;
             stop.lat=result.getData().getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT,0);
@@ -44,7 +47,9 @@ public class StopEditorActivity extends PrototypeActivity {
             new MaterialAlertDialogBuilder(this).setTitle("Sample places in "+trip.city).setItems(names.toArray(new String[0]),(d,index)->{
                 DemoCatalog.Place p=matches.get(index); stop.lat=p.lat; stop.lng=p.lng; stop.hasLocation=true;
                 stop.address=p.name+", "+p.city; stop.outdoor=p.outdoor; stop.category=p.category;
+                stop.currency=p.city.equals("Tokyo")?"JPY":"PHP";
                 name.setText(p.name); duration.setText(String.valueOf(p.minutes)); cost.setText(String.valueOf(p.price));
+                priceCurrency.setSelection(stop.currency.equals("JPY")?1:0);
                 category.setSelection(p.category.equals("Food")?1:0); outdoor.setChecked(p.outdoor); updateLocation();
             }).show();
         });
@@ -55,14 +60,15 @@ public class StopEditorActivity extends PrototypeActivity {
             intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT,stop.hasLocation?stop.lat:DemoCatalog.lat(trip.city));
             intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG,stop.hasLocation?stop.lng:DemoCatalog.lng(trip.city)); mapPicker.launch(intent);
         });
-        TextInputEditText day=field(content,"Day (1–"+trip.days+")",String.valueOf(stop.day),InputType.TYPE_CLASS_NUMBER);
+        day=field(content,"Day (1–"+trip.days+")",String.valueOf(stop.day),InputType.TYPE_CLASS_NUMBER);
         duration=field(content,"Stay in minutes (blank = 60)",String.valueOf(stop.duration),InputType.TYPE_CLASS_NUMBER);
-        TextInputEditText buffer=field(content,"Buffer before this stop (minutes)",String.valueOf(stop.buffer),InputType.TYPE_CLASS_NUMBER);
+        buffer=field(content,"Buffer before this stop (minutes)",String.valueOf(stop.buffer),InputType.TYPE_CLASS_NUMBER);
         category=choices(content,"Budget category",new String[]{"Activities","Food","Transport","Other"},stop.category);
-        cost=field(content,"Estimated cost ("+trip.localCurrency()+")",String.valueOf(stop.cost),InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        cost=field(content,"Estimated cost",String.valueOf(stop.cost),InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        priceCurrency=choices(content,"Price currency",new String[]{"PHP","JPY","USD","EUR"},stop.currency);
         label(content,"Prices are sample estimates. Blank stay duration defaults to 60 minutes; food recommendations use their own suggested duration.");
-        Spinner transport=choices(content,"Transport from previous stop",new String[]{"Suggested","Walking","Cycling","Driving","Transit"},stop.mode);
-        CheckBox booked=check(content,"Booked activity · lock the time",stop.booked);
+        transport=choices(content,"Transport from previous stop",new String[]{"Suggested","Walking","Cycling","Driving","Transit"},stop.mode);
+        booked=check(content,"Booked activity · lock the time",stop.booked);
         TextView fixed=text("Fixed time: "+RoutePreview.time(stop.fixedMinute),16,INK); content.addView(fixed);
         button(content,"Choose fixed time",()->new TimePickerDialog(this,(picker,hour,minute)->{
             stop.fixedMinute=hour*60+minute; fixed.setText("Fixed time: "+RoutePreview.time(stop.fixedMinute));
@@ -73,7 +79,7 @@ public class StopEditorActivity extends PrototypeActivity {
             try {
                 stop.day=(int)number(day,1,trip.days); stop.duration=value(duration).isEmpty()?60:(int)number(duration,5,720);
                 stop.buffer=(int)number(buffer,0,180); stop.cost=number(cost,0,100000000); stop.name=value(name);
-                stop.category=category.getSelectedItem().toString(); stop.mode=transport.getSelectedItem().toString(); stop.booked=booked.isChecked(); stop.outdoor=outdoor.isChecked();
+                stop.category=category.getSelectedItem().toString(); stop.currency=priceCurrency.getSelectedItem().toString(); stop.mode=transport.getSelectedItem().toString(); stop.booked=booked.isChecked(); stop.outdoor=outdoor.isChecked();
                 if(editing) { for(int i=0;i<trip.stops.size();i++) if(trip.stops.get(i).id.equals(stop.id)) trip.stops.set(i,stop); }
                 else trip.stops.add(stop); save(); finish();
             } catch(IllegalArgumentException ignored) {}
@@ -87,6 +93,11 @@ public class StopEditorActivity extends PrototypeActivity {
     private CheckBox outdoor;
     private void updateLocation() { location.setText(stop.hasLocation?String.format(java.util.Locale.US,"Selected pin: %.5f, %.5f",stop.lat,stop.lng):"No pin selected · you can still add a stop by name"); }
     @Override protected void onSaveInstanceState(Bundle state) {
+        try { stop.day=Integer.parseInt(value(day)); } catch(NumberFormatException ignored) {}
+        try { stop.duration=Integer.parseInt(value(duration)); } catch(NumberFormatException ignored) {}
+        try { stop.buffer=Integer.parseInt(value(buffer)); } catch(NumberFormatException ignored) {}
+        try { stop.cost=Double.parseDouble(value(cost)); } catch(NumberFormatException ignored) {}
+        stop.mode=transport.getSelectedItem().toString(); stop.currency=priceCurrency.getSelectedItem().toString(); stop.booked=booked.isChecked(); stop.outdoor=outdoor.isChecked(); stop.category=category.getSelectedItem().toString();
         stop.name=value(name); state.putString("draft",new com.google.gson.Gson().toJson(stop)); super.onSaveInstanceState(state);
     }
 }
