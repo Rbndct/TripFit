@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
+import okhttp3.HttpUrl;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -35,8 +36,17 @@ public class RemoteDataSource {
     }
 
     RemoteDataSource(OkHttpClient httpClient) {
+        this(httpClient, BuildConfig.SUPABASE_URL);
+    }
+
+    RemoteDataSource(OkHttpClient httpClient, String supabaseUrl) {
+        // Local trip planning remains available before remote settings are supplied.
+        if (supabaseUrl == null || HttpUrl.parse(supabaseUrl.trim()) == null) {
+            this.api = null;
+            return;
+        }
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BuildConfig.SUPABASE_URL + "/rest/v1/")
+                .baseUrl(supabaseUrl.trim().replaceAll("/+$", "") + "/rest/v1/")
                 .client(httpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -44,14 +54,22 @@ public class RemoteDataSource {
     }
 
     public List<CityDto> fetchCitiesSync() throws IOException {
+        requireConfiguredApi();
         return unwrap(api.getCities("id,name,country,lat,lng").execute());
     }
 
     public List<PlaceDto> searchPlacesSync(String cityId, String query, int limit) throws IOException {
+        requireConfiguredApi();
         Response<List<PlaceDto>> response = api.searchPlaces(
                 "eq." + cityId, "ilike.*" + query + "*", PLACE_FIELDS, limit
         ).execute();
         return unwrap(response);
+    }
+
+    private void requireConfiguredApi() throws IOException {
+        if (api == null) {
+            throw new IOException("Online place search is unavailable: configure SUPABASE_URL in local.properties.");
+        }
     }
 
     private <T> T unwrap(Response<T> response) throws IOException {

@@ -30,7 +30,7 @@ public class RemoteDataSourceTest {
 
     @Test
     public void fetchCitiesSync_parsesResponseIntoDtos() throws Exception {
-        RemoteDataSource dataSource = new RemoteDataSource(fakeClient(CITIES_JSON));
+        RemoteDataSource dataSource = new RemoteDataSource(fakeClient(CITIES_JSON), "https://example.test");
 
         List<CityDto> cities = dataSource.fetchCitiesSync();
 
@@ -41,7 +41,7 @@ public class RemoteDataSourceTest {
 
     @Test
     public void searchPlacesSync_parsesResponseIntoDtos() throws Exception {
-        RemoteDataSource dataSource = new RemoteDataSource(fakeClient(PLACES_JSON));
+        RemoteDataSource dataSource = new RemoteDataSource(fakeClient(PLACES_JSON), "https://example.test");
 
         List<PlaceDto> places = dataSource.searchPlacesSync("city-1", "temple", 25);
 
@@ -64,7 +64,18 @@ public class RemoteDataSourceTest {
                         .build())
                 .build();
 
-        new RemoteDataSource(client).fetchCitiesSync();
+        new RemoteDataSource(client, "https://example.test").fetchCitiesSync();
+    }
+
+    @Test(expected = java.io.IOException.class)
+    public void missingConfiguration_constructsSafelyAndReportsFetchError() throws Exception {
+        new RemoteDataSource(fakeClient(CITIES_JSON), "").fetchCitiesSync();
+    }
+
+    @Test(expected = java.io.IOException.class)
+    public void invalidConfiguration_constructsSafelyAndReportsSearchError() throws Exception {
+        new RemoteDataSource(fakeClient(PLACES_JSON), "not-a-url")
+                .searchPlacesSync("city-1", "temple", 25);
     }
 
     private OkHttpClient fakeClient(String json) {
