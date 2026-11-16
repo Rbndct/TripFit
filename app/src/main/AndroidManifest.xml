@@ -24,6 +24,7 @@
         <activity android:name=".prototype.WeatherActivity" android:exported="false" />
         <activity android:name=".prototype.GroupActivity" android:exported="false" />
         <activity android:name=".prototype.JournalActivity" android:exported="false" />
+        <activity android:name=".prototype.SummaryActivity" android:exported="false" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
