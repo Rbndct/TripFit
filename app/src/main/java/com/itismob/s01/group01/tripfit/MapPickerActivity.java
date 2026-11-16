@@ -10,12 +10,11 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
-import com.itismob.s01.group01.tripfit.data.AppExecutors;
-import com.itismob.s01.group01.tripfit.data.NominatimReverseGeocoder;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
 import org.osmdroid.views.overlay.MapEventsOverlay;
@@ -25,8 +24,8 @@ import java.io.File;
 
 /**
  * Drag-and-drop pin picker: an osmdroid map (free, OSM-based, no API key) centered on the
- * trip's selected city, with a draggable marker (tap the map to move it too). On confirm, reverse-geocodes the dropped
- * pin via Nominatim (one request, not bulk) and returns the result to the caller.
+ * trip's selected city. Tap, long-press, or drag to select a pin. Confirmation returns
+ * the coordinates immediately without depending on a geocoding service.
  */
 public class MapPickerActivity extends ScreenActivity {
 
@@ -44,7 +43,6 @@ public class MapPickerActivity extends ScreenActivity {
     private Marker marker;
     private TextView coordinatesText;
     private MaterialButton useLocationButton;
-    private final NominatimReverseGeocoder geocoder = new NominatimReverseGeocoder();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,20 +59,21 @@ public class MapPickerActivity extends ScreenActivity {
         useLocationButton = findViewById(R.id.button_use_location);
 
         GeoPoint center = new GeoPoint(
-                getIntent().getDoubleExtra(EXTRA_CITY_LAT, 0),
-                getIntent().getDoubleExtra(EXTRA_CITY_LNG, 0));
+                getIntent().getDoubleExtra(EXTRA_CITY_LAT, 14.5995),
+                getIntent().getDoubleExtra(EXTRA_CITY_LNG, 120.9842));
         GeoPoint pin = center;
         if (savedInstanceState != null && savedInstanceState.containsKey(STATE_PIN_LAT)) {
             pin = new GeoPoint(savedInstanceState.getDouble(STATE_PIN_LAT),
                     savedInstanceState.getDouble(STATE_PIN_LNG));
         }
 
-        setUpMap(center, pin);
+        setUpMap(pin);
         useLocationButton.setOnClickListener(v -> confirmLocation());
     }
 
-    private void setUpMap(GeoPoint center, GeoPoint pin) {
+    private void setUpMap(GeoPoint pin) {
         mapView = findViewById(R.id.map_view);
+        mapView.setTileSource(TileSourceFactory.MAPNIK);
         mapView.setMultiTouchControls(true);
         mapView.getController().setZoom(DEFAULT_ZOOM);
         mapView.getController().setCenter(pin);
@@ -91,7 +90,10 @@ public class MapPickerActivity extends ScreenActivity {
 
             @Override
             public boolean longPressHelper(GeoPoint p) {
-                return false;
+                marker.setPosition(p);
+                updateCoordinates(p);
+                mapView.invalidate();
+                return true;
             }
         }));
 
@@ -129,23 +131,13 @@ public class MapPickerActivity extends ScreenActivity {
 
     private void confirmLocation() {
         GeoPoint position = marker.getPosition();
-        double lat = position.getLatitude();
-        double lng = position.getLongitude();
-
-        useLocationButton.setEnabled(false);
-        useLocationButton.setText(R.string.map_picker_finding);
-
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            String name = geocoder.reverseGeocode(lat, lng);
-            AppExecutors.getInstance().mainThread().execute(() -> {
-                Intent result = new Intent();
-                result.putExtra(EXTRA_RESULT_LAT, lat);
-                result.putExtra(EXTRA_RESULT_LNG, lng);
-                result.putExtra(EXTRA_RESULT_NAME, name);
-                setResult(RESULT_OK, result);
-                finish();
-            });
-        });
+        Intent result = new Intent();
+        result.putExtra(EXTRA_RESULT_LAT, position.getLatitude());
+        result.putExtra(EXTRA_RESULT_LNG, position.getLongitude());
+        result.putExtra(EXTRA_RESULT_NAME, String.format(java.util.Locale.US,
+                "Pinned location (%.5f, %.5f)", position.getLatitude(), position.getLongitude()));
+        setResult(RESULT_OK, result);
+        finish();
     }
 
     @Override
@@ -154,6 +146,12 @@ public class MapPickerActivity extends ScreenActivity {
         GeoPoint position = marker.getPosition();
         outState.putDouble(STATE_PIN_LAT, position.getLatitude());
         outState.putDouble(STATE_PIN_LNG, position.getLongitude());
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mapView != null) mapView.onDetach();
+        super.onDestroy();
     }
 
     @Override
