@@ -22,6 +22,7 @@ public class DraftTrip {
     public List<String> members = new ArrayList<>();
     public List<String> votes = new ArrayList<>();
     public List<Entry> journal = new ArrayList<>();
+    public List<String> weather = new ArrayList<>();
 
     public String localCurrency() { return city.equals("Tokyo") ? "JPY" : "PHP"; }
     public double totalBudget() { return budget * (dailyBudget ? days : 1); }
