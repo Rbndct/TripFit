@@ -8,6 +8,7 @@ import com.itismob.s01.group01.tripfit.data.RemoteDataSource;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.TripRepositoryImpl;
 import com.itismob.s01.group01.tripfit.data.local.TripFitDatabase;
+import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
 /** Manual service locator: no DI framework is warranted at this app's size (YAGNI). */
 public class TripFitApp extends Application {
@@ -17,6 +18,7 @@ public class TripFitApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        PrototypeStore.init(this);
         TripFitDatabase database = TripFitDatabase.getInstance(this);
         tripRepository = new TripRepositoryImpl(database, AppExecutors.getInstance(), new RemoteDataSource());
         startCurrencyRates();
