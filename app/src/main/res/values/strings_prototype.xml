@@ -30,6 +30,19 @@
     <string name="reminders_on">Reminders on</string>
     <string name="reminders_off">Reminders off</string>
     <string name="action_close">Close</string>
+    <string name="profile_row_cd">%1$s, %2$s</string>
+    <plurals name="buffer_minutes_spoken">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <string name="profile_action_choose">Choose</string>
+    <string name="profile_action_open">Open</string>
+    <string name="profile_currency_set">Home currency set to %1$s</string>
+    <string name="profile_buffer_none_set">Buffer removed</string>
+    <plurals name="profile_buffer_set">
+        <item quantity="one">Default buffer set to %1$d minute</item>
+        <item quantity="other">Default buffer set to %1$d minutes</item>
+    </plurals>
 
     <!-- Itinerary hub -->
     <string name="action_optimize">Optimize route</string>

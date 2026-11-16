@@ -84,6 +84,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
+                android:accessibilityHeading="true"
                 android:paddingVertical="@dimen/space_sm"
                 android:text="@string/section_preferences"
                 android:textAppearance="?attr/textAppearanceTitleSmall"
@@ -103,7 +104,10 @@
                 android:layout_height="wrap_content"
                 android:minHeight="56dp"
                 android:paddingHorizontal="@dimen/space_md"
-                android:text="@string/setting_dark_mode" />
+                android:saveEnabled="false"
+                android:text="@string/setting_dark_mode"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface" />
 
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switch_reminders"
@@ -112,12 +116,15 @@
                 android:checked="true"
                 android:minHeight="56dp"
                 android:paddingHorizontal="@dimen/space_md"
-                android:text="@string/setting_reminders" />
+                android:text="@string/setting_reminders"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="?attr/colorOnSurface" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm"
                 android:text="@string/setting_reminders_helper"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant" />
@@ -133,6 +140,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/space_md"
                 android:layout_marginTop="@dimen/space_lg"
+                android:minHeight="48dp"
                 android:text="@string/action_sign_out"
                 android:textColor="@color/status_over"
                 app:strokeColor="@color/status_over" />
