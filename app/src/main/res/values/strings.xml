@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TripFit</string>
+    <string name="app_name">Trippings</string>
 
     <!-- Itinerary screen -->
     <string name="itinerary_title">Tokyo Trip</string>
@@ -32,12 +32,12 @@
     <string name="badge_booked_label">Booked</string>
 
     <!-- Login screen -->
-    <string name="login_subtitle">Plan your next adventure</string>
+    <string name="login_subtitle">Frontend preview · Explore a sample trip</string>
     <string name="field_email_hint">Email</string>
     <string name="field_password_hint">Password</string>
-    <string name="action_sign_in">Sign In</string>
+    <string name="action_sign_in">Continue</string>
     <string name="divider_or">or</string>
-    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_sign_in_google">Preview Google sign-in</string>
     <string name="error_email_required">Enter your email</string>
     <string name="error_password_required">Enter your password</string>
 

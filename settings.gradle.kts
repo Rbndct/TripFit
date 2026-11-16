@@ -22,6 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TripFit"
+rootProject.name = "Trippings"
 include(":app")
- 
