@@ -199,15 +199,40 @@ App code lives in `app/src/main/java/com/itismob/s01/group01/tripfit/`:
 
 <br>
 
-`pipeline/` gathers places for each city from free sources (Nominatim, Overpass, OpenTripMap, Wikidata, Wikivoyage), then normalizes, de-duplicates and cleans them before upserting into Supabase:
+The app's place search reads from a Supabase `places` table. `pipeline/` fills that table, one city at a time:
+
+```
+geocode city → fetch places from 4 sources → normalize → merge duplicates → enrich → clean → upsert to Supabase
+```
+
+| Source | Used for |
+|---|---|
+| Nominatim | City center and bounding box |
+| Overpass (OpenStreetMap) | Attractions, restaurants and shops inside the city |
+| OpenTripMap | Rated attractions (optional; skipped if no key) |
+| Wikidata | Places plus the popularity signal behind "hidden gem" |
+| Wikivoyage | Travel-guide listings for the city |
+
+### Running it
+
+It runs automatically every **Monday at 03:00 UTC** through `.github/workflows/ingest.yml`, and on demand from the repo's **Actions** tab. To run it locally:
 
 ```bash
 pip install -r pipeline/requirements.txt
-SUPABASE_URL=... SUPABASE_SERVICE_KEY=... OPENTRIPMAP_API_KEY=... \
-  python -m pipeline.main --cities "Tokyo,JP" "Manila,PH"
+export SUPABASE_URL=https://<your-project>.supabase.co
+export SUPABASE_SERVICE_KEY=<service role key>
+export OPENTRIPMAP_API_KEY=<key>        # optional
+python -m pipeline.main --cities "Tokyo,JP" "Manila,PH"
 ```
 
-The GitHub Action `.github/workflows/ingest.yml` runs it weekly using repository secrets. The service key and API keys live only there and never ship in the app. Routing goes through the `ors-proxy` Edge Function, so the OpenRouteService key stays server-side as well.
+### Keys
+
+| Key | Where it lives | Never in |
+|---|---|---|
+| `SUPABASE_SERVICE_KEY` | Pipeline only (GitHub secret) | The app |
+| `OPENTRIPMAP_API_KEY` | Pipeline only (GitHub secret) | The app |
+| OpenRouteService key | `ors-proxy` Edge Function | The app |
+| `SUPABASE_ANON_KEY` | The app (`local.properties`), read-only access | — |
 
 </details>
 
