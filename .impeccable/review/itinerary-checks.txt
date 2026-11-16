@@ -1,0 +1,1 @@
+TOUCH_TARGET  40x48dp < 48dp  More options
