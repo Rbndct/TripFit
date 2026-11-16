@@ -25,8 +25,8 @@ import java.io.File;
 
 /**
  * Drag-and-drop pin picker: an osmdroid map (free, OSM-based, no API key) centered on the
- * trip's selected city, with a draggable marker. On confirm, reverse-geocodes the dropped
- * pin via Nominatim (one request, not bulk) and returns the result to the caller.
+ * trip's selected city, with a draggable marker and tap selection. Confirmation returns
+ * coordinates immediately so the frontend does not depend on a geocoding service.
  */
 public class MapPickerActivity extends AppCompatActivity {
 

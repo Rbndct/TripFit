@@ -18,13 +18,17 @@ public final class TripExport {
         for(int day=1;day<=trip.days;day++) {
             text.append("DAY ").append(day).append("\n");
             List<RoutePreview.Slot> slots=RoutePreview.day(trip,day,false);
+            DraftTrip.Stop previous=null;
             if(slots.isEmpty()) text.append("No stops planned yet.\n");
             for(RoutePreview.Slot slot:slots) {
                 DraftTrip.Stop stop=slot.stop;
                 text.append(RoutePreview.time(slot.start)).append("–").append(RoutePreview.time(slot.end)).append(" ").append(stop.name).append(stop.booked?" [BOOKED]":"").append(slot.conflict?" [CHECK CONFLICT]":"").append("\n");
-                text.append("Stay ").append(stop.duration).append(" min; ~").append(slot.travel).append(" min incoming travel; ").append(stop.buffer).append(" min buffer; ").append(stop.mode).append(" transport\n");
+                text.append("Stay ").append(stop.duration).append(" min; ");
+                if(previous==null) text.append("start of day\n");
+                else text.append(RoutePreview.mode(previous,stop)).append(" ~").append(slot.travel).append(" min incoming travel + ").append(stop.buffer).append(" min buffer\n");
                 text.append(String.format(Locale.US,"Estimate: %s %.0f (≈ %s %.0f)\n",trip.costCurrency(stop),stop.cost,trip.homeCurrency,trip.convertedCost(stop)));
                 if(stop.hasLocation) text.append(String.format(Locale.US,"Pin: %.5f, %.5f\n",stop.lat,stop.lng));
+                text.append("\n"); previous=stop;
             }
             text.append("\n");
         }
@@ -45,21 +49,31 @@ public final class TripExport {
         PdfDocument document=new PdfDocument();
         try {
             Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG); paint.setTextSize(11); paint.setColor(Color.rgb(19,33,59));
-            List<String> lines=new ArrayList<>();
-            for(String paragraph:summary(trip).split("\n",-1)) {
-                if(paragraph.isEmpty()) { lines.add(""); continue; }
-                while(!paragraph.isEmpty()) {
-                    int count=paint.breakText(paragraph,true,515,null);
-                    if(count<paragraph.length()) { int space=paragraph.lastIndexOf(' ',count); if(space>0) count=space; }
-                    count=Math.max(1,count); lines.add(paragraph.substring(0,count)); paragraph=paragraph.substring(count).trim();
+            List<List<String>> pages=new ArrayList<>();
+            List<String> current=new ArrayList<>(); pages.add(current);
+            for(String block:summary(trip).split("\n\n+")) {
+                List<String> wrapped=new ArrayList<>();
+                for(String paragraph:block.split("\n")) {
+                    while(!paragraph.isEmpty()) {
+                        int count=paint.breakText(paragraph,true,515,null);
+                        if(count<paragraph.length()) { int space=paragraph.lastIndexOf(' ',count); if(space>0) count=space; }
+                        count=Math.max(1,count); wrapped.add(paragraph.substring(0,count)); paragraph=paragraph.substring(count).trim();
+                    }
                 }
+                // Keep each stop and the category-budget breakdown together when possible.
+                if(!current.isEmpty() && current.size()+wrapped.size()>43) { current=new ArrayList<>(); pages.add(current); }
+                for(String line:wrapped) {
+                    if(current.size()>=43) { current=new ArrayList<>(); pages.add(current); }
+                    current.add(line);
+                }
+                if(current.size()<43) current.add("");
             }
             int number=0;
-            for(int offset=0;offset<lines.size();offset+=43) {
+            for(List<String> lines:pages) {
                 PdfDocument.Page page=document.startPage(new PdfDocument.PageInfo.Builder(595,842,++number).create());
                 Canvas canvas=page.getCanvas(); canvas.drawColor(Color.WHITE);
                 paint.setTextSize(16); canvas.drawText("Trippings | Trip summary",40,40,paint); paint.setTextSize(11);
-                int y=72; for(int i=offset;i<Math.min(offset+43,lines.size());i++) { canvas.drawText(lines.get(i),40,y,paint); y+=16; }
+                int y=72; for(String line:lines) { canvas.drawText(line,40,y,paint); y+=16; }
                 canvas.drawText("Local prototype · Page "+number,40,810,paint); document.finishPage(page);
             }
             document.writeTo(output);
