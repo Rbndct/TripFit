@@ -242,11 +242,23 @@
     <string name="group_votes">Vote on destinations</string>
     <string name="action_vote">Vote</string>
     <string name="action_voted">Voted</string>
-    <string name="vote_count">%1$d votes</string>
+    <plurals name="vote_count">
+        <item quantity="one">%1$d vote</item>
+        <item quantity="other">%1$d votes</item>
+    </plurals>
+    <plurals name="vote_count_yours">
+        <item quantity="one">%1$d vote, including yours</item>
+        <item quantity="other">%1$d votes, including yours</item>
+    </plurals>
+    <string name="vote_cd">Vote for %1$s</string>
+    <string name="vote_remove_cd">Voted for %1$s, tap to remove</string>
+    <string name="cd_copy_code">Copy invite code</string>
+    <string name="split_you">You</string>
+    <string name="split_you_share">You · %1$d%% share</string>
     <string name="group_split">Cost split</string>
     <string name="split_even">Even</string>
     <string name="split_custom">Custom</string>
-    <string name="split_total">Estimated total %1$s</string>
+    <string name="split_total">Estimated total</string>
     <string name="split_member_sub">%1$d%% share</string>
 
     <!-- Journal -->

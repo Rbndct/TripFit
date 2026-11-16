@@ -65,6 +65,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/space_sm"
                             android:layout_weight="1"
+                            android:contentDescription="@string/cd_copy_code"
                             android:text="@string/action_copy_code" />
 
                         <com.google.android.material.button.MaterialButton
@@ -85,6 +86,7 @@
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
                 android:paddingBottom="@dimen/space_sm"
+                android:accessibilityHeading="true"
                 android:text="@string/group_members"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface" />
@@ -102,6 +104,7 @@
                 android:paddingHorizontal="@dimen/space_md"
                 android:paddingTop="@dimen/space_md"
                 android:paddingBottom="@dimen/space_sm"
+                android:accessibilityHeading="true"
                 android:text="@string/group_votes"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface" />
@@ -119,6 +122,7 @@
                 android:paddingHorizontal="@dimen/space_md"
                 android:paddingTop="@dimen/space_md"
                 android:paddingBottom="@dimen/space_sm"
+                android:accessibilityHeading="true"
                 android:text="@string/group_split"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textColor="?attr/colorOnSurface" />
@@ -137,6 +141,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:minHeight="48dp"
                     android:text="@string/split_even" />
 
                 <com.google.android.material.button.MaterialButton
@@ -145,19 +150,37 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:minHeight="48dp"
                     android:text="@string/split_custom" />
 
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
-            <TextView
-                android:id="@+id/text_split_total"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:padding="@dimen/space_md"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="Estimated total ₱15,000" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/space_md">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/split_total"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/text_split_total"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:fontFamily="monospace"
+                    android:textAppearance="?attr/textAppearanceLabelLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="₱15,000" />
+
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/list_split"
