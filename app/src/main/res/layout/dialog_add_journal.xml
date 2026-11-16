@@ -27,7 +27,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_sm"
-        android:hint="@string/field_entry_hint">
+        android:hint="@string/field_entry_hint"
+        app:counterEnabled="true"
+        app:counterMaxLength="500">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/input_entry_note"
@@ -46,6 +48,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_sm"
+        android:minHeight="48dp"
         android:text="@string/action_pick_photo" />
 
 </LinearLayout>

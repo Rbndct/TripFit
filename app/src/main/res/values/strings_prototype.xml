@@ -264,14 +264,15 @@
     <!-- Journal -->
     <string name="journal_title">Journal</string>
     <string name="action_add_entry">Add entry</string>
-    <string name="journal_empty">No entries yet. Capture a note or photo from your day.</string>
+    <string name="journal_empty">No entries yet. Tap Add entry to jot a note or mark a photo from your day.</string>
     <string name="journal_entry_sub">Day %1$d · %2$s</string>
     <string name="journal_photo_tag">Photo attached</string>
     <string name="field_entry_hint">What happened?</string>
-    <string name="entry_stop_label">Stop</string>
+    <string name="entry_stop_label">Attach to</string>
     <string name="action_pick_photo">Add photo</string>
     <string name="action_save_entry">Save entry</string>
-    <string name="entry_saved">Entry saved</string>
+    <string name="journal_saved_to">Entry saved to %1$s</string>
+    <string name="photo_attached_change">Photo attached · tap to change</string>
     <string name="error_note_required">Write a short note</string>
     <string name="journal_general">General</string>
 
