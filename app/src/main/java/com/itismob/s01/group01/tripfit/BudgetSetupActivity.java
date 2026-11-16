@@ -4,12 +4,16 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.graphics.Typeface;
 import android.view.View;
+import android.view.ViewParent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
@@ -20,7 +24,9 @@ import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /** Sets an overall or per-day trip budget, home currency, and optional category split. */
@@ -36,12 +42,16 @@ public class BudgetSetupActivity extends ScreenActivity {
     private MaterialSwitch switchSplit;
     private TextView splitSum;
     private TextView currencyNote;
+    private final List<TextInputLayout> limitLayouts = new ArrayList<>();
+    private int days;
+    private boolean isSaving;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setScreen(R.layout.activity_budget_setup, R.string.budget_setup_title);
         current = store.budget(tripId);
+        days = Math.max(1, store.meta(tripId).getDays());
 
         toggleMode = findViewById(R.id.toggle_mode);
         layoutBudget = findViewById(R.id.layout_budget);
@@ -65,37 +75,102 @@ public class BudgetSetupActivity extends ScreenActivity {
         inputCurrency.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
                 CurrencyMock.codes()));
         inputCurrency.setText(current.getHomeCurrency(), false);
-        inputCurrency.setOnItemClickListener((parent, v, position, id) -> {
-            updateCurrencyHint(CurrencyMock.codes().get(position));
-        });
-        updateCurrencyHint(current.getHomeCurrency());
 
         boolean hasSplit = !current.getCategoryLimits().isEmpty();
         switchSplit.setChecked(hasSplit);
         findViewById(R.id.split_container).setVisibility(hasSplit ? View.VISIBLE : View.GONE);
+        for (Category category : Category.values()) {
+            double limit = current.limitFor(category);
+            limitInputs.get(category).setText(limit > 0 ? String.valueOf((long) limit) : "");
+        }
+        useLabelFont(inputBudget);
+        useLabelFont(inputCurrency);
+        for (TextInputEditText input : limitInputs.values()) {
+            limitLayouts.add(useLabelFont(input));
+        }
+        refreshLabels();
+        bindListeners();
+    }
+
+    /** Wires change listeners after the initial values are set, so binding never fires them. */
+    private void bindListeners() {
+        toggleMode.addOnButtonCheckedListener((group, id, isChecked) -> {
+            if (isChecked) {
+                refreshLabels();
+            }
+        });
+        inputCurrency.addTextChangedListener(new SimpleWatcher(this::refreshLabels));
+        inputBudget.addTextChangedListener(new SimpleWatcher(() -> {
+            layoutBudget.setError(null);
+            refreshLabels();
+        }));
         switchSplit.setOnCheckedChangeListener((button, checked) -> {
             findViewById(R.id.split_container).setVisibility(checked ? View.VISIBLE : View.GONE);
             updateSplitSum();
         });
         TextWatcher watcher = new SimpleWatcher(this::updateSplitSum);
-        inputBudget.addTextChangedListener(watcher);
-        for (Category category : Category.values()) {
-            TextInputEditText input = limitInputs.get(category);
-            double limit = current.limitFor(category);
-            input.setText(limit > 0 ? String.valueOf((long) limit) : "");
+        for (TextInputEditText input : limitInputs.values()) {
             input.addTextChangedListener(watcher);
+        }
+        limitInputs.get(Category.OTHER).setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            save();
+            return true;
+        });
+    }
+
+    /** Labels float in the sans-serif body face; only the typed values stay monospace. */
+    private static TextInputLayout useLabelFont(View field) {
+        ViewParent parent = field.getParent();
+        while (parent != null && !(parent instanceof TextInputLayout)) {
+            parent = parent.getParent();
+        }
+        TextInputLayout layout = (TextInputLayout) parent;
+        if (layout != null) {
+            layout.setTypeface(Typeface.DEFAULT);
+        }
+        return layout;
+    }
+
+    private String homeCode() {
+        return inputCurrency.getText().toString();
+    }
+
+    private boolean isPerDay() {
+        return toggleMode.getCheckedButtonId() == R.id.button_mode_daily;
+    }
+
+    private double tripTotal(double amount) {
+        return isPerDay() ? amount * days : amount;
+    }
+
+    /** Re-derives everything that depends on the mode, the amount, or the home currency. */
+    private void refreshLabels() {
+        String home = homeCode();
+        double amount = parse(inputBudget);
+        layoutBudget.setHint(getString(
+                isPerDay() ? R.string.field_budget_hint_daily : R.string.field_budget_hint, home));
+        layoutBudget.setHelperText(isPerDay() && amount > 0
+                ? getResources().getQuantityString(R.plurals.budget_daily_total, days,
+                        CurrencyMock.format(amount, home), days,
+                        CurrencyMock.format(tripTotal(amount), home))
+                : null);
+        currencyNote.setText(getString(R.string.budget_currency_note, home));
+        for (TextInputLayout layout : limitLayouts) {
+            layout.setPrefixText(home + " ");
         }
         updateSplitSum();
     }
 
-    private void updateCurrencyHint(String homeCode) {
-        layoutBudget.setHint(getString(R.string.field_budget_hint, homeCode));
-        currencyNote.setText(getString(R.string.budget_currency_note, homeCode));
+    private double parse(TextInputEditText input) {
+        return parse(input.getText());
     }
 
-    private double parse(TextInputEditText input) {
-        String text = input.getText() == null ? "" : input.getText().toString().trim();
-        return TextUtils.isEmpty(text) ? 0 : Double.parseDouble(text);
+    private double parse(CharSequence text) {
+        String trimmed = text == null ? "" : text.toString().trim();
+        return TextUtils.isEmpty(trimmed) ? 0 : Double.parseDouble(trimmed);
     }
 
     private double splitTotal() {
@@ -106,35 +181,46 @@ public class BudgetSetupActivity extends ScreenActivity {
         return sum;
     }
 
+    /** Shows the split against the trip total; over-limit reads as words and in the error color. */
     private void updateSplitSum() {
-        String home = inputCurrency.getText().toString();
-        splitSum.setText(getString(R.string.budget_split_sum,
-                CurrencyMock.format(splitTotal(), home),
-                CurrencyMock.format(parse(inputBudget), home)));
+        String home = homeCode();
+        double split = splitTotal();
+        double budget = tripTotal(parse(inputBudget));
+        boolean isOver = split > budget;
+        splitSum.setText(isOver
+                ? getString(R.string.budget_split_over, CurrencyMock.format(split - budget, home),
+                        CurrencyMock.format(budget, home))
+                : getString(R.string.budget_split_sum, CurrencyMock.format(split, home),
+                        CurrencyMock.format(budget, home)));
+        splitSum.setTextColor(MaterialColors.getColor(splitSum, isOver
+                ? androidx.appcompat.R.attr.colorError
+                : com.google.android.material.R.attr.colorOnSurfaceVariant));
     }
 
     private void save() {
+        if (isSaving) {
+            return;
+        }
         double amount = parse(inputBudget);
         if (amount <= 0) {
             layoutBudget.setError(getString(R.string.error_budget_required));
+            inputBudget.requestFocus();
             return;
         }
-        layoutBudget.setError(null);
-        boolean perDay = toggleMode.getCheckedButtonId() == R.id.button_mode_daily;
-        int days = store.meta(tripId).getDays();
-        double tripTotal = perDay ? amount * days : amount;
         Map<Category, Double> limits = new EnumMap<>(Category.class);
         if (switchSplit.isChecked()) {
-            if (splitTotal() > tripTotal) {
+            if (splitTotal() > tripTotal(amount)) {
                 toast(R.string.error_split_exceeds);
+                limitInputs.get(Category.FOOD).requestFocus();
                 return;
             }
             for (Category category : Category.values()) {
                 limits.put(category, parse(limitInputs.get(category)));
             }
         }
-        store.setBudget(tripId, new BudgetSettings(inputCurrency.getText().toString(),
-                current.getLocalCurrency(), amount, perDay, limits));
+        isSaving = true;
+        store.setBudget(tripId, new BudgetSettings(homeCode(), current.getLocalCurrency(), amount,
+                isPerDay(), limits));
         finish();
     }
 
