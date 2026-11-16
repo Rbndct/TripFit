@@ -81,7 +81,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void goToHome() {
-        startActivity(new Intent(this, HomeActivity.class));
+        startActivity(new Intent(this, com.itismob.s01.group01.tripfit.prototype.TripsActivity.class));
         finish();
     }
 
