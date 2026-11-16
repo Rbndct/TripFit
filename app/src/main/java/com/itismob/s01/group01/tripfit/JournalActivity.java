@@ -202,7 +202,8 @@ public class JournalActivity extends ScreenActivity {
         list.scrollToPosition(0);
         String where = day == DAY_GENERAL ? stopName
                 : getString(R.string.journal_entry_sub, day, stopName);
-        Snackbar.make(findViewById(android.R.id.content),
+        // Attach to the CoordinatorLayout root (not the window content) so the FAB anchor stays correct.
+        Snackbar.make(findViewById(R.id.journal_root),
                 getString(R.string.journal_saved_to, where), Snackbar.LENGTH_SHORT)
                 .setAnchorView(R.id.fab_add_entry).show();
     }

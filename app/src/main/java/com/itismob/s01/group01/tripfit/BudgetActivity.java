@@ -63,8 +63,10 @@ public class BudgetActivity extends ScreenActivity {
             return;
         }
         expenseDialog = AddExpenseDialog.show(this, tripId, draft, () -> {
-            // Anchor above the FAB so the confirmation never covers the primary action.
-            Snackbar.make(findViewById(android.R.id.content), R.string.expense_added,
+            // The root is a CoordinatorLayout, so the anchor is re-resolved on every layout pass and
+            // the snackbar stays above the FAB even while the keyboard is still hiding. Anchored to
+            // the window content view it kept a stale margin and floated mid-screen.
+            Snackbar.make(findViewById(R.id.budget_root), R.string.expense_added,
                     Snackbar.LENGTH_SHORT).setAnchorView(R.id.fab_add_expense).show();
             render();
         });
