@@ -98,15 +98,31 @@ public class GroupActivity extends ScreenActivity {
     private void renderVotes() {
         List<UiRow> rows = new ArrayList<>();
         for (String name : destinations) {
-            boolean voted = store.hasVoted(name);
-            rows.add(UiRow.withAction(name, null,
-                    getString(R.string.vote_count, store.voteCount(name)),
-                    getString(voted ? R.string.action_voted : R.string.action_vote), () -> {
-                        store.toggleVote(name);
-                        renderVotes();
-                    }));
+            rows.add(voteRow(name));
         }
         votesAdapter.submit(rows);
+    }
+
+    /** Vote row: count (with a text note when it includes yours) under the name, selected when voted. */
+    private UiRow voteRow(String name) {
+        boolean voted = store.hasVoted(name);
+        int count = store.voteCount(name);
+        String tally = getResources().getQuantityString(
+                voted ? R.plurals.vote_count_yours : R.plurals.vote_count, count, count);
+        return UiRow.withAction(name, tally, null,
+                getString(voted ? R.string.action_voted : R.string.action_vote), () -> {
+                    store.toggleVote(name);
+                    renderVotes();
+                })
+                .withSelected(voted)
+                .withAccessibility(getString(
+                        voted ? R.string.vote_remove_cd : R.string.vote_cd, name), null);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        renderSplit(); // the toggle may have been restored to Custom after onCreate rendered Even
     }
 
     private void renderSplit() {
@@ -117,17 +133,24 @@ public class GroupActivity extends ScreenActivity {
         int people = MEMBERS.length + 1;
 
         ((TextView) findViewById(R.id.text_split_total)).setText(
-                getString(R.string.split_total, CurrencyMock.format(total, home)));
+                CurrencyMock.format(total, home));
         List<UiRow> rows = new ArrayList<>();
         for (int i = 0; i < people; i++) {
             int share = even ? 100 / people : CUSTOM_SHARES[i];
             double amount = even ? total / people : total * share / 100.0;
             String name = i == 0 ? getString(R.string.profile_name) : MEMBERS[i - 1];
-            rows.add(UiRow.withTrailing(name,
-                    even ? null : getString(R.string.split_member_sub, share),
+            rows.add(UiRow.withTrailing(name, splitSubtitle(i == 0, even, share),
                     CurrencyMock.format(amount, home)));
         }
         splitAdapter.submit(rows);
+    }
+
+    private String splitSubtitle(boolean isYou, boolean even, int share) {
+        if (even) {
+            return isYou ? getString(R.string.split_you) : null;
+        }
+        return isYou ? getString(R.string.split_you_share, share)
+                : getString(R.string.split_member_sub, share);
     }
 
     private void copyCode() {
