@@ -55,9 +55,9 @@ public final class CurrencyMock {
         return amount / fromRate * toRate;
     }
 
-    /** Formats like "₱1,234" (whole units; every demo currency is shown without decimals). */
+    /** Formats like "₱1,234.50": a standard two decimals for every currency. */
     public static String format(double amount, String code) {
         String symbol = SYMBOLS.containsKey(code) ? SYMBOLS.get(code) : code + " ";
-        return symbol + String.format(Locale.US, "%,.0f", amount);
+        return symbol + String.format(Locale.US, "%,.2f", amount);
     }
 }

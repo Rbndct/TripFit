@@ -102,7 +102,9 @@ public abstract class PrototypeActivity extends AppCompatActivity {
         try { double value=Double.parseDouble(value(field)); if(Double.isFinite(value)&&value>=min&&value<=max) return value; } catch(NumberFormatException ignored) {}
         field.setError("Enter a number from "+min+" to "+max); throw new IllegalArgumentException();
     }
-    protected String money(double amount,String currency) { return String.format(Locale.US,"%s %,.0f",currency,amount); }
+    protected String money(double amount,String currency) { return String.format(Locale.US,"%s %,.2f",currency,amount); }
+    /** Two-decimal amount for editable fields: no symbol or grouping, so it parses straight back. */
+    protected String plainAmount(double amount) { return String.format(Locale.US,"%.2f",amount); }
     protected void hideKeyboard() { View focus=getCurrentFocus(); if(focus!=null) ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(focus.getWindowToken(),0); }
     protected void save() { store.save(trip); }
     protected void reload() { if(tripId!=null) trip=store.get(tripId); }
