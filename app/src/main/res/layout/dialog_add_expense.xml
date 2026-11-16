@@ -19,6 +19,7 @@
             android:id="@+id/input_expense_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
             android:inputType="textCapSentences"
             android:maxLength="60" />
 
@@ -37,6 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
+            android:imeOptions="actionDone"
             android:inputType="numberDecimal"
             android:maxLength="9" />
 

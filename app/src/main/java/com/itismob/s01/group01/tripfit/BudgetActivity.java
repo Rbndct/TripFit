@@ -8,10 +8,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.snackbar.Snackbar;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
@@ -31,7 +34,11 @@ import java.util.Map;
 public class BudgetActivity extends ScreenActivity {
 
     private final PrototypeStore store = PrototypeStore.get();
+    private static final String STATE_EXPENSE_DRAFT = "expense_draft";
+
     private final RowAdapter expenseAdapter = new RowAdapter();
+    @Nullable
+    private AlertDialog expenseDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,11 +51,40 @@ public class BudgetActivity extends ScreenActivity {
             intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
             startActivity(intent);
         });
-        findViewById(R.id.fab_add_expense).setOnClickListener(v ->
-                AddExpenseDialog.show(this, tripId, () -> {
-                    toast(R.string.expense_added);
-                    render();
-                }));
+        findViewById(R.id.fab_add_expense).setOnClickListener(v -> showExpenseDialog(null));
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_EXPENSE_DRAFT)) {
+            showExpenseDialog(savedInstanceState.getBundle(STATE_EXPENSE_DRAFT));
+        }
+    }
+
+    /** Opens Add Expense (once at a time), optionally restoring a draft after rotation. */
+    private void showExpenseDialog(@Nullable Bundle draft) {
+        if (expenseDialog != null) {
+            return;
+        }
+        expenseDialog = AddExpenseDialog.show(this, tripId, draft, () -> {
+            // Anchor above the FAB so the confirmation never covers the primary action.
+            Snackbar.make(findViewById(android.R.id.content), R.string.expense_added,
+                    Snackbar.LENGTH_SHORT).setAnchorView(R.id.fab_add_expense).show();
+            render();
+        });
+        expenseDialog.setOnDismissListener(d -> expenseDialog = null);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (expenseDialog != null && expenseDialog.isShowing()) {
+            outState.putBundle(STATE_EXPENSE_DRAFT, AddExpenseDialog.draftOf(expenseDialog));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (expenseDialog != null) {
+            expenseDialog.dismiss();
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -63,22 +99,33 @@ public class BudgetActivity extends ScreenActivity {
         String home = budget.getHomeCurrency();
         double total = budget.tripTotal(store.meta(tripId).getDays());
         double spent = BudgetMath.totalSpent(expenses);
-        boolean over = BudgetMath.isOver(spent, total);
 
         ((TextView) findViewById(R.id.text_spent)).setText(CurrencyMock.format(spent, home));
-        ((TextView) findViewById(R.id.text_of_total)).setText(
-                getString(R.string.budget_of_total, CurrencyMock.format(total, home)));
+        ((TextView) findViewById(R.id.text_of_total)).setText(total > 0
+                ? getString(R.string.budget_of_total, CurrencyMock.format(total, home))
+                : getString(R.string.budget_no_total));
         bindProgress(findViewById(R.id.progress_total), spent, total);
+        renderRemaining(total, spent, home);
+
+        renderCategories(budget, expenses);
+        renderExpenses(expenses, home);
+    }
+
+    /** "₱X left" / "₱X over budget"; hidden when no budget is set, so it never reads "₱-X left". */
+    private void renderRemaining(double total, double spent, String home) {
         TextView remaining = findViewById(R.id.text_remaining);
+        if (total <= 0) {
+            remaining.setVisibility(View.GONE);
+            return;
+        }
+        remaining.setVisibility(View.VISIBLE);
+        boolean over = BudgetMath.isOver(spent, total);
         double left = BudgetMath.remaining(total, spent);
         remaining.setText(over
                 ? getString(R.string.budget_over, CurrencyMock.format(-left, home))
                 : getString(R.string.budget_left, CurrencyMock.format(left, home)));
         remaining.setTextColor(over ? getColor(R.color.status_over)
                 : getColor(R.color.md_on_surface));
-
-        renderCategories(budget, expenses);
-        renderExpenses(expenses, home);
     }
 
     private void bindProgress(LinearProgressIndicator bar, double spent, double limit) {
@@ -97,15 +144,20 @@ public class BudgetActivity extends ScreenActivity {
         for (Category category : Category.values()) {
             double spent = byCategory.get(category);
             double limit = budget.limitFor(category);
+            boolean over = BudgetMath.isOver(spent, limit);
             View row = inflater.inflate(R.layout.item_category, container, false);
             ((TextView) row.findViewById(R.id.text_category_name))
                     .setText(Labels.category(this, category));
-            row.findViewById(R.id.badge_over).setVisibility(
-                    BudgetMath.isOver(spent, limit) ? View.VISIBLE : View.GONE);
-            ((TextView) row.findViewById(R.id.text_category_amount)).setText(limit > 0
+            row.findViewById(R.id.badge_over).setVisibility(over ? View.VISIBLE : View.GONE);
+            String amountText = limit > 0
                     ? getString(R.string.category_progress, CurrencyMock.format(spent, home),
                             CurrencyMock.format(limit, home))
-                    : getString(R.string.category_no_limit, CurrencyMock.format(spent, home)));
+                    : getString(R.string.category_no_limit, CurrencyMock.format(spent, home));
+            ((TextView) row.findViewById(R.id.text_category_amount)).setText(amountText);
+            // One TalkBack stop per category: name, over-budget state, and amounts.
+            ViewCompat.setScreenReaderFocusable(row, true);
+            row.setContentDescription(getString(over ? R.string.category_row_cd_over
+                    : R.string.category_row_cd, Labels.category(this, category), amountText));
             bindProgress(row.findViewById(R.id.progress_category), spent, limit);
             container.addView(row);
         }
