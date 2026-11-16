@@ -4,12 +4,17 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.view.ViewCompat;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.color.MaterialColors;
 
 import com.itismob.s01.group01.tripfit.data.AppExecutors;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
@@ -22,9 +27,7 @@ import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 import com.itismob.s01.group01.tripfit.ui.Labels;
-import com.itismob.s01.group01.tripfit.ui.RowAdapter;
 import com.itismob.s01.group01.tripfit.ui.TripPdfWriter;
-import com.itismob.s01.group01.tripfit.ui.UiRow;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,16 +42,29 @@ import java.util.TreeMap;
  */
 public class SummaryActivity extends ScreenActivity {
 
+    /** One label/value pair inside a section card; the value is data and renders monospace. */
+    private static final class Line {
+        final String label;
+        final String value;
+
+        Line(String label, String value) {
+            this.label = label;
+            this.value = value;
+        }
+    }
+
     private final PrototypeStore store = PrototypeStore.get();
-    private final RowAdapter adapter = new RowAdapter();
     private final List<String> lines = new ArrayList<>();
     private String tripName = "";
+    private boolean isTripLoaded;
+    private boolean isItemsLoaded;
+    private boolean isExporting;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setScreen(R.layout.activity_summary, R.string.summary_title);
-        ((RecyclerView) findViewById(R.id.list_summary)).setAdapter(adapter);
+        ViewCompat.setAccessibilityHeading(findViewById(R.id.text_trip_name), true);
         findViewById(R.id.button_export_pdf).setOnClickListener(v -> exportPdf());
         findViewById(R.id.button_share).setOnClickListener(v -> shareText());
 
@@ -56,7 +72,9 @@ public class SummaryActivity extends ScreenActivity {
         repository.observeTrip(tripId).observe(this, trip -> {
             if (trip != null) {
                 tripName = trip.getName();
+                isTripLoaded = true;
                 ((TextView) findViewById(R.id.text_trip_name)).setText(tripName);
+                updateActions();
             }
         });
         repository.observeItineraryItemsWithPlaceNames(tripId).observe(this, this::render);
@@ -64,20 +82,22 @@ public class SummaryActivity extends ScreenActivity {
 
     private void render(List<ItineraryItemWithPlace> items) {
         lines.clear();
-        List<UiRow> rows = new ArrayList<>();
+        ViewGroup container = findViewById(R.id.container_summary);
+        container.removeAllViews();
         Map<Integer, List<ItineraryItemWithPlace>> byDay = new TreeMap<>();
         for (ItineraryItemWithPlace entry : items) {
             byDay.computeIfAbsent(entry.item.getDay(), d -> new ArrayList<>()).add(entry);
         }
         for (Map.Entry<Integer, List<ItineraryItemWithPlace>> day : byDay.entrySet()) {
-            addDay(day.getKey(), day.getValue(), rows);
+            addDay(day.getKey(), day.getValue(), container);
         }
-        addBudget(rows);
-        adapter.submit(rows);
+        addBudget(container);
         findViewById(R.id.text_empty).setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+        isItemsLoaded = true;
+        updateActions();
     }
 
-    private void addDay(int day, List<ItineraryItemWithPlace> entries, List<UiRow> rows) {
+    private void addDay(int day, List<ItineraryItemWithPlace> entries, ViewGroup container) {
         List<ScheduleMath.Stop> stops = new ArrayList<>();
         for (ItineraryItemWithPlace entry : entries) {
             stops.add(new ScheduleMath.Stop(entry.item.displayName(entry.placeName),
@@ -85,38 +105,96 @@ public class SummaryActivity extends ScreenActivity {
                     entry.item.getDurationMin()));
         }
         String heading = getString(R.string.day_label, day);
-        StringBuilder body = new StringBuilder();
+        List<Line> sectionLines = new ArrayList<>();
         lines.add(heading);
         for (ScheduleMath.Slot slot : ScheduleMath.build(stops, store.getBufferMin())) {
-            String line = ScheduleMath.format(slot.getStartMin()) + "–"
-                    + ScheduleMath.format(slot.getEndMin()) + "  " + slot.getName();
-            body.append(body.length() == 0 ? "" : "\n").append(line);
-            lines.add("  " + line);
+            String time = ScheduleMath.format(slot.getStartMin()) + "–"
+                    + ScheduleMath.format(slot.getEndMin());
+            sectionLines.add(new Line(slot.getName(), time));
+            lines.add("  " + time + "  " + slot.getName());
         }
         lines.add("");
-        rows.add(UiRow.plain(heading, body.toString()));
+        String count = getResources().getQuantityString(R.plurals.summary_stop_count,
+                sectionLines.size(), sectionLines.size());
+        container.addView(buildSection(container, heading, count, sectionLines, null, false));
     }
 
-    private void addBudget(List<UiRow> rows) {
+    private void addBudget(ViewGroup container) {
         BudgetSettings budget = store.budget(tripId);
         String home = budget.getHomeCurrency();
         double total = budget.tripTotal(store.meta(tripId).getDays());
         List<Expense> expenses = store.expenses(tripId);
         double spent = BudgetMath.totalSpent(expenses);
-        String headline = getString(R.string.summary_spent_of,
-                CurrencyMock.format(spent, home), CurrencyMock.format(total, home));
+        boolean hasBudget = total > 0;
+        String spentText = CurrencyMock.format(spent, home);
+        String headline = hasBudget
+                ? getString(R.string.summary_spent_of, spentText, CurrencyMock.format(total, home))
+                : getString(R.string.summary_spent_only, spentText);
+        String note = budgetNote(hasBudget, spent, total, home);
 
-        StringBuilder body = new StringBuilder(headline);
+        List<Line> sectionLines = new ArrayList<>();
+        sectionLines.add(new Line(getString(R.string.summary_spent_label), hasBudget
+                ? getString(R.string.summary_spent_value, spentText, CurrencyMock.format(total, home))
+                : spentText));
         lines.add(getString(R.string.summary_budget_title));
         lines.add("  " + headline);
         for (Map.Entry<Category, Double> entry
                 : BudgetMath.spentByCategory(expenses).entrySet()) {
-            String line = Labels.category(this, entry.getKey()) + ": "
-                    + CurrencyMock.format(entry.getValue(), home);
-            body.append('\n').append(line);
-            lines.add("  " + line);
+            String label = Labels.category(this, entry.getKey());
+            String amount = CurrencyMock.format(entry.getValue(), home);
+            sectionLines.add(new Line(label, amount));
+            lines.add("  " + label + ": " + amount);
         }
-        rows.add(UiRow.plain(getString(R.string.summary_budget_title), body.toString()));
+        if (note != null) {
+            lines.add("  " + note);
+        }
+        container.addView(buildSection(container, getString(R.string.summary_budget_title), null,
+                sectionLines, note, hasBudget && BudgetMath.isOver(spent, total)));
+    }
+
+    /** Text status for the budget card (so over-budget never relies on color alone). */
+    @Nullable
+    private String budgetNote(boolean hasBudget, double spent, double total, String home) {
+        if (!hasBudget) {
+            return getString(R.string.budget_no_total);
+        }
+        return BudgetMath.isOver(spent, total)
+                ? getString(R.string.budget_over, CurrencyMock.format(spent - total, home)) : null;
+    }
+
+    private View buildSection(ViewGroup parent, String title, @Nullable String count,
+                              List<Line> sectionLines, @Nullable String note, boolean isAlert) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View section = inflater.inflate(R.layout.item_summary_section, parent, false);
+        TextView titleView = section.findViewById(R.id.text_section_title);
+        titleView.setText(title);
+        ViewCompat.setAccessibilityHeading(titleView, true);
+        TextView countView = section.findViewById(R.id.text_section_count);
+        countView.setText(count);
+        countView.setVisibility(count == null ? View.GONE : View.VISIBLE);
+        ViewGroup linesContainer = section.findViewById(R.id.container_section_lines);
+        for (Line line : sectionLines) {
+            View row = inflater.inflate(R.layout.item_summary_line, linesContainer, false);
+            ((TextView) row.findViewById(R.id.text_line_label)).setText(line.label);
+            ((TextView) row.findViewById(R.id.text_line_value)).setText(line.value);
+            linesContainer.addView(row);
+        }
+        TextView noteView = section.findViewById(R.id.text_section_note);
+        noteView.setVisibility(note == null ? View.GONE : View.VISIBLE);
+        noteView.setText(note);
+        if (isAlert) {
+            noteView.setTextColor(MaterialColors.getColor(noteView, androidx.appcompat.R.attr.colorError));
+        }
+        return section;
+    }
+
+    /** Actions wait for data, and Export PDF shows a busy label (and ignores taps) while writing. */
+    private void updateActions() {
+        boolean isReady = isTripLoaded && isItemsLoaded;
+        MaterialButton export = findViewById(R.id.button_export_pdf);
+        export.setEnabled(isReady && !isExporting);
+        export.setText(isExporting ? R.string.summary_exporting : R.string.action_export_pdf);
+        findViewById(R.id.button_share).setEnabled(isReady);
     }
 
     private void shareText() {
@@ -128,6 +206,11 @@ public class SummaryActivity extends ScreenActivity {
     }
 
     private void exportPdf() {
+        if (isExporting || !isTripLoaded || !isItemsLoaded) {
+            return;
+        }
+        isExporting = true;
+        updateActions();
         List<String> snapshot = new ArrayList<>(lines);
         String title = getString(R.string.summary_share_subject, tripName);
         AppExecutors.getInstance().diskIO().execute(() -> {
@@ -135,12 +218,26 @@ public class SummaryActivity extends ScreenActivity {
                 File file = TripPdfWriter.write(getApplicationContext(), title, snapshot);
                 Uri uri = FileProvider.getUriForFile(getApplicationContext(),
                         getPackageName() + ".fileprovider", file);
-                AppExecutors.getInstance().mainThread().execute(() -> sharePdf(uri, title));
+                AppExecutors.getInstance().mainThread().execute(() -> finishExport(uri, title));
             } catch (IOException | RuntimeException e) {
                 Log.e("SummaryActivity", "PDF export failed", e);
-                AppExecutors.getInstance().mainThread().execute(() -> toast(R.string.pdf_failed));
+                AppExecutors.getInstance().mainThread().execute(() -> finishExport(null, title));
             }
         });
+    }
+
+    /** Back on the main thread: clears the busy state, then shares the PDF or reports failure. */
+    private void finishExport(@Nullable Uri uri, String title) {
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
+        isExporting = false;
+        updateActions();
+        if (uri == null) {
+            toast(R.string.pdf_failed);
+        } else {
+            sharePdf(uri, title);
+        }
     }
 
     private void sharePdf(Uri uri, String title) {
