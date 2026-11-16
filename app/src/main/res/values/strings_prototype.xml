@@ -134,7 +134,13 @@
     <string name="budget_mode_daily">Per day</string>
     <string name="field_budget_hint">Budget (%1$s)</string>
     <string name="budget_split_switch">Split by category</string>
-    <string name="budget_split_sum">Split total %1$s of %2$s</string>
+    <string name="field_budget_hint_daily">Budget per day (%1$s)</string>
+    <plurals name="budget_daily_total">
+        <item quantity="one">%1$s × %2$d day = %3$s trip total</item>
+        <item quantity="other">%1$s × %2$d days = %3$s trip total</item>
+    </plurals>
+    <string name="budget_split_sum">Split %1$s of %2$s trip budget</string>
+    <string name="budget_split_over">Limits are %1$s over the %2$s trip budget</string>
     <string name="error_split_exceeds">Category limits add up to more than the budget</string>
     <string name="error_budget_required">Enter a budget amount</string>
     <string name="action_save_budget">Save budget</string>
