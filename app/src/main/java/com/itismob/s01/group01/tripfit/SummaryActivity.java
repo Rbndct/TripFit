@@ -22,7 +22,7 @@ import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
@@ -126,22 +126,22 @@ public class SummaryActivity extends ScreenActivity {
         List<Expense> expenses = store.expenses(tripId);
         double spent = BudgetMath.totalSpent(expenses);
         boolean hasBudget = total > 0;
-        String spentText = CurrencyMock.format(spent, home);
+        String spentText = CurrencyRates.format(spent, home);
         String headline = hasBudget
-                ? getString(R.string.summary_spent_of, spentText, CurrencyMock.format(total, home))
+                ? getString(R.string.summary_spent_of, spentText, CurrencyRates.format(total, home))
                 : getString(R.string.summary_spent_only, spentText);
         String note = budgetNote(hasBudget, spent, total, home);
 
         List<Line> sectionLines = new ArrayList<>();
         sectionLines.add(new Line(getString(R.string.summary_spent_label), hasBudget
-                ? getString(R.string.summary_spent_value, spentText, CurrencyMock.format(total, home))
+                ? getString(R.string.summary_spent_value, spentText, CurrencyRates.format(total, home))
                 : spentText));
         lines.add(getString(R.string.summary_budget_title));
         lines.add("  " + headline);
         for (Map.Entry<Category, Double> entry
                 : BudgetMath.spentByCategory(expenses).entrySet()) {
             String label = Labels.category(this, entry.getKey());
-            String amount = CurrencyMock.format(entry.getValue(), home);
+            String amount = CurrencyRates.format(entry.getValue(), home);
             sectionLines.add(new Line(label, amount));
             lines.add("  " + label + ": " + amount);
         }
@@ -159,7 +159,7 @@ public class SummaryActivity extends ScreenActivity {
             return getString(R.string.budget_no_total);
         }
         return BudgetMath.isOver(spent, total)
-                ? getString(R.string.budget_over, CurrencyMock.format(spent - total, home)) : null;
+                ? getString(R.string.budget_over, CurrencyRates.format(spent - total, home)) : null;
     }
 
     private View buildSection(ViewGroup parent, String title, @Nullable String count,

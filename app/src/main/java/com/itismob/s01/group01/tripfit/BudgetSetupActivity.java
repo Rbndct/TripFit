@@ -21,7 +21,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class BudgetSetupActivity extends ScreenActivity {
         toggleMode.check(current.isPerDay() ? R.id.button_mode_daily : R.id.button_mode_overall);
         inputBudget.setText(String.valueOf((long) current.getAmount()));
         inputCurrency.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
-                CurrencyMock.codes()));
+                CurrencyRates.codes()));
         inputCurrency.setText(current.getHomeCurrency(), false);
 
         boolean hasSplit = !current.getCategoryLimits().isEmpty();
@@ -154,8 +154,8 @@ public class BudgetSetupActivity extends ScreenActivity {
                 isPerDay() ? R.string.field_budget_hint_daily : R.string.field_budget_hint, home));
         layoutBudget.setHelperText(isPerDay() && amount > 0
                 ? getResources().getQuantityString(R.plurals.budget_daily_total, days,
-                        CurrencyMock.format(amount, home), days,
-                        CurrencyMock.format(tripTotal(amount), home))
+                        CurrencyRates.format(amount, home), days,
+                        CurrencyRates.format(tripTotal(amount), home))
                 : null);
         currencyNote.setText(getString(R.string.budget_currency_note, home));
         for (TextInputLayout layout : limitLayouts) {
@@ -188,10 +188,10 @@ public class BudgetSetupActivity extends ScreenActivity {
         double budget = tripTotal(parse(inputBudget));
         boolean isOver = split > budget;
         splitSum.setText(isOver
-                ? getString(R.string.budget_split_over, CurrencyMock.format(split - budget, home),
-                        CurrencyMock.format(budget, home))
-                : getString(R.string.budget_split_sum, CurrencyMock.format(split, home),
-                        CurrencyMock.format(budget, home)));
+                ? getString(R.string.budget_split_over, CurrencyRates.format(split - budget, home),
+                        CurrencyRates.format(budget, home))
+                : getString(R.string.budget_split_sum, CurrencyRates.format(split, home),
+                        CurrencyRates.format(budget, home)));
         splitSum.setTextColor(MaterialColors.getColor(splitSum, isOver
                 ? androidx.appcompat.R.attr.colorError
                 : com.google.android.material.R.attr.colorOnSurfaceVariant));

@@ -16,7 +16,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
 import java.util.List;
@@ -143,17 +143,27 @@ public class ProfileActivity extends ScreenActivity {
     }
 
     private void pickCurrency() {
-        List<String> codes = CurrencyMock.codes();
+        List<String> codes = CurrencyRates.codes();
         int checked = codes.indexOf(store.getDefaultHomeCurrency());
+        String[] labels = new String[codes.size()];
+        for (int i = 0; i < labels.length; i++) {
+            labels[i] = currencyLabel(codes.get(i));
+        }
         present(DIALOG_CURRENCY, new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.setting_home_currency)
-                .setSingleChoiceItems(codes.toArray(new String[0]), checked, (dialog, which) -> {
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
                     store.setDefaultHomeCurrency(codes.get(which));
                     renderCurrency();
                     toast(getString(R.string.profile_currency_set, codes.get(which)));
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.action_cancel, null));
+    }
+
+    /** "JPY · Japanese Yen"; just the code when no name is known (offline fallback table). */
+    private String currencyLabel(String code) {
+        String name = CurrencyRates.nameOf(code);
+        return name.equals(code) ? code : getString(R.string.currency_option, code, name);
     }
 
     private void pickBuffer() {

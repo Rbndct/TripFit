@@ -16,7 +16,7 @@ import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.MockData;
 import com.itismob.s01.group01.tripfit.prototype.MockPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
@@ -118,7 +118,7 @@ public class SuggestionsActivity extends ScreenActivity {
 
         List<UiRow> rows = new ArrayList<>();
         for (MockPlace place : food ? MockData.food() : MockData.activities()) {
-            double priceHome = CurrencyMock.convert(place.getPriceLocal(), local, home);
+            double priceHome = CurrencyRates.convert(place.getPriceLocal(), local, home);
             boolean fits = limit <= 0 || priceHome <= remaining;
             if (fitsBudget.isChecked() && !fits) {
                 continue;
@@ -138,7 +138,7 @@ public class SuggestionsActivity extends ScreenActivity {
         if (remaining <= 0) {
             return getString(R.string.suggestions_budget_used_up, label);
         }
-        String amount = CurrencyMock.format(remaining, home);
+        String amount = CurrencyRates.format(remaining, home);
         SpannableString text = new SpannableString(
                 getString(R.string.suggestions_budget_hint, amount, label));
         int start = text.toString().indexOf(amount);
@@ -156,13 +156,13 @@ public class SuggestionsActivity extends ScreenActivity {
         String subtitle = getString(fits ? R.string.suggestion_subtitle
                         : R.string.suggestion_subtitle_over, place.getKind(),
                 place.getRating(), place.getDistanceKm(),
-                CurrencyMock.format(place.getPriceLocal(), local));
+                CurrencyRates.format(place.getPriceLocal(), local));
         String label = getString(isAdded ? R.string.action_added
                 : isAdding ? R.string.discover_adding : R.string.action_add);
         String actionDesc = isAdded ? getString(R.string.suggestion_added, name, targetDay)
                 : getString(R.string.suggestion_add_cd, name, targetDay);
         Runnable onAdd = isAdded || isAdding ? null : () -> addToItinerary(place);
-        return UiRow.withAction(name, subtitle, CurrencyMock.format(priceHome, home), label, onAdd)
+        return UiRow.withAction(name, subtitle, CurrencyRates.format(priceHome, home), label, onAdd)
                 .withAccessibility(actionDesc, null)
                 .withSelected(isAdded);
     }

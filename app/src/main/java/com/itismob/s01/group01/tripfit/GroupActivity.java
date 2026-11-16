@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.MockData;
 import com.itismob.s01.group01.tripfit.prototype.MockPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
@@ -133,14 +133,14 @@ public class GroupActivity extends ScreenActivity {
         int people = MEMBERS.length + 1;
 
         ((TextView) findViewById(R.id.text_split_total)).setText(
-                CurrencyMock.format(total, home));
+                CurrencyRates.format(total, home));
         List<UiRow> rows = new ArrayList<>();
         for (int i = 0; i < people; i++) {
             int share = even ? 100 / people : CUSTOM_SHARES[i];
             double amount = even ? total / people : total * share / 100.0;
             String name = i == 0 ? getString(R.string.profile_name) : MEMBERS[i - 1];
             rows.add(UiRow.withTrailing(name, splitSubtitle(i == 0, even, share),
-                    CurrencyMock.format(amount, home)));
+                    CurrencyRates.format(amount, home)));
         }
         splitAdapter.submit(rows);
     }

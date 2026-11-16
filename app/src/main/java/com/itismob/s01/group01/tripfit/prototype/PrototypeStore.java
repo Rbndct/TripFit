@@ -1,5 +1,6 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.data.TripRepositoryImpl;
 
 import java.util.ArrayList;
@@ -91,7 +92,7 @@ public final class PrototypeStore {
         for (Expense expense : expenses.get(tripId)) {
             converted.add(new Expense(expense.getTitle(), expense.getCategory(),
                     expense.getAmountLocal(), expense.getLocalCurrency(),
-                    CurrencyMock.convert(expense.getAmountLocal(), expense.getLocalCurrency(), home)));
+                    CurrencyRates.convert(expense.getAmountLocal(), expense.getLocalCurrency(), home)));
         }
         return converted;
     }
@@ -101,7 +102,7 @@ public final class PrototypeStore {
                               String localCurrency) {
         BudgetSettings budget = budget(tripId);
         Expense expense = new Expense(title, category, amountLocal, localCurrency,
-                CurrencyMock.convert(amountLocal, localCurrency, budget.getHomeCurrency()));
+                CurrencyRates.convert(amountLocal, localCurrency, budget.getHomeCurrency()));
         seedExpensesIfNeeded(tripId);
         expenses.get(tripId).add(0, expense);
         return expense;
@@ -123,7 +124,7 @@ public final class PrototypeStore {
     }
 
     private Expense seedExpense(String title, Category category, double jpy, String home) {
-        return new Expense(title, category, jpy, "JPY", CurrencyMock.convert(jpy, "JPY", home));
+        return new Expense(title, category, jpy, "JPY", CurrencyRates.convert(jpy, "JPY", home));
     }
 
     private BudgetSettings defaultBudget(String home, String local) {
@@ -137,7 +138,7 @@ public final class PrototypeStore {
 
     /** Converts a PHP-denominated demo figure into {@code home}, rounded to the nearest 100. */
     private static double scale(double php, String home) {
-        double converted = CurrencyMock.convert(php, "PHP", home);
+        double converted = CurrencyRates.convert(php, "PHP", home);
         return Math.max(100, Math.round(converted / 100.0) * 100.0);
     }
 

@@ -19,7 +19,7 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.itismob.s01.group01.tripfit.data.Result;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.MockData;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
@@ -77,7 +77,7 @@ public class NewTripActivity extends ScreenActivity {
                 MockData.CITIES));
         inputCity.setText(MockData.CITIES.get(0), false);
         inputCurrency.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
-                CurrencyMock.codes()));
+                CurrencyRates.codes()));
         inputCurrency.setText(PrototypeStore.get().getDefaultHomeCurrency(), false);
         togglePlanMode.check(R.id.button_plan_manual);
 

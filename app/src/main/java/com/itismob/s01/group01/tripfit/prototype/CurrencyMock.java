@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/** Fixed demo exchange rates (units per 1 USD) standing in for the Frankfurter API. */
+/**
+ * Fixed demo exchange rates (units per 1 USD). {@link com.itismob.s01.group01.tripfit.data.CurrencyRates}
+ * uses these only as the offline fallback until live Frankfurter rates are fetched or restored from cache,
+ * and still delegates symbol formatting here.
+ */
 public final class CurrencyMock {
 
     private static final Map<String, Double> PER_USD = new HashMap<>();
@@ -34,6 +38,11 @@ public final class CurrencyMock {
 
     public static List<String> codes() {
         return CODES;
+    }
+
+    /** Read-only copy of the built-in rates (units per 1 USD): the offline fallback for CurrencyRates. */
+    public static Map<String, Double> perUsd() {
+        return Collections.unmodifiableMap(new HashMap<>(PER_USD));
     }
 
     /** Converts {@code amount} between two supported currencies; unknown codes pass through unchanged. */
