@@ -137,6 +137,8 @@
     <string name="field_amount">Amount (%1$s)</string>
     <string name="field_category_hint">Category</string>
     <string name="conversion_preview">≈ %1$s at today\'s demo rate</string>
+    <string name="conversion_preview_live">≈ %1$s at the %2$s exchange rate</string>
+    <string name="currency_option">%1$s · %2$s</string>
     <string name="error_amount_required">Enter an amount</string>
     <string name="error_title_required">Enter a description</string>
     <string name="expense_added">Expense added</string>

@@ -22,7 +22,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.itismob.s01.group01.tripfit.R;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
-import com.itismob.s01.group01.tripfit.prototype.CurrencyMock;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
 /** Dialog for logging an expense in the trip's local currency, with a live home-currency preview. */
@@ -177,10 +177,13 @@ public final class AddExpenseDialog {
                 return;
             }
             preview.setVisibility(View.VISIBLE);
-            preview.setText(activity.getString(R.string.conversion_preview,
-                    CurrencyMock.format(CurrencyMock.convert(amount,
-                            budget.getLocalCurrency(), budget.getHomeCurrency()),
-                            budget.getHomeCurrency())));
+            String converted = CurrencyRates.format(CurrencyRates.convert(amount,
+                    budget.getLocalCurrency(), budget.getHomeCurrency()), budget.getHomeCurrency());
+            // Say "demo" only when the built-in table is in use; live ECB rates carry their date.
+            preview.setText(CurrencyRates.isLive()
+                    ? activity.getString(R.string.conversion_preview_live, converted,
+                            CurrencyRates.asOfDate())
+                    : activity.getString(R.string.conversion_preview, converted));
         }
 
         /** Validates and saves; on failure shows errors and focuses the first invalid field. */
