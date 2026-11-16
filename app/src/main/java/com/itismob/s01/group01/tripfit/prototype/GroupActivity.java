@@ -35,7 +35,7 @@ public class GroupActivity extends PrototypeActivity {
         }
         title("Split the estimated cost");
         double estimated=0, spent=0;
-        for(DraftTrip.Stop stop:trip.stops) estimated+=RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency);
+        for(DraftTrip.Stop stop:trip.stops) estimated+=trip.convertedCost(stop);
         for(DraftTrip.Expense expense:trip.expenses) spent+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
         LinearLayout card=card(content);
         label(card,"Planned total: "+money(estimated,trip.homeCurrency)+" · "+trip.members.size()+" travelers");

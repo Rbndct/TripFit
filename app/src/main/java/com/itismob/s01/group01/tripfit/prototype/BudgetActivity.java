@@ -12,7 +12,7 @@ public class BudgetActivity extends PrototypeActivity {
     private static final int DECIMAL=InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL;
     @Override protected void onCreate(Bundle state) { super.onCreate(state); if(trip==null) { finish(); return; } render(); }
     private double planned(String category) {
-        double total=0; for(DraftTrip.Stop stop:trip.stops) if(category==null || stop.category.equals(category)) total+=RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency); return total;
+        double total=0; for(DraftTrip.Stop stop:trip.stops) if(category==null || stop.category.equals(category)) total+=trip.convertedCost(stop); return total;
     }
     private double actual(String category) {
         double total=0; for(DraftTrip.Expense expense:trip.expenses) if(category==null || expense.category.equals(category)) total+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency); return total;

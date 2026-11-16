@@ -23,18 +23,18 @@ public final class TripExport {
                 DraftTrip.Stop stop=slot.stop;
                 text.append(RoutePreview.time(slot.start)).append("–").append(RoutePreview.time(slot.end)).append(" ").append(stop.name).append(stop.booked?" [BOOKED]":"").append(slot.conflict?" [CHECK CONFLICT]":"").append("\n");
                 text.append("Stay ").append(stop.duration).append(" min; ~").append(slot.travel).append(" min incoming travel; ").append(stop.buffer).append(" min buffer; ").append(stop.mode).append(" transport\n");
-                text.append(String.format(Locale.US,"Estimate: %s %.0f (≈ %s %.0f)\n",trip.localCurrency(),stop.cost,trip.homeCurrency,RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency)));
+                text.append(String.format(Locale.US,"Estimate: %s %.0f (≈ %s %.0f)\n",trip.costCurrency(stop),stop.cost,trip.homeCurrency,trip.convertedCost(stop)));
                 if(stop.hasLocation) text.append(String.format(Locale.US,"Pin: %.5f, %.5f\n",stop.lat,stop.lng));
             }
             text.append("\n");
         }
         double planned=0,actual=0;
-        for(DraftTrip.Stop stop:trip.stops) planned+=RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency);
+        for(DraftTrip.Stop stop:trip.stops) planned+=trip.convertedCost(stop);
         for(DraftTrip.Expense expense:trip.expenses) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
         text.append(String.format(Locale.US,"BUDGET (%s)\nTrip limit: %.0f\nEstimated stops: %.0f\nLogged expenses: %.0f\nRemaining after expenses: %.0f\n",trip.homeCurrency,trip.totalBudget(),planned,actual,trip.totalBudget()-actual));
         for(String category:new String[]{"Food","Activities","Transport","Other"}) {
             double categoryPlanned=0,categoryActual=0;
-            for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) categoryPlanned+=RoutePreview.convert(stop.cost,trip.localCurrency(),trip.homeCurrency);
+            for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) categoryPlanned+=trip.convertedCost(stop);
             for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) categoryActual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
             text.append(String.format(Locale.US,"%s: limit %.0f / planned %.0f / logged %.0f\n",category,trip.categoryBudget(category),categoryPlanned,categoryActual));
         }
@@ -42,7 +42,8 @@ public final class TripExport {
         return text.toString();
     }
     public static void pdf(DraftTrip trip,OutputStream output) throws IOException {
-        try(PdfDocument document=new PdfDocument()) {
+        PdfDocument document=new PdfDocument();
+        try {
             Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG); paint.setTextSize(11); paint.setColor(Color.rgb(19,33,59));
             List<String> lines=new ArrayList<>();
             for(String paragraph:summary(trip).split("\n",-1)) {
@@ -62,6 +63,8 @@ public final class TripExport {
                 canvas.drawText("Local prototype · Page "+number,40,810,paint); document.finishPage(page);
             }
             document.writeTo(output);
+        } finally {
+            document.close();
         }
     }
     public static String calendar(DraftTrip trip) {

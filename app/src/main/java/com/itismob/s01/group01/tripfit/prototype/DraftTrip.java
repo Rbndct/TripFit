@@ -25,6 +25,8 @@ public class DraftTrip {
     public List<String> weather = new ArrayList<>();
 
     public String localCurrency() { return city.equals("Tokyo") ? "JPY" : "PHP"; }
+    public String costCurrency(Stop stop) { return stop.currency==null || stop.currency.isEmpty()?localCurrency():stop.currency; }
+    public double convertedCost(Stop stop) { return RoutePreview.convert(stop.cost,costCurrency(stop),homeCurrency); }
     public double totalBudget() { return budget * (dailyBudget ? days : 1); }
     public double categoryBudget(String category) {
         double value = category.equals("Food") ? foodBudget : category.equals("Activities") ? activityBudget
@@ -34,7 +36,7 @@ public class DraftTrip {
 
     public static class Stop {
         public String id = UUID.randomUUID().toString();
-        public String name = "", address = "", category = "Activities", mode = "Suggested";
+        public String name = "", address = "", category = "Activities", mode = "Suggested", currency = "";
         public int day = 1, duration = 60, buffer = 15, fixedMinute = 540;
         public double lat, lng, cost;
         public boolean hasLocation, booked, outdoor = true;

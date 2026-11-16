@@ -21,6 +21,7 @@ public final class DemoCatalog {
             stop.name=name; stop.address=name+", "+city; stop.category=category;
             stop.lat=lat; stop.lng=lng; stop.hasLocation=true; stop.cost=price;
             stop.duration=minutes; stop.day=day; stop.outdoor=outdoor;
+            stop.currency=city.equals("Tokyo")?"JPY":"PHP";
             return stop;
         }
     }
