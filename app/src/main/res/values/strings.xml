@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TripFit</string>
+    <string name="app_name">Trippings</string>
 
     <!-- Itinerary screen -->
     <string name="itinerary_title">Tokyo Trip</string>
