@@ -9,6 +9,7 @@ public class DraftTrip {
     public String id = UUID.randomUUID().toString();
     public String name = "";
     public String city = "Tokyo";
+    public String destinationId = "", destinationCurrency = "", destinationTimeZone = "";
     public String startDate = "2026-12-01";
     public int days = 3;
     public String homeCurrency = "PHP";
@@ -24,9 +25,22 @@ public class DraftTrip {
     public List<Entry> journal = new ArrayList<>();
     public List<String> weather = new ArrayList<>();
 
-    public String localCurrency() { return city.equals("Tokyo") ? "JPY" : "PHP"; }
+    public String localCurrency() {
+        if(destinationCurrency!=null && !destinationCurrency.isEmpty()) return destinationCurrency;
+        // Compatibility for drafts saved before city metadata was persisted.
+        if(city.equals("Tokyo")) return "JPY";
+        if(city.equals("Manila")) return "PHP";
+        throw new IllegalArgumentException("Destination currency is required");
+    }
+    public String timeZone() {
+        if(destinationTimeZone!=null && !destinationTimeZone.isEmpty()) return destinationTimeZone;
+        if(city.equals("Tokyo")) return "Asia/Tokyo";
+        if(city.equals("Manila")) return "Asia/Manila";
+        throw new IllegalArgumentException("Destination time zone is required");
+    }
     public String costCurrency(Stop stop) { return stop.currency==null || stop.currency.isEmpty()?localCurrency():stop.currency; }
-    public double convertedCost(Stop stop) { return RoutePreview.convert(stop.cost,costCurrency(stop),homeCurrency); }
+    public double convertedCost(Stop stop) { return stop.costKnown?RoutePreview.convert(stop.cost,costCurrency(stop),homeCurrency):0; }
+    public double convertedCost(Stop stop,com.itismob.s01.group01.tripfit.data.frontend.ExchangeRates rates) { return stop.costKnown?rates.convert(stop.cost,costCurrency(stop),homeCurrency):0; }
     public double totalBudget() { return budget * (dailyBudget ? days : 1); }
     public double categoryBudget(String category) {
         double value = category.equals("Food") ? foodBudget : category.equals("Activities") ? activityBudget
@@ -36,12 +50,14 @@ public class DraftTrip {
 
     public static class Stop {
         public String id = UUID.randomUUID().toString();
-        public String name = "", address = "", category = "Activities", mode = "Suggested", currency = "";
+        public String name = "", address = "", category = "Activities", mode = "Suggested", currency = "", placeId = "";
         public int day = 1, duration = 60, buffer = 15, fixedMinute = 540;
         public double lat, lng, cost;
         public boolean hasLocation, booked, outdoor = true;
+        public boolean costKnown = true;
     }
     public static class Expense {
+        public int day = 1;
         public String id = UUID.randomUUID().toString();
         public String title = "", category = "Food", currency = "PHP";
         public double amount;

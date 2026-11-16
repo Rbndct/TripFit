@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.frontend.PlaceSuggestion;
+
 import android.os.Bundle;
 import android.widget.*;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -10,37 +12,43 @@ public class WeatherActivity extends PrototypeActivity {
     @Override protected void onCreate(Bundle state) { super.onCreate(state); if(trip==null) { finish(); return; } render(); }
     private void render() {
         page("A plan for every forecast",trip.city+" · Weather-aware trip preview",true);
-        notice("Sample forecast · This is not live weather. Choose a condition to test outdoor warnings and indoor alternatives. Booked activities are never moved automatically.");
-        if(trip.weather==null) trip.weather=new ArrayList<>();
-        while(trip.weather.size()<trip.days) trip.weather.add(trip.weather.size()%3==1?"Rain":"Clear");
+        notice("Forecast sources are shown per day. Sample conditions can be changed to test indoor alternatives. Booked activities are never moved automatically.");
+        button(content,"Refresh travel information",()->refreshTravelData(this::render));
         for(int day=1;day<=trip.days;day++) {
             final int current=day;
             LinearLayout card=card(content);
             card.addView(text("Day "+day+" · "+date(day),20,INK));
-            String condition=trip.weather.get(day-1);
-            label(card,(condition.equals("Rain")?"☂ Rain · 22°C · 80% sample chance":condition.equals("Storm")?"Storm · 20°C · 95% sample chance":"☀ Clear · 26°C · 10% sample chance"));
-            Spinner forecast=choices(card,"Sample condition",new String[]{"Clear","Rain","Storm"},condition);
-            button(card,"Apply sample forecast",()->{trip.weather.set(current-1,forecast.getSelectedItem().toString());save();render();});
+            com.itismob.s01.group01.tripfit.data.frontend.DailyForecast forecastData=data.forecast(day);
+            String condition=forecastData.condition;
+            label(card,forecastData.display());
+            if(forecastData.sample) {
+                Spinner forecast=choices(card,"Sample condition for Day "+day,new String[]{"Clear","Rain","Storm"},condition);
+                button(card,"Apply sample forecast for Day "+day,()->{
+                    if(trip.weather==null) trip.weather=new ArrayList<>();
+                    while(trip.weather.size()<trip.days) trip.weather.add("Clear");
+                    trip.weather.set(current-1,forecast.getSelectedItem().toString());save();data=services.travel.cached(com.itismob.s01.group01.tripfit.data.frontend.TravelQuery.from(trip));render();
+                });
+            }
             int outdoor=0;
             for(DraftTrip.Stop stop:trip.stops) if(stop.day==day && stop.outdoor) {
                 outdoor++;
-                if(!condition.equals("Clear")) {
+                if(forecastData.risky()) {
                     label(card,"⚠ "+stop.name+(stop.booked?" · Booked: review with your provider":" · Consider an indoor swap"));
                     if(!stop.booked) button(card,"Indoor alternatives for "+stop.name,()->alternatives(stop));
                 }
             }
-            if(condition.equals("Clear")) label(card,"No sample weather conflicts. Review actual weather before your trip.");
+            if(condition.equals("Clear")) label(card,"No weather conflicts in this forecast. Review actual weather before your trip.");
             else if(outdoor==0) label(card,"No outdoor stops to flag on this day.");
         }
     }
     private void alternatives(DraftTrip.Stop outdoor) {
         List<DraftTrip.Stop> indoor=new ArrayList<>(); List<String> labels=new ArrayList<>();
-        for(DraftTrip.Stop stop:trip.stops) if(!stop.outdoor && !stop.booked && stop.day!=outdoor.day) {
+        for(DraftTrip.Stop stop:trip.stops) if(!stop.outdoor && !stop.booked && stop.day!=outdoor.day && data.forecast(stop.day).condition.equals("Clear")) {
             indoor.add(stop); labels.add("Swap days with "+stop.name+" (Day "+stop.day+")");
         }
-        List<DemoCatalog.Place> extras=new ArrayList<>();
-        for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) if(!place.outdoor && place.category.equals("Activities")) {
-            boolean exists=false; for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) exists=true;
+        List<PlaceSuggestion> extras=new ArrayList<>();
+        for(PlaceSuggestion place:data.places(trip.city)) if(!place.outdoor && place.category.equals("Activities")) {
+            boolean exists=false; for(DraftTrip.Stop stop:trip.stops) if(place.matches(stop)) exists=true;
             if(!exists) { extras.add(place); labels.add("Replace with "+place.name+" · sample suggestion"); }
         }
         if(labels.isEmpty()) { toast("No flexible indoor alternatives. Add one through Discover or edit the stop manually."); return; }

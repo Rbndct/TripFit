@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.frontend.PlaceSuggestion;
+
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.content.Intent;
@@ -33,23 +35,25 @@ public class StopEditorActivity extends PrototypeActivity {
             if(result.getResultCode()!=Activity.RESULT_OK || result.getData()==null) return;
             stop.lat=result.getData().getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT,0);
             stop.lng=result.getData().getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LNG,0); stop.hasLocation=true;
+            stop.placeId=""; stop.address="";
             if(value(name).isEmpty()) name.setText("Pinned destination"); updateLocation();
         });
         render();
     }
     private void render() {
-        page(editing?"Edit destination":"Add a destination","Search sample places, type a name or drop a pin.",true);
-        TextInputEditText search=field(content,"Search sample places","",InputType.TYPE_CLASS_TEXT);
+        page(editing?"Edit destination":"Add a destination","Search places, type a name or drop a pin.",true);
+        TextInputEditText search=field(content,"Search places","",InputType.TYPE_CLASS_TEXT);
         button(content,"Search in "+trip.city,()->{
-            List<DemoCatalog.Place> matches=new ArrayList<>(); List<String> names=new ArrayList<>();
-            for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) if(place.name.toLowerCase(java.util.Locale.ROOT).contains(value(search).toLowerCase(java.util.Locale.ROOT))) { matches.add(place); names.add(place.name); }
+            List<PlaceSuggestion> matches=new ArrayList<>(); List<String> names=new ArrayList<>();
+            for(PlaceSuggestion place:data.places(trip.city)) if(place.name.toLowerCase(java.util.Locale.ROOT).contains(value(search).toLowerCase(java.util.Locale.ROOT))) { matches.add(place); names.add(place.name); }
             if(matches.isEmpty()) { toast("No sample matches. Add a name or choose a map pin."); return; }
             new MaterialAlertDialogBuilder(this).setTitle("Sample places in "+trip.city).setItems(names.toArray(new String[0]),(d,index)->{
-                DemoCatalog.Place p=matches.get(index); stop.lat=p.lat; stop.lng=p.lng; stop.hasLocation=true;
+                PlaceSuggestion p=matches.get(index); stop.lat=p.lat; stop.lng=p.lng; stop.hasLocation=true;
                 stop.address=p.name+", "+p.city; stop.outdoor=p.outdoor; stop.category=p.category;
-                stop.currency=p.city.equals("Tokyo")?"JPY":"PHP";
-                name.setText(p.name); duration.setText(String.valueOf(p.minutes)); cost.setText(String.valueOf(p.price));
-                priceCurrency.setSelection(stop.currency.equals("JPY")?1:0);
+                stop.currency=p.currency; stop.placeId=p.id;
+                name.setText(p.name); duration.setText(String.valueOf(p.minutes)); cost.setText(p.price==null?"":String.valueOf(p.price));
+                String[] currencies=data.rates.currencies();
+                for(int c=0;c<currencies.length;c++) if(currencies[c].equals(stop.currency)) priceCurrency.setSelection(c);
                 category.setSelection(p.category.equals("Food")?1:0); outdoor.setChecked(p.outdoor); updateLocation();
             }).show();
         });
@@ -57,16 +61,17 @@ public class StopEditorActivity extends PrototypeActivity {
         location=text("",14,TEAL); content.addView(location); updateLocation();
         button(content,"Pick or adjust location on map",()->{
             Intent intent=new Intent(this,MapPickerActivity.class);
-            intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT,stop.hasLocation?stop.lat:DemoCatalog.lat(trip.city));
-            intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG,stop.hasLocation?stop.lng:DemoCatalog.lng(trip.city)); mapPicker.launch(intent);
+            intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT,stop.hasLocation?stop.lat:data.destination(trip.city).lat);
+            intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG,stop.hasLocation?stop.lng:data.destination(trip.city).lng); mapPicker.launch(intent);
         });
         day=field(content,"Day (1–"+trip.days+")",String.valueOf(stop.day),InputType.TYPE_CLASS_NUMBER);
-        duration=field(content,"Stay in minutes (blank = 60)",String.valueOf(stop.duration),InputType.TYPE_CLASS_NUMBER);
+        duration=field(content,"Stay in minutes (optional)",String.valueOf(stop.duration),InputType.TYPE_CLASS_NUMBER);
         buffer=field(content,"Buffer before this stop (minutes)",String.valueOf(stop.buffer),InputType.TYPE_CLASS_NUMBER);
         category=choices(content,"Budget category",new String[]{"Activities","Food","Transport","Other"},stop.category);
-        cost=field(content,"Estimated cost",String.valueOf(stop.cost),InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        priceCurrency=choices(content,"Price currency",new String[]{"PHP","JPY","USD","EUR"},stop.currency);
-        label(content,"Prices are sample estimates. Blank stay duration defaults to 60 minutes; food recommendations use their own suggested duration.");
+        cost=field(content,"Estimated cost",stop.costKnown?String.valueOf(stop.cost):"",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        priceCurrency=choices(content,"Price currency",data.rates.currencies(),stop.currency);
+        label(content,"Blank stays use 60 minutes for food/activities and 30 for transport/other stops. Recommended places include their own suggested duration.");
+        label(content,"Blank cost means no estimate is available; enter 0 only for a free stop.");
         transport=choices(content,"Transport from previous stop",new String[]{"Suggested","Walking","Cycling","Driving","Transit"},stop.mode);
         booked=check(content,"Booked activity · lock the time",stop.booked);
         TextView fixed=text("Fixed time: "+RoutePreview.time(stop.fixedMinute),16,INK); content.addView(fixed);
@@ -77,8 +82,8 @@ public class StopEditorActivity extends PrototypeActivity {
         button(content,editing?"Save changes":"Add to itinerary",()->{
             if(value(name).isEmpty()) { name.setError("Enter a destination name"); return; }
             try {
-                stop.day=(int)number(day,1,trip.days); stop.duration=value(duration).isEmpty()?60:(int)number(duration,5,720);
-                stop.buffer=(int)number(buffer,0,180); stop.cost=number(cost,0,100000000); stop.name=value(name);
+                stop.day=(int)number(day,1,trip.days); stop.duration=value(duration).isEmpty()?DraftRules.defaultDuration(category.getSelectedItem().toString()):(int)number(duration,5,720);
+                stop.buffer=(int)number(buffer,0,180); stop.costKnown=!value(cost).isEmpty(); stop.cost=stop.costKnown?number(cost,0,100000000):0; stop.name=value(name);
                 stop.category=category.getSelectedItem().toString(); stop.currency=priceCurrency.getSelectedItem().toString(); stop.mode=transport.getSelectedItem().toString(); stop.booked=booked.isChecked(); stop.outdoor=outdoor.isChecked();
                 if(editing) { for(int i=0;i<trip.stops.size();i++) if(trip.stops.get(i).id.equals(stop.id)) trip.stops.set(i,stop); }
                 else trip.stops.add(stop); save(); finish();
@@ -96,7 +101,8 @@ public class StopEditorActivity extends PrototypeActivity {
         try { stop.day=Integer.parseInt(value(day)); } catch(NumberFormatException ignored) {}
         try { stop.duration=Integer.parseInt(value(duration)); } catch(NumberFormatException ignored) {}
         try { stop.buffer=Integer.parseInt(value(buffer)); } catch(NumberFormatException ignored) {}
-        try { stop.cost=Double.parseDouble(value(cost)); } catch(NumberFormatException ignored) {}
+        stop.costKnown=!value(cost).isEmpty();
+        try { double parsed=Double.parseDouble(value(cost)); if(Double.isFinite(parsed)) stop.cost=parsed; } catch(NumberFormatException ignored) {}
         stop.mode=transport.getSelectedItem().toString(); stop.currency=priceCurrency.getSelectedItem().toString(); stop.booked=booked.isChecked(); stop.outdoor=outdoor.isChecked(); stop.category=category.getSelectedItem().toString();
         stop.name=value(name); state.putString("draft",new com.google.gson.Gson().toJson(stop)); super.onSaveInstanceState(state);
     }

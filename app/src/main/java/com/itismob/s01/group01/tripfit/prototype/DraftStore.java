@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.frontend.PlaceSuggestion;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import com.google.gson.Gson;
@@ -8,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Stores frontend drafts only. Existing Room data is left intact. */
-public final class DraftStore {
+public final class DraftStore implements com.itismob.s01.group01.tripfit.data.frontend.DraftRepository {
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
     public DraftStore(Context context) { preferences=context.getSharedPreferences("trippings_prototype_v1",Context.MODE_PRIVATE); }
@@ -18,7 +20,7 @@ public final class DraftStore {
         DraftTrip sample=new DraftTrip();
         sample.name="Tokyo, at your own pace"; sample.sample=true;
         sample.members.add("You"); sample.members.add("Alex (sample)");
-        for(DemoCatalog.Place place:DemoCatalog.places("Tokyo")) {
+        for(PlaceSuggestion place:DemoCatalog.places("Tokyo")) {
             if(sample.stops.size()>=6) break;
             DraftTrip.Stop stop=place.stop(sample.stops.size()<3?1:2);
             if(place.name.equals("Tokyo Skytree")) { stop.booked=true; stop.fixedMinute=1080; }
@@ -34,4 +36,7 @@ public final class DraftStore {
         trips.add(0,trip); write(trips);
     }
     private void write(List<DraftTrip> trips) { preferences.edit().putString("trips",gson.toJson(trips)).apply(); }
+    @Override public void refresh(com.itismob.s01.group01.tripfit.data.Result.Callback<List<DraftTrip>> callback) {
+        callback.onResult(com.itismob.s01.group01.tripfit.data.Result.success(all()));
+    }
 }

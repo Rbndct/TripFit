@@ -18,18 +18,24 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.itismob.s01.group01.tripfit.HomeActivity;
 import com.itismob.s01.group01.tripfit.R;
 import java.util.Locale;
+import com.itismob.s01.group01.tripfit.TripFitApp;
+import com.itismob.s01.group01.tripfit.data.frontend.*;
 
 /** Shared native Material building blocks for the frontend prototype. */
 public abstract class PrototypeActivity extends AppCompatActivity {
     protected LinearLayout root, content, navigation;
-    protected DraftStore store;
+    protected DraftRepository store;
+    protected FrontendServices services;
+    protected TravelSnapshot data;
+    private int refreshGeneration;
     protected DraftTrip trip;
     protected String tripId;
     protected static final int NAVY=0xff13213b, INK=0xff15181d, MUTED=0xff586374, PAPER=0xfffbfbf9, TEAL=0xff196c62;
     @Override protected void onCreate(Bundle state) {
-        super.onCreate(state); store=new DraftStore(this);
+        super.onCreate(state); services=((TripFitApp)getApplication()).getFrontendServices(); store=services.drafts;
         tripId=getIntent().getStringExtra(HomeActivity.EXTRA_TRIP_ID);
         if(tripId!=null) trip=store.get(tripId);
+        data=services.travel.cached(TravelQuery.from(trip));
     }
     protected void page(String title,String subtitle,boolean back) {
         root=new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(PAPER);
@@ -106,6 +112,25 @@ public abstract class PrototypeActivity extends AppCompatActivity {
     protected void hideKeyboard() { View focus=getCurrentFocus(); if(focus!=null) ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(focus.getWindowToken(),0); }
     protected void save() { store.save(trip); }
     protected void reload() { if(tripId!=null) trip=store.get(tripId); }
+    protected boolean reloadIfChanged() {
+        if(tripId==null) return false;
+        DraftTrip latest=store.get(tripId);
+        if(latest==null) { finish(); return false; }
+        com.google.gson.Gson gson=new com.google.gson.Gson();
+        if(gson.toJson(latest).equals(gson.toJson(trip))) return false;
+        trip=latest; data=services.travel.cached(TravelQuery.from(trip)); return true;
+    }
+    protected void refreshTravelData(Runnable render) {
+        TravelQuery request=TravelQuery.from(trip); int generation=++refreshGeneration;
+        services.travel.refresh(request,result->runOnUiThread(()->{
+            if(isFinishing() || isDestroyed() || generation!=refreshGeneration) return;
+            DraftTrip latest=tripId==null?trip:store.get(tripId);
+            if(!request.equals(TravelQuery.from(latest))) return;
+            if(!result.isSuccess() || result.getData()==null) { toast("Could not refresh travel information. Your cached data and draft are still available."); return; }
+            try { result.getData().validateFor(trip); data=result.getData(); render.run(); }
+            catch(IllegalArgumentException error) { toast("Updated travel information is incomplete. Kept your cached data."); }
+        }));
+    }
     protected String date(int day) {
         try {
             java.text.SimpleDateFormat format=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US); format.setLenient(false);

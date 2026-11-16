@@ -16,16 +16,23 @@ public class TripSetupActivity extends PrototypeActivity {
         boolean editing=trip!=null;
         if(!editing) { trip=new DraftTrip(); trip.startDate=new java.text.SimpleDateFormat("yyyy-MM-dd",Locale.US).format(new java.util.Date()); trip.members.add("You"); }
         page(editing?"Trip settings":"A new adventure","A few details, then make it yours.",true);
+        if(data.destinations.isEmpty()) {
+            notice("No destinations are available yet. Refresh the travel catalog and try again.");
+            button(content,"Refresh travel information",()->refreshTravelData(this::recreate));
+            return;
+        }
         TextInputEditText name=field(content,"Trip name",trip.name,InputType.TYPE_CLASS_TEXT);
-        Spinner city=choices(content,"Destination city",new String[]{"Tokyo","Manila"},trip.city);
-        label(content,"Prototype cities: Tokyo and Manila. You can add a pin anywhere on the map.");
+        String[] destinations=new String[data.destinations.size()];
+        for(int i=0;i<destinations.length;i++) destinations[i]=data.destinations.get(i).name;
+        Spinner city=choices(content,"Destination city",destinations,trip.city);
+        label(content,"Choose a city, then add the places you want to visit. You can add a pin anywhere on the map.");
         TextInputEditText start=field(content,"Start date (YYYY-MM-DD)",trip.startDate,InputType.TYPE_CLASS_DATETIME);
         button(content,"Choose start date",()->{
             Calendar calendar=Calendar.getInstance();
             new DatePickerDialog(this,(picker,year,month,day)->start.setText(String.format(Locale.US,"%04d-%02d-%02d",year,month+1,day)),calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH)).show();
         });
         TextInputEditText days=field(content,"Number of days",String.valueOf(trip.days),InputType.TYPE_CLASS_NUMBER);
-        Spinner currency=choices(content,"Home currency",new String[]{"PHP","JPY","USD","EUR"},trip.homeCurrency);
+        Spinner currency=choices(content,"Home currency",data.rates.currencies(),trip.homeCurrency);
         TextInputEditText budget=field(content,"Budget in home currency",String.valueOf(trip.budget),InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         CheckBox daily=check(content,"This is a daily budget",trip.dailyBudget);
         if(editing) label(content,"Changing city keeps your existing stops. Changing currency keeps the numeric budget; review category limits in Budget.");
@@ -40,6 +47,8 @@ public class TripSetupActivity extends PrototypeActivity {
                 int count=(int)number(days,1,30); double amount=number(budget,1,100000000);
                 for(DraftTrip.Stop stop:trip.stops) if(stop.day>count) { days.setError("Move stops from later days before shortening this trip"); return; }
                 trip.name=value(name); trip.city=city.getSelectedItem().toString(); trip.startDate=value(start); trip.days=count;
+                com.itismob.s01.group01.tripfit.data.frontend.Destination selected=data.destination(trip.city);
+                trip.destinationId=selected.id; trip.destinationCurrency=selected.currency; trip.destinationTimeZone=selected.timeZone;
                 trip.homeCurrency=currency.getSelectedItem().toString(); trip.dailyBudget=daily.isChecked();
                 if(trip.budget!=amount || !editing) { trip.foodBudget=amount*.3; trip.activityBudget=amount*.4; trip.transportBudget=amount*.2; trip.otherBudget=amount*.1; }
                 trip.budget=amount; store.save(trip);

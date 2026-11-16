@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.frontend.PlaceSuggestion;
+
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.*;
@@ -8,6 +10,7 @@ import java.util.Locale;
 
 public class GroupActivity extends PrototypeActivity {
     @Override protected void onCreate(Bundle state) { super.onCreate(state); if(trip==null) { finish(); return; } render(); }
+    @Override protected void onResume() { super.onResume(); if(root!=null && reloadIfChanged()) render(); }
     private void render() {
         page("Better together",trip.name+" · Group trip",true);
         notice("Local group preview · Members and votes are simulated on this device. No invitations are sent and no other device can join yet.");
@@ -28,15 +31,18 @@ public class GroupActivity extends PrototypeActivity {
         });
         title("Vote on the next stop");
         label(content,"One local vote per place. Tap again to remove your vote. Add winning places through Discover.");
-        for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) if(place.category.equals("Activities")) {
+        for(PlaceSuggestion place:data.places(trip.city)) if(place.category.equals("Activities")) {
             LinearLayout card=card(content); card.addView(text(place.name,18,INK));
-            boolean voted=trip.votes.contains(place.name); label(card,voted?"1 vote · You":"0 votes");
-            button(card,voted?"Remove my vote":"Vote for this place",()->{ if(trip.votes.contains(place.name)) trip.votes.remove(place.name); else trip.votes.add(place.name); save(); render(); });
+            boolean voted=trip.votes.contains(place.id) || trip.votes.contains(place.name); label(card,voted?"1 vote · You":"0 votes");
+            button(card,(voted?"Remove vote for ":"Vote for ")+place.name,()->{
+                if(trip.votes.contains(place.id) || trip.votes.contains(place.name)) { trip.votes.remove(place.id); trip.votes.remove(place.name); }
+                else trip.votes.add(place.id); save(); render();
+            });
         }
         title("Split the estimated cost");
         double estimated=0, spent=0;
-        for(DraftTrip.Stop stop:trip.stops) estimated+=trip.convertedCost(stop);
-        for(DraftTrip.Expense expense:trip.expenses) spent+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
+        for(DraftTrip.Stop stop:trip.stops) estimated+=trip.convertedCost(stop,data.rates);
+        for(DraftTrip.Expense expense:trip.expenses) spent+=data.rates.convert(expense.amount,expense.currency,trip.homeCurrency);
         LinearLayout card=card(content);
         label(card,"Planned total: "+money(estimated,trip.homeCurrency)+" · "+trip.members.size()+" travelers");
         card.addView(text(money(estimated/trip.members.size(),trip.homeCurrency)+" each",24,TEAL));

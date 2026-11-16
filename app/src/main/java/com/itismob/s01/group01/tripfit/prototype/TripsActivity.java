@@ -15,6 +15,10 @@ public class TripsActivity extends PrototypeActivity {
         title("Where to next?");
         label(content,"Build a trip around the places, people and budget that matter to you.");
         button(content,"+ Plan a new trip",()->open(TripSetupActivity.class));
+        button(content,"Refresh saved trips",()->store.refresh(result->runOnUiThread(()->{
+            if(isFinishing() || isDestroyed()) return;
+            if(result.isSuccess()) render(); else toast("Could not refresh trips. Your local drafts are still available.");
+        })));
         title("Your trips");
         for(DraftTrip draft:store.all()) {
             LinearLayout card=card(content);

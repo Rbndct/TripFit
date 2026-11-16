@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.frontend.PlaceSuggestion;
+
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.*;
@@ -20,41 +22,42 @@ public class DiscoverActivity extends PrototypeActivity {
     }
     private void render() {
         page("Discover "+trip.city,"Must-sees, little discoveries and room for spontaneity.",true);
-        notice("Sample recommendations · Ratings, review counts, restaurant names and prices are illustrative. Distances are straight-line estimates, not walking routes.");
+        notice(data.placeSource+" Distances are straight-line estimates, not walking routes.");
+        button(content,"Refresh travel information",()->refreshTravelData(this::render));
         Spinner kind=choices(content,"What would you like to find?",new String[]{"All places","Famous / must-see","Hidden gems","Food","Activities"},filter);
-        TextInputEditText search=field(content,"Search sample places",query,InputType.TYPE_CLASS_TEXT);
+        TextInputEditText search=field(content,"Search places",query,InputType.TYPE_CLASS_TEXT);
         String[] days=new String[trip.days]; for(int i=0;i<days.length;i++) days[i]="Day "+(i+1);
         Spinner targetDay=choices(content,"Add suggestions to",days,"Day "+day);
         CheckBox affordable=check(content,"Only show places within remaining category budget",withinBudget);
         button(content,"Update suggestions",()->{ filter=kind.getSelectedItem().toString(); query=value(search); day=targetDay.getSelectedItemPosition()+1; withinBudget=affordable.isChecked(); render(); });
         button(content,"Build a suggested itinerary",this::suggestedPlan);
         title("Suggestions for Day "+day);
-        double anchorLat=DemoCatalog.lat(trip.city), anchorLng=DemoCatalog.lng(trip.city);
+        double anchorLat=data.destination(trip.city).lat, anchorLng=data.destination(trip.city).lng;
         String anchorName="city center";
         for(DraftTrip.Stop s:trip.stops) if(s.day==day && s.hasLocation) { anchorLat=s.lat; anchorLng=s.lng; anchorName=s.name; }
         label(content,"Nearby "+anchorName+" · Change the day to use that day's last pinned stop.");
-        List<DemoCatalog.Place> candidates=DemoCatalog.places(trip.city);
+        List<PlaceSuggestion> candidates=data.places(trip.city);
         final double lat=anchorLat,lng=anchorLng;
         candidates.sort(java.util.Comparator.comparingDouble(p->RoutePreview.distance(lat,lng,p.lat,p.lng)));
         int count=0;
-        for(DemoCatalog.Place p:candidates) {
+        for(PlaceSuggestion p:candidates) {
             if(!query.isEmpty() && !p.name.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT))) continue;
             if(filter.equals("Famous / must-see") && (p.hidden || p.category.equals("Food"))) continue;
             if(filter.equals("Hidden gems") && !p.hidden) continue;
             if(filter.equals("Food") && !p.category.equals("Food")) continue;
             if(filter.equals("Activities") && !p.category.equals("Activities")) continue;
-            double converted=RoutePreview.convert(p.price,trip.localCurrency(),trip.homeCurrency);
+            double converted=p.price==null?0:data.rates.convert(p.price,p.currency,trip.homeCurrency);
             double remaining=remaining(p.category);
-            if(withinBudget && converted>remaining) continue;
+            if(withinBudget && (p.price==null || converted>remaining)) continue;
             count++;
             LinearLayout card=card(content);
             label(card,(p.hidden?"HIDDEN GEM":"POPULAR PICK")+" · "+p.category+(p.outdoor?" · Outdoors":" · Indoors"));
             card.addView(text(p.name,20,INK)); label(card,p.description);
-            label(card,String.format(Locale.US,"★ %.1f · %,d sample reviews · %.1f km away",p.rating,p.reviews,RoutePreview.distance(anchorLat,anchorLng,p.lat,p.lng)));
-            String tier=p.price==0?"Free":p.price<(trip.city.equals("Tokyo")?1200:200)?"$":"$$";
-            label(card,tier+" · "+money(p.price,trip.localCurrency())+" ≈ "+money(converted,trip.homeCurrency)+" · "+p.minutes+" min");
+            label(card,String.format(Locale.US,"★ %.1f · %,d reviews · %.1f km away",p.rating,p.reviews,RoutePreview.distance(anchorLat,anchorLng,p.lat,p.lng)));
+            String price=p.price==null?"Price estimate unavailable":money(p.price,p.currency)+" ≈ "+money(converted,trip.homeCurrency);
+            label(card,p.tierLabel()+" · "+price+" · "+p.minutes+" min");
             label(card,money(remaining,trip.homeCurrency)+" remaining in "+p.category+(converted>remaining?" · Over category budget":""));
-            boolean already=false; for(DraftTrip.Stop s:trip.stops) if(s.name.equals(p.name)) already=true;
+            boolean already=false; for(DraftTrip.Stop s:trip.stops) if(p.matches(s)) already=true;
             if(already) label(card,"Already in your itinerary");
             else button(card,"Add to Day "+day,()->{ trip.stops.add(p.stop(day)); save(); toast("Added to your itinerary"); render(); });
             button(card,"Swap with a flexible stop",()->swap(p));
@@ -62,16 +65,14 @@ public class DiscoverActivity extends PrototypeActivity {
         if(count==0) notice("No sample places match these filters. Try all places, turn off the budget filter or add your own stop from the itinerary.");
     }
     private double remaining(String category) {
-        double planned=0; for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) planned+=trip.convertedCost(stop);
-        double actual=0; for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
-        return trip.categoryBudget(category)-Math.max(planned,actual);
+        return DraftBudget.suggestionAllowance(trip,data.rates,category,day);
     }
     private void suggestedPlan() {
-        List<DemoCatalog.Place> picks=new ArrayList<>();
+        List<PlaceSuggestion> picks=new ArrayList<>();
         for(boolean hidden:new boolean[]{false,true}) {
             int limit=hidden?2:3, added=0;
-            for(DemoCatalog.Place place:DemoCatalog.places(trip.city)) {
-                boolean duplicate=false; for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) duplicate=true;
+            for(PlaceSuggestion place:data.places(trip.city)) {
+                boolean duplicate=false; for(DraftTrip.Stop stop:trip.stops) if(place.matches(stop)) duplicate=true;
                 if(!duplicate && place.hidden==hidden && !place.category.equals("Food") && added<limit) { picks.add(place); added++; }
             }
         }
@@ -87,8 +88,8 @@ public class DiscoverActivity extends PrototypeActivity {
                 save(); toast(added+" stops added across your trip days"); render();
             }).show();
     }
-    private void swap(DemoCatalog.Place place) {
-        for(DraftTrip.Stop stop:trip.stops) if(stop.name.equals(place.name)) { toast("This place is already in your itinerary."); return; }
+    private void swap(PlaceSuggestion place) {
+        for(DraftTrip.Stop stop:trip.stops) if(place.matches(stop)) { toast("This place is already in your itinerary."); return; }
         List<DraftTrip.Stop> flexible=new ArrayList<>(); List<String> names=new ArrayList<>();
         for(DraftTrip.Stop stop:trip.stops) if(!stop.booked) { flexible.add(stop); names.add("Day "+stop.day+" · "+stop.name); }
         if(flexible.isEmpty()) { toast("No flexible stops to swap. Booked activities stay protected."); return; }

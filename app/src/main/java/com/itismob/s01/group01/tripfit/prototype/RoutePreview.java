@@ -16,6 +16,20 @@ public final class RoutePreview {
         }
     }
     public static List<Slot> day(DraftTrip trip,int day,boolean optimize) {
+        return day(trip,day,optimize,new com.itismob.s01.group01.tripfit.data.frontend.SampleTravelTimes());
+    }
+    public static List<Slot> day(DraftTrip trip,int day,boolean optimize,
+            com.itismob.s01.group01.tripfit.data.frontend.TravelTimeProvider timings) {
+        List<Slot> baseline=plan(trip,day,false,timings);
+        if(!optimize) return baseline;
+        List<Slot> preview=plan(trip,day,true,timings);
+        int before=0,after=0,oldConflicts=0,newConflicts=0;
+        for(Slot slot:baseline) { before+=slot.travel; if(slot.conflict) oldConflicts++; }
+        for(Slot slot:preview) { after+=slot.travel; if(slot.conflict) newConflicts++; }
+        return after<=before && newConflicts<=oldConflicts?preview:baseline;
+    }
+    private static List<Slot> plan(DraftTrip trip,int day,boolean optimize,
+            com.itismob.s01.group01.tripfit.data.frontend.TravelTimeProvider timings) {
         List<DraftTrip.Stop> flexible=new ArrayList<>(), fixed=new ArrayList<>();
         for(DraftTrip.Stop stop:trip.stops) if(stop.day==day) (stop.booked?fixed:flexible).add(stop);
         fixed.sort(Comparator.comparingInt(s->s.fixedMinute));
@@ -28,21 +42,21 @@ public final class RoutePreview {
                 DraftTrip.Stop chosen=null;
                 double nearest=Double.MAX_VALUE;
                 for(DraftTrip.Stop candidate:flexible) {
-                    int arrival=cursor+travel(previous,candidate)+(previous==null?0:candidate.buffer);
+                    int arrival=cursor+timings.minutes(previous,candidate)+(previous==null?0:candidate.buffer);
                     int departure=arrival+candidate.duration;
-                    if(booked!=null && departure+travel(candidate,booked)+booked.buffer>booked.fixedMinute) continue;
-                    double distance=previous==null?0:distance(previous.lat,previous.lng,candidate.lat,candidate.lng);
+                    if(booked!=null && departure+timings.minutes(candidate,booked)+booked.buffer>booked.fixedMinute) continue;
+                    double distance=timings.minutes(previous,candidate);
                     if(chosen==null || (optimize && distance<nearest)) { chosen=candidate; nearest=distance; }
                     if(!optimize) break;
                 }
                 if(chosen==null) break;
-                int minutes=travel(previous,chosen);
+                int minutes=timings.minutes(previous,chosen);
                 int start=cursor+minutes+(previous==null?0:chosen.buffer);
                 Slot slot=new Slot(chosen,start,minutes,start+chosen.duration>1200);
                 result.add(slot); cursor=slot.end; previous=chosen; flexible.remove(chosen);
             }
             if(booked!=null) {
-                int minutes=travel(previous,booked);
+                int minutes=timings.minutes(previous,booked);
                 int earliest=cursor+minutes+(previous==null?0:booked.buffer);
                 Slot slot=new Slot(booked,booked.fixedMinute,minutes,earliest>booked.fixedMinute || booked.fixedMinute+booked.duration>1440);
                 result.add(slot); cursor=Math.max(cursor,slot.end); previous=booked;
@@ -70,10 +84,7 @@ public final class RoutePreview {
     }
     public static String time(int minute) { return String.format(Locale.US,"%02d:%02d",minute/60,minute%60); }
     public static double convert(double amount,String from,String to) {
-        return amount*rate(from)/rate(to);
-    }
-    private static double rate(String currency) {
-        switch(currency) { case "JPY":return 0.38; case "USD":return 58; case "EUR":return 63; default:return 1; }
+        return com.itismob.s01.group01.tripfit.data.frontend.ExchangeRates.samples().convert(amount,from,to);
     }
     private RoutePreview() {}
 }
