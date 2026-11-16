@@ -23,6 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/space_md"
+                android:focusable="true"
                 app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="@dimen/card_corner"
                 app:cardElevation="0dp"
@@ -42,13 +43,14 @@
                         android:background="@drawable/bg_circle_badge"
                         android:contentDescription="@null"
                         android:padding="10dp"
-                        android:src="@drawable/ic_schedule_24"
+                        android:src="@drawable/ic_person_24"
                         app:tint="?attr/colorOnPrimaryContainer" />
 
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/space_md"
+                        android:layout_weight="1"
                         android:orientation="vertical">
 
                         <TextView
@@ -121,6 +123,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/space_sm"
+            android:accessibilityLiveRegion="polite"
+            android:drawableStart="@drawable/ic_check_24"
+            android:drawablePadding="@dimen/space_sm"
+            android:drawableTint="?attr/colorOnSurface"
+            android:gravity="center_vertical"
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textColor="?attr/colorOnSurface"
             android:visibility="gone" />
@@ -128,13 +135,15 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_sync"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:minHeight="48dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_open_calendar"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:text="@string/action_open_calendar"
             android:visibility="gone" />
 
