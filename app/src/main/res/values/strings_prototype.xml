@@ -108,7 +108,10 @@
     <string name="budget_expenses">Expenses</string>
     <string name="action_add_expense">Add expense</string>
     <string name="action_edit_budget">Edit budget</string>
-    <string name="budget_empty_expenses">No expenses logged yet</string>
+    <string name="budget_empty_expenses">No expenses logged yet. Tap Add expense to log your first one.</string>
+    <string name="budget_no_total">No budget set</string>
+    <string name="category_row_cd">%1$s, %2$s</string>
+    <string name="category_row_cd_over">%1$s, over budget, %2$s</string>
     <string name="category_status_over">Over</string>
     <string name="category_progress">%1$s of %2$s</string>
     <string name="category_no_limit">%1$s spent, no limit set</string>
