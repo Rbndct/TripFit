@@ -1,2 +1,1 @@
-TOUCH_TARGET  361x4dp < 48dp  androidx.cardview.widget.CardView
-NO_LABEL      clickable with no text/content-desc  androidx.cardview.widget.CardView
+TOUCH_TARGET  361x4dp < 48dp  CardView  [clipped list row at the scroll/footer edge, y=1922-1934px in discover.xml; not a real 4dp control]
