@@ -49,7 +49,9 @@ public class BudgetSetupActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_budget_setup, R.string.budget_setup_title);
+        if (!setScreen(R.layout.activity_budget_setup, R.string.budget_setup_title)) {
+            return;
+        }
         current = store.budget(tripId);
         days = Math.max(1, store.meta(tripId).getDays());
 

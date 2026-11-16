@@ -75,7 +75,9 @@ public class AddDestinationActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_add_destination, R.string.add_destination_title);
+        if (!setScreen(R.layout.activity_add_destination, R.string.add_destination_title)) {
+            return;
+        }
 
         TripFitApp app = (TripFitApp) getApplication();
         viewModel = new ViewModelProvider(this,

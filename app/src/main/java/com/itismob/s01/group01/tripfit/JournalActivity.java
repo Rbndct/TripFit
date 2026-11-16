@@ -57,7 +57,9 @@ public class JournalActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_journal, R.string.journal_title);
+        if (!setScreen(R.layout.activity_journal, R.string.journal_title)) {
+            return;
+        }
         list = findViewById(R.id.list_journal);
         list.setAdapter(adapter);
 

@@ -43,7 +43,9 @@ public class BudgetActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_budget, R.string.budget_title);
+        if (!setScreen(R.layout.activity_budget, R.string.budget_title)) {
+            return;
+        }
         ((RecyclerView) findViewById(R.id.list_expenses)).setAdapter(expenseAdapter);
 
         findViewById(R.id.button_edit_budget).setOnClickListener(v -> {

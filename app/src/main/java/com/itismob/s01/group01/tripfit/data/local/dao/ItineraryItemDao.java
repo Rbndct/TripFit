@@ -30,6 +30,9 @@ public interface ItineraryItemDao {
             + "WHERE i.tripId = :tripId ORDER BY i.day, i.position")
     LiveData<List<ItineraryItemWithPlace>> observeByTripIdWithPlace(String tripId);
 
+    @Query("SELECT COALESCE(MAX(day), 0) FROM itinerary_items WHERE tripId = :tripId")
+    int maxDaySync(String tripId);
+
     @Query("SELECT COALESCE(MAX(position), -1) + 1 FROM itinerary_items WHERE tripId = :tripId AND day = :day")
     int nextPositionSync(String tripId, int day);
 

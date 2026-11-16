@@ -24,7 +24,12 @@ public abstract class ScreenActivity extends AppCompatActivity {
 
     protected String tripId;
 
-    protected void setScreen(@LayoutRes int layout, @StringRes int titleRes) {
+    /**
+     * Sets up the shared shell. Returns false when this screen needs a trip but got a missing
+     * or blank id; it has then already finished itself and the caller must return from
+     * {@code onCreate}. An id that matches no trip closes the screen as soon as Room answers.
+     */
+    protected boolean setScreen(@LayoutRes int layout, @StringRes int titleRes) {
         EdgeToEdge.enable(this);
         setContentView(layout);
         applyShellSystemBars();
@@ -39,6 +44,30 @@ public abstract class ScreenActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(titleRes);
         toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        return guardTrip();
+    }
+
+    /** Whether this screen shows one trip's data; false for Profile, Map Picker and New Trip. */
+    protected boolean requiresTrip() {
+        return true;
+    }
+
+    private boolean guardTrip() {
+        boolean hasId = tripId != null && !tripId.trim().isEmpty();
+        if (!hasId) {
+            if (requiresTrip()) {
+                finish();
+                return false;
+            }
+            return true;
+        }
+        ((TripFitApp) getApplication()).getTripRepository().observeTrip(tripId)
+                .observe(this, trip -> {
+                    if (trip == null) {
+                        finish();
+                    }
+                });
+        return true;
     }
 
     /** Keeps the status bar on the fixed navy shell with light icons, in both light and dark themes. */

@@ -33,6 +33,7 @@ public class TripRepositoryImplTest {
         database = Room.inMemoryDatabaseBuilder(
                 ApplicationProvider.getApplicationContext(), TripFitDatabase.class
         ).allowMainThreadQueries().build();
+        com.itismob.s01.group01.tripfit.prototype.PrototypeStore.resetForTesting();
         repository = new TripRepositoryImpl(database, AppExecutors.getInstance(), new RemoteDataSource());
     }
 
@@ -107,6 +108,79 @@ public class TripRepositoryImplTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals("Ueno Zoo", added.placeName);
+    }
+
+    @Test
+    public void renameTrip_updatesNameAndKeepsStops() throws InterruptedException {
+        awaitSeed();
+        int stopsBefore = awaitItems("seed-trip-tokyo").size();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        repository.renameTrip("seed-trip-tokyo", "Renamed", result -> latch.countDown());
+        latch.await(5, TimeUnit.SECONDS);
+
+        assertEquals(stopsBefore, awaitItems("seed-trip-tokyo").size());
+        assertEquals(1, database.tripDao().countSync());
+        assertEquals("Renamed", awaitTrips().get(0).getName());
+    }
+
+    @Test
+    public void observeAll_listsNewestTripFirst() throws InterruptedException {
+        database.tripDao().insert(new com.itismob.s01.group01.tripfit.data.local.entity.TripEntity(
+                "trip-a", null, "A", null, null, null, null));
+        database.tripDao().insert(new com.itismob.s01.group01.tripfit.data.local.entity.TripEntity(
+                "trip-b", null, "B", null, null, null, null));
+
+        List<com.itismob.s01.group01.tripfit.data.local.entity.TripEntity> trips = awaitTrips();
+
+        assertEquals("trip-b", trips.get(0).getId());
+        assertEquals("trip-a", trips.get(1).getId());
+    }
+
+    @Test
+    public void maxStopDay_reportsLastDayWithAStop() throws InterruptedException {
+        awaitSeed();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        Integer[] holder = new Integer[1];
+        repository.maxStopDay("seed-trip-tokyo", result -> {
+            holder[0] = result.getData();
+            latch.countDown();
+        });
+        latch.await(5, TimeUnit.SECONDS);
+
+        assertEquals(Integer.valueOf(2), holder[0]);
+    }
+
+    @Test
+    public void ensureSeedData_marksSeedTripAsSampleWithDetailsInStore() throws InterruptedException {
+        awaitSeed();
+
+        com.itismob.s01.group01.tripfit.prototype.PrototypeStore store =
+                com.itismob.s01.group01.tripfit.prototype.PrototypeStore.get();
+        assertTrue(store.isSample("seed-trip-tokyo"));
+        assertTrue(store.hasMeta("seed-trip-tokyo"));
+        assertEquals("Tokyo", store.meta("seed-trip-tokyo").getCity());
+        assertEquals(2, store.meta("seed-trip-tokyo").getDays());
+    }
+
+    private List<com.itismob.s01.group01.tripfit.data.local.entity.TripEntity> awaitTrips()
+            throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        List<com.itismob.s01.group01.tripfit.data.local.entity.TripEntity>[] holder = new List[1];
+        androidx.lifecycle.Observer<List<com.itismob.s01.group01.tripfit.data.local.entity.TripEntity>>
+                observer = trips -> {
+                    holder[0] = trips;
+                    latch.countDown();
+                };
+        androidx.lifecycle.LiveData<List<com.itismob.s01.group01.tripfit.data.local.entity.TripEntity>>
+                liveData = repository.observeTrips();
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                .runOnMainSync(() -> liveData.observeForever(observer));
+        latch.await(5, TimeUnit.SECONDS);
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                .runOnMainSync(() -> liveData.removeObserver(observer));
+        return holder[0];
     }
 
     private List<ItineraryItemWithPlace> awaitItemsWithPlace(String tripId) throws InterruptedException {

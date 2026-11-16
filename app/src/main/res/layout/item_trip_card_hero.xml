@@ -70,14 +70,24 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/text_trip_place"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/space_sm"
-                android:text="@string/itinerary_subtitle"
+                android:layout_weight="1"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_trip_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_md"
+            android:layout_marginBottom="@dimen/space_sm"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant" />
 
         <com.itismob.s01.group01.tripfit.ui.BarcodeStripView
             android:id="@+id/view_trip_barcode"

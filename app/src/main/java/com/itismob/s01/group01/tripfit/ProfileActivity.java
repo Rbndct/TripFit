@@ -39,9 +39,16 @@ public class ProfileActivity extends ScreenActivity {
     private int openDialog = DIALOG_NONE;
 
     @Override
+    protected boolean requiresTrip() {
+        return false;
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_profile, R.string.profile_title);
+        if (!setScreen(R.layout.activity_profile, R.string.profile_title)) {
+            return;
+        }
 
         rowCurrency = findViewById(R.id.row_currency);
         rowBuffer = findViewById(R.id.row_buffer);

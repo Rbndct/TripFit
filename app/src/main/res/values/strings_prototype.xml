@@ -21,7 +21,7 @@
     <string name="setting_reminders">Event reminders</string>
     <string name="setting_reminders_helper">Handled natively by Google Calendar</string>
     <string name="setting_about">About TripFit</string>
-    <string name="about_message">TripFit v1.0: smart itinerary planning with route, budget and calendar sync. ITISMOB term project, DLSU CCS-IT.</string>
+    <string name="about_message">TripFit v1.0: smart itinerary planning with route, budget and calendar sync. ITISMOB term project, DLSU CCS-IT.\n\nYour drafts stay on this device. Discovery, prices, exchange rates and weather use sample data.</string>
     <string name="buffer_none">No buffer</string>
     <string name="buffer_minutes">%1$d min</string>
     <string name="action_sign_out">Sign out</string>
@@ -293,7 +293,20 @@
 
     <!-- New trip -->
     <string name="field_city_hint">Destination city</string>
-    <string name="field_dates_hint">Trip dates</string>
+    <string name="field_dates_hint">Start date (YYYY-MM-DD)</string>
+    <string name="field_days_hint">Number of days</string>
+    <string name="field_budget_home_hint">Budget in home currency</string>
+    <string name="switch_daily_budget">This is a daily budget</string>
+    <string name="field_city_helper">Discovery covers Tokyo and Manila. A map pin can go anywhere.</string>
+    <string name="trip_settings_title">Trip settings</string>
+    <string name="action_trip_settings">Trip settings</string>
+    <string name="action_save_trip_settings">Save trip settings</string>
+    <string name="trip_edit_note">Changing city keeps your existing stops. Changing currency keeps the numeric budget, so review your category limits in Budget.</string>
+    <string name="error_start_date_invalid">Use a valid date, for example 2026-12-01</string>
+    <string name="error_days_range">Enter a whole number of days from 1 to 30</string>
+    <string name="error_budget_range">Enter an amount from 1 to 100,000,000</string>
+    <string name="error_shorten_blocked_day">Move stops from later days before shortening this trip. The last stop is on day %1$d.</string>
+    <string name="error_save_trip_failed">Could not save trip settings</string>
     <string name="field_currency_hint">Home currency</string>
     <string name="plan_mode_title">How do you want to start?</string>
     <string name="plan_mode_manual">I\'ll add stops</string>
@@ -301,7 +314,6 @@
     <string name="select_dates_title">Select trip dates</string>
     <string name="error_city_required">Pick a city</string>
     <string name="cd_pick_dates">Choose trip dates</string>
-    <string name="field_dates_helper">Optional. Without dates your trip starts with %1$d days.</string>
 
     <!-- Add destination -->
     <string name="duplicate_title">Already in your trip</string>

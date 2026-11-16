@@ -60,7 +60,9 @@ public class StopDetailActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_stop_detail, R.string.stop_detail_title);
+        if (!setScreen(R.layout.activity_stop_detail, R.string.stop_detail_title)) {
+            return;
+        }
         repository = ((TripFitApp) getApplication()).getTripRepository();
 
         Intent in = getIntent();

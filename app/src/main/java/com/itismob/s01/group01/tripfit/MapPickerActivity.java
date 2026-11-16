@@ -45,6 +45,11 @@ public class MapPickerActivity extends ScreenActivity {
     private MaterialButton useLocationButton;
 
     @Override
+    protected boolean requiresTrip() {
+        return false;
+    }
+
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         SharedPreferences prefs = getSharedPreferences("osmdroid_config", MODE_PRIVATE);
         Configuration.getInstance().load(this, prefs);
@@ -53,7 +58,9 @@ public class MapPickerActivity extends ScreenActivity {
         Configuration.getInstance().setOsmdroidTileCache(new File(getCacheDir(), "osmdroid/tiles"));
 
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_map_picker, R.string.map_picker_title);
+        if (!setScreen(R.layout.activity_map_picker, R.string.map_picker_title)) {
+            return;
+        }
 
         coordinatesText = findViewById(R.id.text_coordinates);
         useLocationButton = findViewById(R.id.button_use_location);

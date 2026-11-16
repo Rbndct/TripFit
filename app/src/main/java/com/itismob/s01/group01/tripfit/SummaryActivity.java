@@ -63,7 +63,9 @@ public class SummaryActivity extends ScreenActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setScreen(R.layout.activity_summary, R.string.summary_title);
+        if (!setScreen(R.layout.activity_summary, R.string.summary_title)) {
+            return;
+        }
         ViewCompat.setAccessibilityHeading(findViewById(R.id.text_trip_name), true);
         findViewById(R.id.button_export_pdf).setOnClickListener(v -> exportPdf());
         findViewById(R.id.button_share).setOnClickListener(v -> shareText());

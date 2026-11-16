@@ -39,6 +39,12 @@ public interface TripRepository {
     /** Creates a new trip and hands back its id so the caller can navigate into it. */
     void createTrip(String name, Result.Callback<String> callback);
 
+    /** Renames a trip with an UPDATE, so its stops survive (an insert would REPLACE and cascade). */
+    void renameTrip(String tripId, String name, Result.Callback<Void> callback);
+
+    /** The last day that has a stop, or 0 when the trip has none. */
+    void maxStopDay(String tripId, Result.Callback<Integer> callback);
+
     /** First-run only: inserts the sample Tokyo trip + stops if no trip exists yet. */
     void ensureSeedData(Result.Callback<Void> callback);
 

@@ -77,6 +77,10 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         });
 
         tripId = getIntent().getStringExtra(HomeActivity.EXTRA_TRIP_ID);
+        if (tripId == null || tripId.trim().isEmpty()) {
+            finish(); // an itinerary needs a trip: close instead of rendering defaults
+            return;
+        }
         dayTabContainer = findViewById(R.id.day_tab_container);
         daySummary = findViewById(R.id.text_day_summary);
         weatherBanner = findViewById(R.id.banner_weather);
@@ -92,7 +96,9 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
 
         TextView tripTitle = findViewById(R.id.text_trip_title);
         repository.observeTrip(tripId).observe(this, trip -> {
-            if (trip != null) {
+            if (trip == null) {
+                finish(); // unknown trip id
+            } else {
                 tripTitle.setText(trip.getName());
             }
         });
@@ -139,6 +145,8 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
             open(BudgetActivity.class);
         } else if (id == R.id.action_suggestions) {
             open(SuggestionsActivity.class);
+        } else if (id == R.id.action_trip_settings) {
+            open(NewTripActivity.class);
         } else if (id == R.id.action_discover) {
             open(DiscoverActivity.class);
         } else if (id == R.id.action_calendar) {
@@ -166,6 +174,14 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         TextView subtitle = findViewById(R.id.text_trip_subtitle);
         String dates = meta.getDates();
         subtitle.setText(dates.isEmpty() ? meta.getCity() : meta.getCity() + " · " + dates);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!isFinishing()) {
+            bindSubtitle(); // Trip settings may have changed the city or dates
+        }
     }
 
     // ---- stop / leg taps ----

@@ -6,9 +6,13 @@ import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.TripItemCount;
 import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
+import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
+import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.TripMeta;
 import com.itismob.s01.group01.tripfit.ui.HomeTripRow;
 
 import java.util.ArrayList;
@@ -47,11 +51,25 @@ public class HomeViewModel extends ViewModel {
         List<HomeTripRow> rows = new ArrayList<>();
         for (TripEntity trip : latestTrips) {
             TripItemCount count = latestCounts.get(trip.getId());
-            int dayCount = count != null ? count.dayCount : 0;
             int stopCount = count != null ? count.stopCount : 0;
-            rows.add(new HomeTripRow(trip.getId(), trip.getName(), dayCount, stopCount));
+            rows.add(buildRow(trip, stopCount));
         }
         return rows;
+    }
+
+    /** Trip length, city, start date and budget come from the persistent store's trip details. */
+    private HomeTripRow buildRow(TripEntity trip, int stopCount) {
+        PrototypeStore store = PrototypeStore.get();
+        TripMeta meta = store.meta(trip.getId());
+        BudgetSettings budget = store.budget(trip.getId());
+        String total = CurrencyRates.format(budget.tripTotal(meta.getDays()), budget.getHomeCurrency());
+        return new HomeTripRow(trip.getId(), trip.getName(), meta.getDays(), stopCount,
+                meta.getCity(), meta.getStartDateIso(), store.isSample(trip.getId()), total);
+    }
+
+    /** Rebuilds the rows after trip details or budgets changed in the store (not in Room). */
+    public void refresh() {
+        tripRows.setValue(buildRows());
     }
 
     private static Map<String, TripItemCount> indexByTripId(List<TripItemCount> counts) {
