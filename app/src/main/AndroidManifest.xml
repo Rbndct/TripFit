@@ -15,6 +15,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TripFit">
+        <activity android:name=".prototype.TripsActivity" android:exported="false" />
+        <activity android:name=".prototype.TripSetupActivity" android:exported="false" />
+        <activity android:name=".prototype.PlannerActivity" android:exported="false" />
+        <activity android:name=".prototype.StopEditorActivity" android:exported="false" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
