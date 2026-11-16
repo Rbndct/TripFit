@@ -1,0 +1,2 @@
+TOUCH_TARGET  361x4dp < 48dp  androidx.cardview.widget.CardView
+NO_LABEL      clickable with no text/content-desc  androidx.cardview.widget.CardView

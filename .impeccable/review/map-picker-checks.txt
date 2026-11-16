@@ -1,0 +1,1 @@
+NO_LABEL      clickable with no text/content-desc  android.widget.ImageButton

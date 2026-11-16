@@ -1,0 +1,1 @@
+TOUCH_TARGET  88x30dp < 48dp  Vote

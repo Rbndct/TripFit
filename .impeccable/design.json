@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T00:00:00Z",
+  "title": "Design System: TripFit",
+  "extensions": {
+    "colorMeta": {
+      "ticket-carrier-navy": {
+        "role": "fixed-shell",
+        "displayName": "Ticket Carrier Navy",
+        "canonical": "#13213B",
+        "tonalRamp": ["#0A1020", "#13213B", "#1C2A47", "#2B3A5C", "#4A5A80", "#7686A8", "#AEB9D1", "#D7DEEA"]
+      },
+      "on-ticket-carrier": {
+        "role": "fixed-shell-text",
+        "displayName": "On Ticket Carrier",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#2B2E35", "#4A4E57", "#6A7180", "#8B93A6", "#AEB9D1", "#D7DEEA", "#F0F2F5", "#FFFFFF"]
+      },
+      "on-ticket-carrier-translucent": {
+        "role": "fixed-shell-text-translucent",
+        "displayName": "On Ticket Carrier Translucent",
+        "canonical": "#66FFFFFF",
+        "tonalRamp": ["#2B2E3566", "#4A4E5766", "#6A718066", "#8B93A666", "#AEB9D166", "#D7DEEA66", "#F0F2F566", "#FFFFFF66"]
+      },
+      "md-primary": {
+        "role": "primary",
+        "displayName": "Primary (theme role, light=navy / dark=steel-blue)",
+        "canonical": "#13213B",
+        "tonalRamp": ["#0A1020", "#13213B", "#1C2A47", "#2B3A5C", "#4A5A80", "#7686A8", "#AEB9D1", "#D7DEEA"]
+      },
+      "md-secondary": {
+        "role": "secondary",
+        "displayName": "Booked Amber",
+        "canonical": "#8A5B00",
+        "tonalRamp": ["#2B1B00", "#452B00", "#5E3F00", "#8A5B00", "#B37A00", "#FFB95C", "#FFDDA6", "#FFE8B2"]
+      },
+      "md-background": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#FBFBF9",
+        "tonalRamp": ["#121419", "#1B1E24", "#2B2E35", "#4A4E57", "#8B93A6", "#C3C7D1", "#E7E9ED", "#FBFBF9"]
+      },
+      "md-outline": {
+        "role": "neutral",
+        "displayName": "Outline / Perforation Dot",
+        "canonical": "#8B93A6",
+        "tonalRamp": ["#2B2E35", "#4A4E57", "#6A7180", "#8B93A6", "#A3AAB9", "#C3C7D1", "#DADEE4", "#E7E9ED"]
+      },
+      "ticket-barcode-bar": {
+        "role": "neutral-accent",
+        "displayName": "Barcode Bar",
+        "canonical": "#8B93A6",
+        "tonalRamp": ["#2B2E35", "#4A4E57", "#6A7180", "#8B93A6", "#A3AAB9", "#C3C7D1", "#DADEE4", "#E7E9ED"]
+      }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Title", "purpose": "Trip name on Home; trip name in Itinerary's header. Material Roboto scale." },
+      "body": { "displayName": "Body", "purpose": "Itinerary subtitle line, both screens. Material Roboto scale." },
+      "data-mono": { "displayName": "Data (Mono)", "purpose": "Count and status fields only: day/stop counts, DRAFT/PLANNED badges, and Itinerary's day-tab numbers. Never titles, labels, or prose." }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Trip Card — Hero (Ticket Stub)",
+      "kind": "card",
+      "refersTo": "trip-card-hero",
+      "description": "The one hero trip card per Home list: navy carrier band, perforation divider, status badge, barcode strip. Signature move of the Boarding Pass / Ticket Stub world.",
+      "html": "<div class=\"ds-ticket-hero\"><div class=\"ds-ticket-band\"><div class=\"ds-ticket-title\">Kyoto Spring Loop</div><div class=\"ds-ticket-counts\">4 DAYS · 9 STOPS</div></div><div class=\"ds-ticket-perforation\"></div><div class=\"ds-ticket-status-row\"><span class=\"ds-badge-planned\">PLANNED</span><span class=\"ds-ticket-subtitle\">Itinerary in progress</span></div><div class=\"ds-ticket-barcode\"></div></div>",
+      "css": ".ds-ticket-hero { background: #FBFBF9; border: 1px solid #8B93A6; border-radius: 16px; overflow: hidden; } .ds-ticket-band { background: #13213B; color: #FFFFFF; padding: 16px; } .ds-ticket-title { font-family: Roboto, sans-serif; font-size: 22px; font-weight: 500; } .ds-ticket-counts { font-family: monospace; font-size: 12px; margin-top: 4px; } .ds-ticket-perforation { height: 16px; background: repeating-linear-gradient(90deg, #8B93A6 0 4px, transparent 4px 16px); } .ds-ticket-status-row { display: flex; align-items: center; gap: 8px; padding: 0 16px 8px 16px; } .ds-badge-planned { font-family: monospace; font-size: 11px; background: #FFE8B2; color: #4A4E57; padding: 4px 10px; border-radius: 20px; } .ds-ticket-subtitle { font-family: Roboto, sans-serif; font-size: 12px; color: #4A4E57; } .ds-ticket-barcode { height: 28px; margin: 0 16px 16px 16px; background: repeating-linear-gradient(90deg, #8B93A6 0 3px, transparent 3px 6px); }"
+    },
+    {
+      "name": "Trip Card — Stub",
+      "kind": "card",
+      "refersTo": "trip-card-stub",
+      "description": "Plain secondary-tier card for every non-hero trip: no navy, no perforation, no barcode. The two-tier restraint rule — signature motif on exactly one card — is this world's central guardrail.",
+      "html": "<div class=\"ds-ticket-stub\"><div class=\"ds-stub-title\">Lisbon Weekend</div><div class=\"ds-stub-subtitle\">Itinerary in progress</div><div class=\"ds-stub-row\"><span class=\"ds-badge-draft\">DRAFT</span><span class=\"ds-chip-count\">2 DAYS</span><span class=\"ds-chip-count\">0 STOPS</span></div></div>",
+      "css": ".ds-ticket-stub { background: #FBFBF9; border: 1px solid #8B93A6; border-radius: 16px; padding: 16px; } .ds-stub-title { font-family: Roboto, sans-serif; font-size: 16px; font-weight: 500; color: #15181D; } .ds-stub-subtitle { font-family: Roboto, sans-serif; font-size: 12px; color: #4A4E57; margin-top: 2px; } .ds-stub-row { display: flex; gap: 8px; margin-top: 8px; } .ds-badge-draft { font-family: monospace; font-size: 11px; background: #E7E9ED; color: #4A4E57; padding: 4px 10px; border-radius: 20px; } .ds-chip-count { font-family: monospace; font-size: 11px; background: #D7DEEA; color: #13213B; padding: 4px 10px; border-radius: 20px; }"
+    },
+    {
+      "name": "Day Tab Strip",
+      "kind": "nav",
+      "refersTo": "day-tab-selected",
+      "description": "Itinerary's structural addition: a horizontally scrollable row of pill tabs (one per trip day) inside the fixed-navy header band. Selected pill fills white/navy-text; unselected pills outline in translucent white — the On-Navy Contrast Rule, since the strip sits on navy rather than paper.",
+      "html": "<div class=\"ds-day-tab-strip\"><span class=\"ds-day-tab ds-day-tab-selected\">1</span><span class=\"ds-day-tab ds-day-tab-unselected\">2</span><span class=\"ds-day-tab ds-day-tab-unselected\">3</span></div>",
+      "css": ".ds-day-tab-strip { display: flex; gap: 8px; background: #13213B; padding: 16px; overflow-x: auto; } .ds-day-tab { font-family: monospace; font-size: 14px; min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 20px; padding: 8px 16px; } .ds-day-tab-selected { background: #FFFFFF; color: #13213B; } .ds-day-tab-unselected { background: transparent; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.4); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Boarding Pass / Ticket Stub",
+    "overview": "TripFit's Home screen reads its trip list as a small stack of travel tickets: one trip — the one the pipeline (destination → route → calendar → budget) is currently moving — gets the full boarding-pass treatment; every other trip is a plain stub. The Itinerary screen (per-trip day-by-day builder) is the second surface built in this world: it inherits the fixed navy shell and tabular-monospace rule as-is and adds one structural move of its own — a horizontal day-tab strip, read as stepping between legs of the same boarding pass rather than paging a generic tab control. Both screens stay inside the platform's standard navigation, layout, and controls: the world contributes type, palette, density, and a signature move per surface, never a substitute for RecyclerView lists, AppBarLayout, or Material components. The palette is a fixed navy carrier band (#13213B) holding white text, paired with an off-white paper surface — a deliberate, non-theme-reactive shell color chosen once and held constant across light and dark. Everything else is ordinary Material role tokens that DayNight inverts normally. Count and status data are set in monospace, read as a punch-card ledger; titles, subtitles, and prose stay on the existing Material/Roboto type scale. On Itinerary, this extends to the day-tab numbers, which are data in the same sense as Home's day/stop counts.",
+    "keyCharacteristics": [
+      "One fixed shell color (navy carrier band + its white text, plus its translucent stroke variant) that never inverts with DayNight; all other color is ordinary theme-reactive Material roles.",
+      "Monospace reserved strictly for time/count/status data fields — including day-tab numbers — never for titles, labels, or body prose.",
+      "Exactly one hero card carries Home's ticket motif (navy band, perforation, barcode); every other trip is a plain stub card with no ticket ornament.",
+      "Status vocabulary is DRAFT / PLANNED, driven by actual stop count (0 vs 1+), not the brief's literal \"confirmed\" — there is no booking-confirmation field in the data model.",
+      "Flat Material cards (16dp corner radius) with a 1dp outline stroke; elevation is used only to separate the hero card (2dp) from stub cards (0dp). Itinerary's day-tab pills follow a parallel but distinct fill/stroke rule because they sit directly on the navy band itself."
+    ],
+    "rules": [
+      { "name": "The Fixed Shell Rule", "body": "The carrier navy (ticket_carrier_navy, #13213B) and its on-color (on_ticket_carrier, #FFFFFF), plus the translucent on-color derivative (on_ticket_carrier_translucent, #66FFFFFF), are the color set in this system that does not invert with DayNight. They exist only in values/colors.xml. Every other color token, including md_primary (which happens to share navy's hex in light mode), is a normal theme role and must be defined in both values/colors.xml and values-night/colors.xml.", "section": "colors" },
+      { "name": "The On-Navy Contrast Rule", "body": "When a component is placed directly on the fixed navy ground itself (not on paper), the active/selected state fills with on_ticket_carrier (white fill, navy text) and the inactive/unselected state outlines with on_ticket_carrier_translucent (stroke only, no fill) — never invert to a navy fill when the component already sits on navy. Both states still resolve from only the two fixed-shell tokens; no third color is introduced.", "section": "colors" },
+      { "name": "The Mono-Means-Data Rule", "body": "android:fontFamily=\"monospace\" is applied only to time/count/status fields (status badges, day/stop counts, day-tab numbers). It is never applied to a title, a label, or body prose — monospace is a data marker, not a generic \"technical\" decoration.", "section": "typography" },
+      { "name": "The One Elevation Rule", "body": "Only the hero card elevates (2dp). Stub cards are flat (0dp) and rely on their 1dp outline stroke alone. Do not add elevation to a stub card to make it feel more important — that is what the hero slot is for.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the carrier navy (#13213B), its white on-color, and the on-color's translucent stroke derivative (#66FFFFFF) fixed across light and dark — all three live only in values/colors.xml, never in values-night/colors.xml.",
+      "Do restrict android:fontFamily=\"monospace\" to count/status/data fields (day/stop counts, DRAFT/PLANNED badges, day-tab numbers) — titles, subtitles, and body text stay on the Material/Roboto scale.",
+      "Do render the ticket motif (navy band, PerforationDividerView, BarcodeStripView) on exactly one hero card per list; every other trip renders as the plain stub layout with zero ticket ornament.",
+      "Do derive status from real data (stop count 0 vs 1+ → DRAFT vs PLANNED) rather than a field the data model doesn't have.",
+      "Do apply the On-Navy Contrast Rule whenever a new component sits directly on the fixed navy ground: active/selected fills with on_ticket_carrier, inactive/unselected outlines with on_ticket_carrier_translucent — never the reverse."
+    ],
+    "donts": [
+      "Don't apply the ticket band, perforation divider, or barcode strip to more than one card in the list — repeating the signature motif as general decoration is the one rule this world cannot survive breaking.",
+      "Don't let md_primary/colorPrimary and the fixed ticket_carrier_navy/on_ticket_carrier pair drift into being treated as the same token — one inverts with DayNight, the other must never be defined in values-night/colors.xml.",
+      "Don't fill a selected pill (or any selected state) with navy when the component already sits on a navy ground — there is no contrast; use the white fill / translucent-stroke pairing instead.",
+      "Don't extend this documented system to Add Destination, New Trip, or Map Picker — those screens have no surface brief or built direction yet; this DESIGN.md covers Home and Itinerary only.",
+      "Don't treat the unverified tablet/expanded-width layout as settled — only phone-viewport (Pixel 6 / API 34) builds exist for both Home and Itinerary; no tablet AVD or cmdline-tools/avdmanager is available on this dev machine, so neither Home's nav-rail-at-expanded-width behavior nor Itinerary's day-tab wrap/scroll/rail behavior at expanded width is confirmed."
+    ]
+  }
+}
