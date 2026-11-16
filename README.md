@@ -115,10 +115,6 @@ SUPABASE_URL=... SUPABASE_SERVICE_KEY=... OPENTRIPMAP_API_KEY=... \
 
 The GitHub Action `.github/workflows/ingest.yml` runs it weekly using repository secrets. The service key and API keys live only there and never ship in the app. Routing goes through the `ors-proxy` Edge Function, so the OpenRouteService key stays server-side as well.
 
-## Design
-
-The visual system is a **boarding pass / ticket stub**: a fixed navy header band that stays the same in dark mode, monospace used only for data (times, amounts, counts), and flat outlined cards. See [`DESIGN.md`](DESIGN.md) for the full rules and [`PRODUCT.md`](PRODUCT.md) for the product brief.
-
 ## Documentation
 
 - [`docs/TripFit-Proposal-and-Backlog.md`](docs/TripFit-Proposal-and-Backlog.md): proposal, scope, 19-item backlog, sprint plan
