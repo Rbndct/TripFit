@@ -186,15 +186,29 @@
     <!-- Calendar sync -->
     <string name="calendar_title">Calendar sync</string>
     <string name="calendar_account">Google account</string>
-    <string name="calendar_events_header">%1$d events will be created</string>
-    <string name="action_sync_calendar">Sync %1$d events</string>
+    <plurals name="calendar_events_header">
+        <item quantity="one">%1$d event will be created</item>
+        <item quantity="other">%1$d events will be created</item>
+    </plurals>
+    <plurals name="calendar_events_synced">
+        <item quantity="one">%1$d event on your calendar</item>
+        <item quantity="other">%1$d events on your calendar</item>
+    </plurals>
+    <plurals name="action_sync_calendar">
+        <item quantity="one">Sync %1$d event</item>
+        <item quantity="other">Sync %1$d events</item>
+    </plurals>
     <string name="action_resync">Re-sync (updates existing events)</string>
     <string name="calendar_syncing">Syncing…</string>
-    <string name="calendar_success">%1$d events added to your calendar</string>
+    <plurals name="calendar_success">
+        <item quantity="one">%1$d event added to your calendar</item>
+        <item quantity="other">%1$d events added to your calendar</item>
+    </plurals>
     <string name="calendar_resynced">Calendar updated. No duplicates were created.</string>
     <string name="action_open_calendar">Open Google Calendar</string>
     <string name="calendar_open_failed">No calendar app found</string>
-    <string name="calendar_event_sub">Day %1$d · %2$s–%3$s</string>
+    <string name="calendar_event_day">Day %1$d</string>
+    <string name="calendar_event_time">%1$s–%2$s</string>
     <string name="calendar_empty">Add stops to your itinerary before syncing.</string>
 
     <!-- Trip summary -->
