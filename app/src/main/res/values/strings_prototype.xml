@@ -7,7 +7,6 @@
     <string name="action_add">Add</string>
     <string name="action_added">Added</string>
     <string name="cd_back">Back</string>
-    <string name="stop_booked_at">At %1$s</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>
@@ -54,10 +53,11 @@
     <string name="action_group">Group trip</string>
     <string name="action_journal">Journal</string>
     <string name="itinerary_empty_title">No stops on this day yet</string>
-    <string name="itinerary_empty_body">Add a destination, or let TripFit suggest places.</string>
+    <string name="itinerary_empty_body">A day full of possibilities. Add your first stop or discover a suggested plan.</string>
+    <string name="day_heading_dated">Day %1$d · %2$s</string>
     <plurals name="day_summary">
-        <item quantity="one">%1$d stop · %2$d min travel</item>
-        <item quantity="other">%1$d stops · %2$d min travel</item>
+        <item quantity="one">%1$d stop · %2$d min at stops · %3$d min travel, plus buffers</item>
+        <item quantity="other">%1$d stops · %2$d min at stops · %3$d min travel, plus buffers</item>
     </plurals>
     <string name="state_selected">Selected</string>
     <plurals name="weather_banner">
@@ -72,9 +72,17 @@
         <item quantity="one">Swapped %1$d outdoor stop for an indoor one</item>
         <item quantity="other">Swapped %1$d outdoor stops for indoor ones</item>
     </plurals>
-    <string name="leg_label">%1$s · %2$d min to next stop</string>
-    <string name="leg_dialog_title">Transport to next stop</string>
-    <string name="leg_option">%1$s: %2$d min</string>
+    <string name="leg_label">%1$s · ~%2$d min travel + %3$d min buffer</string>
+    <string name="leg_placeholder">No map pin yet · travel uses a 20 min placeholder</string>
+    <string name="leg_dialog_title">Travel to %1$s</string>
+    <string name="leg_buffer_hint">Buffer before this stop</string>
+    <string name="leg_buffer_helper">0 to 180 minutes; blank uses your Profile default</string>
+    <string name="mode_suggested">Suggested</string>
+    <string name="stop_time_range">%1$s–%2$s · %3$s</string>
+    <string name="stop_status_fixed">BOOKED / FIXED</string>
+    <string name="stop_status_flexible">FLEXIBLE</string>
+    <string name="stop_coords">%1$s, %2$s</string>
+    <string name="stop_conflict">Schedule conflict: check travel time, booked blocks or the 20:00 day limit.</string>
     <string name="mode_walk">Walk</string>
     <string name="mode_cycle">Cycle</string>
     <string name="mode_drive">Drive</string>
@@ -84,9 +92,15 @@
     <string name="stop_detail_title">Stop details</string>
     <string name="field_day_label">Day</string>
     <string name="move_day_title">Move to day</string>
-    <string name="duration_helper">Leave blank for a smart estimate (%1$d min)</string>
-    <string name="buffer_switch">Add buffer after this stop</string>
-    <string name="buffer_helper">%1$d min for parking, queues and rest stops</string>
+    <string name="duration_helper">5 to 720 minutes; blank uses %1$d min</string>
+    <string name="field_buffer_hint">Buffer before this stop</string>
+    <string name="buffer_helper">0 to 180 minutes before the incoming leg; blank uses your Profile default (%1$d min)</string>
+    <string name="field_mode_title">Travel to this stop</string>
+    <string name="mode_dialog_title">Travel mode</string>
+    <string name="action_adjust_pin">Adjust pin</string>
+    <string name="pin_selected">Selected pin: %1$s</string>
+    <string name="pin_none">No pin selected · you can still add a stop by name</string>
+    <string name="error_pin_invalid">Latitude must be -90 to 90 and longitude -180 to 180</string>
     <string name="field_notes_hint">Notes</string>
     <string name="action_attach_photo">Attach photo</string>
     <string name="photo_attached">Photo attached</string>
@@ -100,15 +114,21 @@
     <string name="optimize_title">Optimize route</string>
     <string name="optimize_summary">Reordering saves about %1$d min of travel</string>
     <string name="optimize_summary_none">Your route is already efficient</string>
-    <string name="optimize_summary_small">Reordering saves a little travel time</string>
-    <string name="optimize_day_distance">%1$.1f km</string>
-    <string name="optimize_order">New order: %1$s\nWas %2$.1f km</string>
-    <string name="optimize_order_same">Already the shortest order: %1$s</string>
     <string name="optimize_applied">Route order updated</string>
-    <string name="optimize_locked_note">Booked stops keep their fixed time and position.</string>
-    <string name="action_apply_order">Confirm new order</string>
-    <string name="action_keep_current">Keep current order</string>
+    <string name="optimize_locked_note">Travel times are straight-line estimates, not live routing. Booked stops keep their day and time.</string>
+    <string name="action_apply_order">Apply order</string>
+    <string name="action_keep_current">Keep current</string>
     <string name="optimize_empty">Add at least two stops to a day to optimize it.</string>
+    <string name="optimize_day_compare">Travel now %1$d min, preview %2$d min</string>
+    <string name="optimize_day_same">Travel %1$d min; this is already the shortest order</string>
+    <string name="optimize_day_trailing">%1$d → %2$d min</string>
+    <string name="optimize_slot">%1$s–%2$s  %3$s</string>
+    <string name="optimize_slot_conflict">%1$s–%2$s  %3$s  ⚠ Schedule conflict</string>
+    <string name="action_balance_days">Balance days</string>
+    <string name="balance_title">Balance the itinerary?</string>
+    <string name="balance_message">Flexible stops are spread across your trip days by visit time plus buffer, including empty days. Booked stops keep their day and time. Review travel and any conflict warnings afterward.</string>
+    <string name="balance_confirm">Balance days</string>
+    <string name="balance_applied">Days balanced</string>
     <string name="optimize_loading">Calculating the fastest order…</string>
 
     <!-- Budget -->

@@ -54,6 +54,46 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Stay 45 min" />
 
+            <TextView
+                android:id="@+id/text_stop_coords"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="monospace"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:text="35.71480, 139.79670"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/row_conflict"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:gravity="top"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginTop="2dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_warning_24" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_xs"
+                    android:layout_weight="1"
+                    android:text="@string/stop_conflict"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorError" />
+
+            </LinearLayout>
+
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_leg"
                 style="@style/Widget.Material3.Chip.Assist"
@@ -61,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_xs"
                 android:fontFamily="monospace"
-                tools:text="Walk · 12 min to next stop" />
+                tools:text="Walk · ~12 min travel + 15 min buffer" />
 
         </LinearLayout>
 

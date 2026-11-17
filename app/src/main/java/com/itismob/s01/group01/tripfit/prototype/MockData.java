@@ -116,12 +116,4 @@ public final class MockData {
         }
         return indoor;
     }
-
-    /** Deterministic fake {lat, lng} near central Tokyo, derived from the stop name. */
-    public static double[] coordFor(String stopName) {
-        int h = stopName.hashCode();
-        double lat = 35.60 + (Math.abs(h % 1000) / 1000.0) * 0.15;
-        double lng = 139.65 + (Math.abs((h / 1000) % 1000) / 1000.0) * 0.18;
-        return new double[]{lat, lng};
-    }
 }

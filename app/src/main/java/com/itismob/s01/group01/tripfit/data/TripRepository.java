@@ -9,6 +9,8 @@ import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
+
 import java.util.List;
 
 /** Repository interface the ViewModels depend on; Room (local) + Supabase REST (remote) back it. */
@@ -25,6 +27,9 @@ public interface TripRepository {
 
     /** Same rows as {@link #observeItineraryItems}, left-joined with each referenced place's name. */
     LiveData<List<ItineraryItemWithPlace>> observeItineraryItemsWithPlaceNames(String tripId);
+
+    /** One item with its place name and pin; emits null once the item is deleted. */
+    LiveData<ItineraryItemWithPlace> observeItemWithPlace(String itemId);
 
     /** Adds a free-text stop (no database place match) at the end of its day. */
     void addItineraryItem(String tripId, String customName, int day, String time,
@@ -54,13 +59,43 @@ public interface TripRepository {
     /** Searches the given city's places by name substring (case-insensitive). */
     void searchPlaces(String cityId, String query, Result.Callback<List<PlaceDto>> callback);
 
-    /** Edits a stop; moving it to another day appends it to the end of that day. */
+    /** Edits a stop including buffer and transport mode in one UPDATE (null buffer = profile default,
+     * null mode = Suggested). Moving to another day appends it to the end of that day. */
     void updateItineraryItem(String tripId, String itemId, int oldDay, int oldPosition, int newDay,
-                             String time, Integer durationMin, boolean booked,
-                             Result.Callback<Void> callback);
+                             String time, Integer durationMin, boolean booked, Integer bufferMin,
+                             String transportMode, Result.Callback<Void> callback);
+
+    /** Saves a leg's buffer and mode in one UPDATE ({@code modeOrNull} null = Suggested). */
+    void updateLegSettings(String itemId, Integer bufferMin, String modeOrNull,
+                           Result.Callback<Void> callback);
+
+    void updateBuffer(String itemId, Integer bufferMin, Result.Callback<Void> callback);
+
+    /** {@code modeOrNull} is a TravelMode name; null means Suggested. */
+    void updateTransportMode(String itemId, String modeOrNull, Result.Callback<Void> callback);
+
+    /**
+     * Gives one item its own pin: creates place {@code "pin-" + itemId} (never a shared place, so
+     * other items keep their pin) and points the item at it. {@code cityId} is null or the trip's city.
+     * Fails for lat outside -90..90 or lng outside -180..180.
+     */
+    void adjustPin(String itemId, String cityId, String name, double lat, double lng,
+                   Result.Callback<Void> callback);
+
+    /**
+     * {@link #updateItineraryItem} plus {@link #adjustPin} in one transaction: either both land or
+     * neither does. The item's existing place details are kept; only the coordinates move.
+     */
+    void updateItineraryItemWithPin(String tripId, String itemId, int oldDay, int oldPosition,
+                                    int newDay, String time, Integer durationMin, boolean booked,
+                                    Integer bufferMin, String transportMode, String pinName,
+                                    double pinLat, double pinLng, Result.Callback<Void> callback);
+
+    /** Applies day and position changes for many items in one transaction. */
+    void applyMoves(List<TripSnapshots.ItemMove> moves, Result.Callback<Void> callback);
+
+    /** Rewrites positions for several days in one transaction; each inner list is one day's order. */
+    void applyItemOrders(List<List<String>> orderedItemIdsPerDay, Result.Callback<Void> callback);
 
     void deleteItineraryItem(String itemId, Result.Callback<Void> callback);
-
-    /** Rewrites positions so the given item ids appear in exactly this order within their day. */
-    void applyItemOrder(List<String> orderedItemIds, Result.Callback<Void> callback);
 }

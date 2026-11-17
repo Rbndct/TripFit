@@ -1,5 +1,6 @@
 package com.itismob.s01.group01.tripfit;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -21,41 +22,58 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.itismob.s01.group01.tripfit.data.Result;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
+import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
+import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
+import com.itismob.s01.group01.tripfit.prototype.TravelMode;
+import com.itismob.s01.group01.tripfit.ui.Labels;
 import com.itismob.s01.group01.tripfit.ui.TimeFields;
 
+import java.util.Locale;
+
 /**
- * Edits one itinerary stop: day, stay duration, booked fixed time, buffer, notes and photo.
- * Day, duration and booked/time persist to Room; buffer, notes and photo are session-only
- * until their backend tables exist.
+ * Edits one itinerary stop, loaded by id: day, stay, booked time, buffer and travel mode before
+ * the stop, and its map pin. Everything except notes and photo persists to Room in one UPDATE.
+ * The form is bound from Room once; later edits and rotation never reload over what was typed.
  */
 public class StopDetailActivity extends ScreenActivity {
 
     public static final String EXTRA_ITEM_ID = "extra_item_id";
-    public static final String EXTRA_NAME = "extra_name";
-    public static final String EXTRA_DAY = "extra_day";
-    public static final String EXTRA_POSITION = "extra_position";
-    public static final String EXTRA_TIME = "extra_time";
-    public static final String EXTRA_DURATION = "extra_duration";
-    public static final String EXTRA_BOOKED = "extra_booked";
-    public static final String EXTRA_MAX_DAY = "extra_max_day";
+
+    private static final String KEY_BOUND = "form_bound";
+    private static final String KEY_DAY = "form_day";
+    private static final String KEY_MODE = "form_mode";
+    private static final String KEY_TIME = "form_time";
+    private static final String KEY_PIN_LAT = "form_pin_lat";
+    private static final String KEY_PIN_LNG = "form_pin_lng";
 
     private TripRepository repository;
     private String itemId;
-    private String stopName;
-    private int originalDay;
-    private int selectedDay;
-    private int position;
+    private ItineraryItemWithPlace current;
+    private boolean formBound;
+    private int selectedDay = 1;
+    private TravelMode selectedMode;
     private String fixedTime;
+    private Double pendingPinLat;
+    private Double pendingPinLng;
+
     private TextInputLayout layoutTime;
     private TextInputEditText inputTime;
-    private TextInputEditText inputDuration;
     private TextInputLayout layoutDuration;
+    private TextInputEditText inputDuration;
+    private TextInputLayout layoutBuffer;
+    private TextInputEditText inputBuffer;
     private MaterialSwitch switchBooked;
     private View rowDay;
+    private View rowMode;
+    private MaterialButton saveButton;
+    private boolean saving;
     private ActivityResultLauncher<PickVisualMediaRequest> photoPicker;
+    private ActivityResultLauncher<Intent> pinPicker;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,45 +81,123 @@ public class StopDetailActivity extends ScreenActivity {
         if (!setScreen(R.layout.activity_stop_detail, R.string.stop_detail_title)) {
             return;
         }
+        itemId = getIntent().getStringExtra(EXTRA_ITEM_ID);
+        if (itemId == null || itemId.trim().isEmpty()) {
+            finish();
+            return;
+        }
         repository = ((TripFitApp) getApplication()).getTripRepository();
+        restoreDraft(savedInstanceState);
 
-        Intent in = getIntent();
-        itemId = in.getStringExtra(EXTRA_ITEM_ID);
-        stopName = in.getStringExtra(EXTRA_NAME);
-        originalDay = in.getIntExtra(EXTRA_DAY, 1);
-        selectedDay = originalDay;
-        position = in.getIntExtra(EXTRA_POSITION, 0);
-        fixedTime = in.getStringExtra(EXTRA_TIME);
-
-        TextView title = findViewById(R.id.text_stop_title);
-        title.setText(stopName);
-        ViewCompat.setAccessibilityHeading(title, true);
+        ViewCompat.setAccessibilityHeading(findViewById(R.id.text_stop_title), true);
         bindDayRow();
-        bindDuration(in.getIntExtra(EXTRA_DURATION, -1));
-        bindBooked(in.getBooleanExtra(EXTRA_BOOKED, false));
+        bindModeRow();
+        bindDuration();
+        bindBooked();
         bindBuffer();
+        bindPin();
         bindPhoto();
-
+        saveButton = findViewById(R.id.button_save);
+        saveButton.setOnClickListener(v -> save());
+        findViewById(R.id.button_delete).setOnClickListener(v -> confirmDelete());
         findViewById(R.id.button_nearby).setOnClickListener(v -> {
             Intent nearby = new Intent(this, SuggestionsActivity.class);
             nearby.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
             nearby.putExtra(SuggestionsActivity.EXTRA_DAY, selectedDay);
             startActivity(nearby);
         });
-        findViewById(R.id.button_save).setOnClickListener(v -> save());
-        findViewById(R.id.button_delete).setOnClickListener(v -> confirmDelete());
+
+        repository.observeItemWithPlace(itemId).observe(this, row -> {
+            if (row == null) {
+                finish(); // deleted elsewhere
+                return;
+            }
+            current = row;
+            if (!formBound) {
+                populateFromRow(row);
+                formBound = true;
+            }
+            renderStatic();
+        });
     }
+
+    private void restoreDraft(@Nullable Bundle state) {
+        if (state == null || !state.getBoolean(KEY_BOUND)) {
+            return;
+        }
+        formBound = true; // views restore their own text; the rest comes back from the bundle
+        selectedDay = state.getInt(KEY_DAY, 1);
+        String mode = state.getString(KEY_MODE);
+        selectedMode = mode == null ? null : TravelMode.valueOf(mode);
+        fixedTime = state.getString(KEY_TIME);
+        if (state.containsKey(KEY_PIN_LAT)) {
+            pendingPinLat = state.getDouble(KEY_PIN_LAT);
+            pendingPinLng = state.getDouble(KEY_PIN_LNG);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_BOUND, formBound);
+        outState.putInt(KEY_DAY, selectedDay);
+        outState.putString(KEY_MODE, selectedMode == null ? null : selectedMode.name());
+        outState.putString(KEY_TIME, fixedTime);
+        if (pendingPinLat != null && pendingPinLng != null) {
+            outState.putDouble(KEY_PIN_LAT, pendingPinLat);
+            outState.putDouble(KEY_PIN_LNG, pendingPinLng);
+        }
+    }
+
+    private void populateFromRow(ItineraryItemWithPlace row) {
+        selectedDay = row.item.getDay();
+        selectedMode = parseMode(row.item.getTransportMode());
+        fixedTime = row.item.getTime();
+        if (row.item.getDurationMin() != null) {
+            inputDuration.setText(String.valueOf(row.item.getDurationMin()));
+        }
+        // Blank means "use the profile default" (shown as a hint), so saving untouched keeps null.
+        inputBuffer.setText(StopFormRules.bufferFieldText(row.item.getBufferMin()));
+        switchBooked.setChecked(row.item.isBooked());
+        layoutTime.setVisibility(row.item.isBooked() ? View.VISIBLE : View.GONE);
+        if (fixedTime != null) {
+            inputTime.setText(fixedTime);
+        }
+    }
+
+    @Nullable
+    private static TravelMode parseMode(@Nullable String name) {
+        try {
+            return name == null ? null : TravelMode.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** Draws the parts that come from Room or from non-text draft state. */
+    private void renderStatic() {
+        TextView title = findViewById(R.id.text_stop_title);
+        title.setText(current.item.displayName(current.placeName));
+        renderDayValue();
+        renderModeValue();
+        renderPin();
+    }
+
+    // ---- day ----
 
     private void bindDayRow() {
         rowDay = findViewById(R.id.row_day);
         ((TextView) rowDay.findViewById(R.id.text_setting_title)).setText(R.string.move_day_title);
-        TextView value = rowDay.findViewById(R.id.text_setting_value);
+        styleSettingRow(rowDay);
+        rowDay.setOnClickListener(v -> pickDay());
+    }
+
+    private void styleSettingRow(View row) {
+        TextView value = row.findViewById(R.id.text_setting_value);
         value.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand_more_24, 0);
         value.setCompoundDrawablePadding(getResources().getDimensionPixelSize(R.dimen.space_xs));
         // Align the row's text with the fields below it (item_setting carries its own gutter).
-        rowDay.setPaddingRelative(0, rowDay.getPaddingTop(), 0, rowDay.getPaddingBottom());
-        renderDayValue();
-        rowDay.setOnClickListener(v -> pickDay());
+        row.setPaddingRelative(0, row.getPaddingTop(), 0, row.getPaddingBottom());
     }
 
     private void renderDayValue() {
@@ -109,10 +205,16 @@ public class StopDetailActivity extends ScreenActivity {
                 .setText(getString(R.string.day_label, selectedDay));
     }
 
+    /** Trip length, but never below this stop's own day so an existing late stop stays valid. */
+    private int dayChoices() {
+        return Math.max(PrototypeStore.get().meta(tripId).getDays(),
+                current == null ? 1 : current.item.getDay());
+    }
+
     private void pickDay() {
-        int maxDay = getIntent().getIntExtra(EXTRA_MAX_DAY, 3);
-        String[] labels = new String[maxDay];
-        for (int i = 0; i < maxDay; i++) {
+        int count = dayChoices();
+        String[] labels = new String[count];
+        for (int i = 0; i < count; i++) {
             labels[i] = getString(R.string.day_label, i + 1);
         }
         new MaterialAlertDialogBuilder(this)
@@ -126,20 +228,66 @@ public class StopDetailActivity extends ScreenActivity {
                 .show();
     }
 
-    private void bindDuration(int durationMin) {
+    // ---- travel mode ----
+
+    private void bindModeRow() {
+        rowMode = findViewById(R.id.row_mode);
+        ((TextView) rowMode.findViewById(R.id.text_setting_title)).setText(R.string.field_mode_title);
+        styleSettingRow(rowMode);
+        rowMode.setOnClickListener(v -> pickMode());
+    }
+
+    private void renderModeValue() {
+        ((TextView) rowMode.findViewById(R.id.text_setting_value)).setText(
+                selectedMode == null ? getString(R.string.mode_suggested)
+                        : Labels.mode(this, selectedMode));
+    }
+
+    private void pickMode() {
+        TravelMode[] modes = TravelMode.values();
+        String[] labels = new String[modes.length + 1];
+        labels[0] = getString(R.string.mode_suggested);
+        for (int i = 0; i < modes.length; i++) {
+            labels[i + 1] = Labels.mode(this, modes[i]);
+        }
+        int checked = selectedMode == null ? 0 : selectedMode.ordinal() + 1;
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.mode_dialog_title)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    selectedMode = which == 0 ? null : modes[which - 1];
+                    renderModeValue();
+                    dialog.dismiss();
+                })
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    // ---- text fields ----
+
+    private void bindDuration() {
         inputDuration = findViewById(R.id.input_duration);
         layoutDuration = findViewById(R.id.layout_duration);
-        if (durationMin > 0) {
-            inputDuration.setText(String.valueOf(durationMin));
-        }
         layoutDuration.setHelperText(getString(R.string.duration_helper, ScheduleMath.DEFAULT_STAY_MIN));
-        inputDuration.addTextChangedListener(new TextWatcher() {
+        clearErrorOnEdit(inputDuration, layoutDuration);
+    }
+
+    private void bindBuffer() {
+        inputBuffer = findViewById(R.id.input_buffer);
+        layoutBuffer = findViewById(R.id.layout_buffer);
+        ((TextView) findViewById(R.id.text_buffer_helper)).setText(
+                getString(R.string.buffer_helper, PrototypeStore.get().getBufferMin()));
+        layoutBuffer.setPlaceholderText(String.valueOf(PrototypeStore.get().getBufferMin()));
+        clearErrorOnEdit(inputBuffer, layoutBuffer);
+    }
+
+    private static void clearErrorOnEdit(TextInputEditText input, TextInputLayout layout) {
+        input.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                layoutDuration.setError(null);
+                layout.setError(null);
             }
 
             @Override
@@ -147,12 +295,11 @@ public class StopDetailActivity extends ScreenActivity {
         });
     }
 
-    private void bindBooked(boolean booked) {
+    private void bindBooked() {
         switchBooked = findViewById(R.id.switch_booked);
         layoutTime = findViewById(R.id.layout_time);
         inputTime = findViewById(R.id.input_time);
-        switchBooked.setChecked(booked);
-        layoutTime.setVisibility(booked ? View.VISIBLE : View.GONE);
+        layoutTime.setVisibility(switchBooked.isChecked() ? View.VISIBLE : View.GONE);
         if (fixedTime != null) {
             inputTime.setText(fixedTime);
         }
@@ -169,19 +316,57 @@ public class StopDetailActivity extends ScreenActivity {
         layoutTime.setEndIconOnClickListener(picker);
     }
 
-    private void bindBuffer() {
-        TextView helper = findViewById(R.id.text_buffer_helper);
-        MaterialSwitch bufferSwitch = findViewById(R.id.switch_buffer);
-        int minutes = PrototypeStore.get().getBufferMin();
-        if (minutes > 0) {
-            helper.setText(getString(R.string.buffer_helper, minutes));
-        } else {
-            helper.setText(R.string.buffer_none);
-            bufferSwitch.setChecked(false);
+    // ---- pin ----
+
+    private void bindPin() {
+        pinPicker = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    Intent data = result.getData();
+                    if (result.getResultCode() != Activity.RESULT_OK || data == null) {
+                        return;
+                    }
+                    double lat = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT, Double.NaN);
+                    double lng = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LNG, Double.NaN);
+                    if (!StopFormRules.isPinValid(lat, lng)) {
+                        toast(R.string.error_pin_invalid);
+                        return;
+                    }
+                    pendingPinLat = lat;
+                    pendingPinLng = lng;
+                    renderPin();
+                });
+        findViewById(R.id.button_adjust_pin).setOnClickListener(v -> openPinPicker());
+    }
+
+    private void openPinPicker() {
+        double[] start = currentPin();
+        if (start == null) {
+            String city = PrototypeStore.get().meta(tripId).getCity();
+            start = new double[]{DemoCatalog.lat(city), DemoCatalog.lng(city)};
         }
-        bufferSwitch.setEnabled(minutes > 0);
-        bufferSwitch.setOnCheckedChangeListener((button, checked) ->
-                helper.setVisibility(checked ? View.VISIBLE : View.INVISIBLE));
+        Intent intent = new Intent(this, MapPickerActivity.class);
+        intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, start[0]);
+        intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, start[1]);
+        pinPicker.launch(intent);
+    }
+
+    /** The pin to show: a freshly picked one, else the saved one, else null. */
+    @Nullable
+    private double[] currentPin() {
+        if (pendingPinLat != null && pendingPinLng != null) {
+            return new double[]{pendingPinLat, pendingPinLng};
+        }
+        if (current != null && current.placeLat != null && current.placeLng != null) {
+            return new double[]{current.placeLat, current.placeLng};
+        }
+        return null;
+    }
+
+    private void renderPin() {
+        double[] pin = currentPin();
+        ((TextView) findViewById(R.id.text_pin_status)).setText(pin == null
+                ? getString(R.string.pin_none)
+                : getString(R.string.pin_selected, String.format(Locale.US, "%.5f, %.5f", pin[0], pin[1])));
     }
 
     private void bindPhoto() {
@@ -197,45 +382,83 @@ public class StopDetailActivity extends ScreenActivity {
                 .build()));
     }
 
+    // ---- save / delete ----
+
     private void save() {
-        boolean booked = switchBooked.isChecked();
-        String durationText = inputDuration.getText() == null
-                ? "" : inputDuration.getText().toString().trim();
-        Integer duration = durationText.isEmpty() ? null : Integer.parseInt(durationText);
-        if (duration != null && duration < 1) {
-            layoutDuration.setError(getString(R.string.error_duration_invalid));
-            inputDuration.requestFocus();
+        if (saving || current == null) {
             return;
+        }
+        String durationText = text(inputDuration);
+        String bufferText = text(inputBuffer);
+        boolean booked = switchBooked.isChecked();
+        View firstInvalid = null;
+        if (!StopFormRules.isDurationValid(durationText)) {
+            layoutDuration.setError(getString(R.string.error_duration_range));
+            firstInvalid = inputDuration;
+        }
+        if (!StopFormRules.isBufferValid(bufferText)) {
+            layoutBuffer.setError(getString(R.string.error_buffer_range));
+            firstInvalid = firstInvalid == null ? inputBuffer : firstInvalid;
         }
         if (booked && TextUtils.isEmpty(fixedTime)) {
             layoutTime.setError(getString(R.string.error_time_required));
-            layoutTime.requestRectangleOnScreen(
-                    new Rect(0, 0, layoutTime.getWidth(), layoutTime.getHeight()));
+            firstInvalid = firstInvalid == null ? inputTime : firstInvalid;
+        }
+        if (firstInvalid != null) {
+            if (firstInvalid == inputTime) {
+                // The time field is picker-only (not focusable), so scroll it into view instead.
+                layoutTime.requestRectangleOnScreen(
+                        new Rect(0, 0, layoutTime.getWidth(), layoutTime.getHeight()));
+            } else {
+                firstInvalid.requestFocus();
+            }
             return;
         }
-        View saveButton = findViewById(R.id.button_save);
-        saveButton.setEnabled(false);
-        repository.updateItineraryItem(tripId, itemId, originalDay, position, selectedDay,
-                booked ? fixedTime : null, duration, booked, result -> {
-                    if (result.isSuccess()) {
-                        finish();
-                    } else {
-                        saveButton.setEnabled(true);
-                        toast(R.string.error_update_failed);
-                    }
-                });
+        setSaving(true);
+        Result.Callback<Void> done = result -> {
+            if (result.isSuccess()) {
+                finish();
+            } else {
+                setSaving(false);
+                toast(R.string.error_update_failed);
+            }
+        };
+        Integer buffer = StopFormRules.bufferOrNull(bufferText);
+        String mode = selectedMode == null ? null : selectedMode.name();
+        int duration = StopFormRules.durationOrDefault(durationText);
+        String time = booked ? fixedTime : null;
+        if (pendingPinLat == null || pendingPinLng == null) {
+            repository.updateItineraryItem(tripId, itemId, current.item.getDay(),
+                    current.item.getPosition(), selectedDay, time, duration, booked, buffer, mode,
+                    done);
+            return;
+        }
+        repository.updateItineraryItemWithPin(tripId, itemId, current.item.getDay(),
+                current.item.getPosition(), selectedDay, time, duration, booked, buffer, mode,
+                current.item.displayName(current.placeName), pendingPinLat, pendingPinLng, done);
+    }
+
+    private void setSaving(boolean isSaving) {
+        saving = isSaving;
+        saveButton.setEnabled(!isSaving);
+    }
+
+    private static String text(TextInputEditText input) {
+        return input.getText() == null ? "" : input.getText().toString().trim();
     }
 
     private void confirmDelete() {
+        if (current == null) {
+            return;
+        }
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.delete_stop_title)
-                .setMessage(getString(R.string.delete_stop_message, stopName, originalDay))
+                .setMessage(getString(R.string.delete_stop_message,
+                        current.item.displayName(current.placeName), current.item.getDay()))
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_delete, (dialog, which) ->
                         repository.deleteItineraryItem(itemId, result -> {
-                            if (result.isSuccess()) {
-                                finish();
-                            } else {
+                            if (!result.isSuccess()) {
                                 toast(R.string.error_update_failed);
                             }
                         }))

@@ -6,8 +6,6 @@
     <string name="itinerary_subtitle">Day-by-day itinerary</string>
     <string name="add_destination">Add destination</string>
     <string name="day_label">Day %1$d</string>
-    <string name="stop_duration">Stay %1$s</string>
-    <string name="no_duration">No set duration</string>
 
     <!-- Add destination screen -->
     <string name="add_destination_title">Add destination</string>
@@ -22,9 +20,10 @@
     <string name="select_time">Select fixed time</string>
     <string name="error_name_required">Enter a destination name</string>
     <string name="error_day_required">Enter a day number</string>
-    <string name="error_day_invalid">Day must be 1 or higher</string>
+    <string name="error_day_range">Enter a day from 1 to %1$d</string>
     <string name="label_search_city">Search in</string>
-    <string name="error_duration_invalid">Duration must be 1 minute or more</string>
+    <string name="error_duration_range">Enter 5 to 720 minutes, or leave blank for 60</string>
+    <string name="error_buffer_range">Enter 0 to 180 minutes</string>
     <string name="error_time_required">Pick a time for a booked stop</string>
     <string name="destination_saved">Destination added</string>
     <string name="error_save_failed">Could not save destination</string>

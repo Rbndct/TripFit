@@ -29,6 +29,17 @@ public final class TripDates {
         return days <= 1 ? first : first + " – " + last;
     }
 
+    /** "Wed, Dec 2" for day {@code day} (1-based) of a trip starting {@code startIso}; "" if either is invalid. */
+    public static String dayDateLabel(String startIso, int day) {
+        if (day < 1 || !TripFormRules.isValidIsoDate(startIso)) {
+            return "";
+        }
+        Calendar date = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.US);
+        date.setTimeInMillis(parseIso(startIso).getTime());
+        date.add(Calendar.DAY_OF_MONTH, day - 1);
+        return utc("EEE, MMM d").format(date.getTime());
+    }
+
     /** The UTC calendar day of a date-picker timestamp as {@code yyyy-MM-dd}. */
     public static String isoFromUtcMillis(long millis) {
         return utc(ISO).format(new Date(millis));

@@ -257,28 +257,7 @@ public final class PrototypeStore {
         return Math.max(100, Math.round(converted / 100.0) * 100.0);
     }
 
-    // ---- per-leg transport, per-stop buffers, per-item details ----
-
-    public synchronized TravelMode legMode(String itemId, double km) {
-        TravelMode mode = TripDocMapper.parseMode(docs.global().legModes.get(itemId));
-        return mode != null ? mode : TravelMode.suggestFor(km);
-    }
-
-    public synchronized void setLegMode(String itemId, TravelMode mode) {
-        docs.global().legModes.put(itemId, mode.name());
-        docs.saveGlobal();
-    }
-
-    /** Per-stop buffer minutes, or null when the stop uses the global buffer. */
-    @Nullable
-    public synchronized Integer stopBuffer(String itemId) {
-        return docs.global().stopBuffers.get(itemId);
-    }
-
-    public synchronized void setStopBuffer(String itemId, int minutes) {
-        docs.global().stopBuffers.put(itemId, minutes);
-        docs.saveGlobal();
-    }
+    // ---- per-item details ----
 
     /** Cost, currency, category and outdoor flag for an itinerary item, or null if never set. */
     @Nullable
@@ -295,11 +274,6 @@ public final class PrototypeStore {
         if (docs.global().itemDetails.remove(itemId) != null) {
             docs.saveGlobal();
         }
-    }
-
-    /** Deterministic fake leg distance (km) from an item id, standing in for the Matrix API. */
-    public static double legKm(String itemId) {
-        return 0.4 + (Math.abs(itemId.hashCode()) % 90) / 10.0;
     }
 
     // ---- journal ----

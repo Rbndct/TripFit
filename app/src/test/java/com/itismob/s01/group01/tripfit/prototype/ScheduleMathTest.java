@@ -1,38 +1,58 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
+/** Clock helpers plus the flow expectations that used to live on ScheduleMath.build. */
 public class ScheduleMathTest {
 
-    @Test
-    public void build_flexibleStops_flowWithBufferFromNineAm() {
-        List<ScheduleMath.Slot> slots = ScheduleMath.build(Arrays.asList(
-                new ScheduleMath.Stop("A", null, 45),
-                new ScheduleMath.Stop("B", null, 30)), 15);
-        assertEquals(9 * 60, slots.get(0).getStartMin());
-        assertEquals(9 * 60 + 45, slots.get(0).getEndMin());
-        assertEquals(9 * 60 + 60, slots.get(1).getStartMin());
+    private static DraftTrip.Stop stop(String name, int duration, int buffer) {
+        DraftTrip.Stop s = new DraftTrip.Stop();
+        s.name = name;
+        s.duration = duration;
+        s.buffer = buffer;
+        return s;
     }
 
     @Test
-    public void build_missingDuration_usesDefaultStay() {
-        List<ScheduleMath.Slot> slots = ScheduleMath.build(
-                java.util.Collections.singletonList(new ScheduleMath.Stop("A", null, null)), 0);
-        assertEquals(ScheduleMath.DEFAULT_STAY_MIN, slots.get(0).getEndMin() - slots.get(0).getStartMin());
+    public void flexibleStops_flowFromNineAmWithPlaceholderLegAndBuffer() {
+        DraftTrip trip = new DraftTrip();
+        trip.stops.add(stop("A", 45, 15));
+        trip.stops.add(stop("B", 30, 15));
+        List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, false);
+        assertEquals(9 * 60, slots.get(0).start);
+        assertEquals(9 * 60 + 45, slots.get(0).end);
+        assertEquals(585 + ScheduleMath.PLACEHOLDER_TRAVEL_MIN + 15, slots.get(1).start);
+        assertEquals(10 * 60 + 20, slots.get(1).start);
+        assertEquals(10 * 60 + 50, slots.get(1).end);
     }
 
     @Test
-    public void build_bookedStop_isPinnedToItsFixedTime() {
-        List<ScheduleMath.Slot> slots = ScheduleMath.build(Arrays.asList(
-                new ScheduleMath.Stop("A", null, 30),
-                new ScheduleMath.Stop("Dinner", "18:00", 90)), 15);
-        assertEquals(18 * 60, slots.get(1).getStartMin());
-        assertEquals(19 * 60 + 30, slots.get(1).getEndMin());
+    public void bookedStop_isPinnedToItsFixedTimeWithoutConflict() {
+        DraftTrip trip = new DraftTrip();
+        trip.stops.add(stop("A", 30, 15));
+        DraftTrip.Stop dinner = stop("Dinner", 90, 15);
+        dinner.booked = true;
+        dinner.fixedMinute = 18 * 60;
+        trip.stops.add(dinner);
+        List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, false);
+        assertEquals(18 * 60, slots.get(1).start);
+        assertEquals(19 * 60 + 30, slots.get(1).end);
+        assertFalse(slots.get(1).conflict);
+    }
+
+    @Test
+    public void constants_matchTheAgreedValues() {
+        assertEquals(540, ScheduleMath.DAY_START_MIN);
+        assertEquals(1200, ScheduleMath.LATE_END_MIN);
+        assertEquals(1440, ScheduleMath.DAY_END_MIN);
+        assertEquals(20, ScheduleMath.PLACEHOLDER_TRAVEL_MIN);
+        assertEquals(15, ScheduleMath.DEFAULT_BUFFER_MIN);
+        assertEquals(60, ScheduleMath.DEFAULT_STAY_MIN);
     }
 
     @Test
@@ -42,7 +62,7 @@ public class ScheduleMathTest {
     }
 
     @Test
-    public void parse_roundTripsWithFormat() {
+    public void parse_readsHoursAndMinutes() {
         assertEquals(15 * 60 + 30, ScheduleMath.parse("15:30"));
     }
 }

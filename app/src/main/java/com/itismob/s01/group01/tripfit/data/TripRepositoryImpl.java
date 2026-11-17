@@ -12,8 +12,10 @@ import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 
 import android.util.Log;
 
@@ -28,6 +30,7 @@ public class TripRepositoryImpl implements TripRepository {
     private static final String SEED_START_DATE = "2026-12-01";
     private static final int SEED_DAYS = 2;
     private static final String TAG = "TripRepository";
+    private static final String PIN_PREFIX = "pin-";
     private static final int PLACE_SEARCH_LIMIT = 25;
 
     private final TripFitDatabase database;
@@ -64,6 +67,11 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public LiveData<List<ItineraryItemWithPlace>> observeItineraryItemsWithPlaceNames(String tripId) {
         return database.itineraryItemDao().observeByTripIdWithPlace(tripId);
+    }
+
+    @Override
+    public LiveData<ItineraryItemWithPlace> observeItemWithPlace(String itemId) {
+        return database.itineraryItemDao().observeByIdWithPlace(itemId);
     }
 
     @Override
@@ -209,17 +217,94 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public void updateItineraryItem(String tripId, String itemId, int oldDay, int oldPosition,
                                     int newDay, String time, Integer durationMin, boolean booked,
+                                    Integer bufferMin, String transportMode,
                                     Result.Callback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
                 int position = newDay == oldDay
                         ? oldPosition
                         : database.itineraryItemDao().nextPositionSync(tripId, newDay);
-                database.itineraryItemDao().updateDetails(
-                        itemId, newDay, time, durationMin, booked, position);
+                database.itineraryItemDao().updateDetailsWithRouting(itemId, newDay, time,
+                        durationMin, booked, position, bufferMin, transportMode);
                 deliver(callback, Result.success(null));
             } catch (RuntimeException e) {
                 deliver(callback, Result.error("Could not update stop: " + e.getMessage()));
+            }
+        });
+    }
+
+    @Override
+    public void updateLegSettings(String itemId, Integer bufferMin, String modeOrNull,
+                                  Result.Callback<Void> callback) {
+        runVoid("Could not save leg: ", callback, () -> database.itineraryItemDao()
+                .updateLegSettings(itemId, bufferMin, modeOrNull));
+    }
+
+    @Override
+    public void updateBuffer(String itemId, Integer bufferMin, Result.Callback<Void> callback) {
+        runVoid("Could not save buffer: ", callback,
+                () -> database.itineraryItemDao().updateBuffer(itemId, bufferMin));
+    }
+
+    @Override
+    public void updateTransportMode(String itemId, String modeOrNull,
+                                    Result.Callback<Void> callback) {
+        runVoid("Could not save travel mode: ", callback,
+                () -> database.itineraryItemDao().updateTransportMode(itemId, modeOrNull));
+    }
+
+    @Override
+    public void adjustPin(String itemId, String cityId, String name, double lat, double lng,
+                          Result.Callback<Void> callback) {
+        if (!StopFormRules.isPinValid(lat, lng)) {
+            deliver(callback, Result.error("Latitude must be -90 to 90 and longitude -180 to 180"));
+            return;
+        }
+        runVoid("Could not save pin: ", callback, () ->
+                database.placeDao().pinItem(itemId, PIN_PREFIX + itemId, cityId, name, lat, lng));
+    }
+
+    @Override
+    public void updateItineraryItemWithPin(String tripId, String itemId, int oldDay,
+                                           int oldPosition, int newDay, String time,
+                                           Integer durationMin, boolean booked, Integer bufferMin,
+                                           String transportMode, String pinName, double pinLat,
+                                           double pinLng, Result.Callback<Void> callback) {
+        if (!StopFormRules.isPinValid(pinLat, pinLng)) {
+            deliver(callback, Result.error("Latitude must be -90 to 90 and longitude -180 to 180"));
+            return;
+        }
+        runVoid("Could not update stop: ", callback, () -> database.runInTransaction(() -> {
+            database.placeDao().pinItem(itemId, PIN_PREFIX + itemId, null, pinName, pinLat, pinLng);
+            int position = newDay == oldDay
+                    ? oldPosition
+                    : database.itineraryItemDao().nextPositionSync(tripId, newDay);
+            database.itineraryItemDao().updateDetailsWithRouting(itemId, newDay, time,
+                    durationMin, booked, position, bufferMin, transportMode);
+        }));
+    }
+
+    @Override
+    public void applyMoves(List<TripSnapshots.ItemMove> moves, Result.Callback<Void> callback) {
+        runVoid("Could not move stops: ", callback,
+                () -> database.itineraryItemDao().applyMoves(moves));
+    }
+
+    @Override
+    public void applyItemOrders(List<List<String>> orderedItemIdsPerDay,
+                                Result.Callback<Void> callback) {
+        runVoid("Could not reorder stops: ", callback,
+                () -> database.itineraryItemDao().applyOrders(orderedItemIdsPerDay));
+    }
+
+    /** Runs a disk write off the main thread and reports success or a short error. */
+    private void runVoid(String errorPrefix, Result.Callback<Void> callback, Runnable work) {
+        executors.diskIO().execute(() -> {
+            try {
+                work.run();
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error(errorPrefix + e.getMessage()));
             }
         });
     }
@@ -232,20 +317,6 @@ public class TripRepositoryImpl implements TripRepository {
                 deliver(callback, Result.success(null));
             } catch (RuntimeException e) {
                 deliver(callback, Result.error("Could not delete stop: " + e.getMessage()));
-            }
-        });
-    }
-
-    @Override
-    public void applyItemOrder(List<String> orderedItemIds, Result.Callback<Void> callback) {
-        executors.diskIO().execute(() -> {
-            try {
-                for (int i = 0; i < orderedItemIds.size(); i++) {
-                    database.itineraryItemDao().updatePosition(orderedItemIds.get(i), i);
-                }
-                deliver(callback, Result.success(null));
-            } catch (RuntimeException e) {
-                deliver(callback, Result.error("Could not reorder stops: " + e.getMessage()));
             }
         });
     }

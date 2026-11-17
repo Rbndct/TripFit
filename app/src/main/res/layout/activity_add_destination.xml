@@ -63,6 +63,16 @@
                 android:enabled="false"
                 android:text="@string/action_pick_on_map" />
 
+            <TextView
+                android:id="@+id/text_pin_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:fontFamily="monospace"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="No pin selected · you can still add a stop by name" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_search_results"
                 android:layout_width="match_parent"

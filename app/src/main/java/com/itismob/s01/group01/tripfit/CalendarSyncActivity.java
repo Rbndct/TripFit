@@ -16,14 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.RowAdapter;
 import com.itismob.s01.group01.tripfit.ui.UiRow;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Previews the timed Google Calendar events built from the itinerary and simulates the one-tap
@@ -87,22 +88,15 @@ public class CalendarSyncActivity extends ScreenActivity {
     }
 
     private void showEvents(List<ItineraryItemWithPlace> items) {
-        Map<Integer, List<ScheduleMath.Stop>> byDay = new TreeMap<>();
-        for (ItineraryItemWithPlace entry : items) {
-            byDay.computeIfAbsent(entry.item.getDay(), d -> new ArrayList<>()).add(
-                    new ScheduleMath.Stop(entry.item.displayName(entry.placeName),
-                            entry.item.isBooked() ? entry.item.getTime() : null,
-                            entry.item.getDurationMin()));
-        }
+        Map<Integer, List<RoutePreview.Slot>> byDay = TripSnapshots.schedule(
+                tripId, store.meta(tripId), items, store);
         List<UiRow> rows = new ArrayList<>();
-        for (Map.Entry<Integer, List<ScheduleMath.Stop>> day : byDay.entrySet()) {
-            for (ScheduleMath.Slot slot : ScheduleMath.build(day.getValue(),
-                    store.getBufferMin())) {
-                rows.add(UiRow.withTrailing(slot.getName(),
+        for (Map.Entry<Integer, List<RoutePreview.Slot>> day : byDay.entrySet()) {
+            for (RoutePreview.Slot slot : day.getValue()) {
+                rows.add(UiRow.withTrailing(slot.stop.name,
                         getString(R.string.calendar_event_day, day.getKey()),
                         getString(R.string.calendar_event_time,
-                                ScheduleMath.format(slot.getStartMin()),
-                                ScheduleMath.format(slot.getEndMin()))));
+                                ScheduleMath.format(slot.start), ScheduleMath.format(slot.end))));
             }
         }
         eventCount = rows.size();
