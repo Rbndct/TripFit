@@ -51,6 +51,18 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/text_category_planned"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:fontFamily="monospace"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:text="Planned ₱2,400.00"
+        tools:visibility="visible" />
+
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/progress_category"
         android:layout_width="match_parent"

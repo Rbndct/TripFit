@@ -110,7 +110,7 @@ public class SuggestionsActivity extends ScreenActivity {
         BudgetSettings budget = store.budget(tripId);
         String home = budget.getHomeCurrency();
         String local = budget.getLocalCurrency();
-        double limit = budget.limitFor(category);
+        double limit = budget.limitFor(category, store.meta(tripId).getDays());
         double spent = BudgetMath.spentByCategory(store.expenses(tripId)).get(category);
         double remaining = BudgetMath.remaining(limit, spent);
 

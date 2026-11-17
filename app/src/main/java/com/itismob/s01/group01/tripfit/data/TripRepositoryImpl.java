@@ -75,14 +75,14 @@ public class TripRepositoryImpl implements TripRepository {
     }
 
     @Override
-    public void addItineraryItem(String tripId, String customName, int day, String time,
-                                  Integer durationMin, boolean booked,
-                                  Result.Callback<Void> callback) {
+    public void addItineraryItem(String itemId, String tripId, String customName, int day,
+                                 String time, Integer durationMin, boolean booked,
+                                 Result.Callback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
                 int position = database.itineraryItemDao().nextPositionSync(tripId, day);
                 ItineraryItemEntity item = new ItineraryItemEntity(
-                        UUID.randomUUID().toString(), tripId, null, customName, day, time,
+                        itemId, tripId, null, customName, day, time,
                         durationMin, booked, null, null, position
                 );
                 database.itineraryItemDao().insert(item);
@@ -94,9 +94,9 @@ public class TripRepositoryImpl implements TripRepository {
     }
 
     @Override
-    public void addItineraryItemFromPlace(String tripId, PlaceDto place, int day, String time,
-                                           Integer durationMin, boolean booked,
-                                           Result.Callback<Void> callback) {
+    public void addItineraryItemFromPlace(String itemId, String tripId, PlaceDto place, int day,
+                                          String time, Integer durationMin, boolean booked,
+                                          Result.Callback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
                 database.placeDao().upsert(new PlaceEntity(
@@ -107,7 +107,7 @@ public class TripRepositoryImpl implements TripRepository {
                 ));
                 int position = database.itineraryItemDao().nextPositionSync(tripId, day);
                 ItineraryItemEntity item = new ItineraryItemEntity(
-                        UUID.randomUUID().toString(), tripId, place.getId(), null, day, time,
+                        itemId, tripId, place.getId(), null, day, time,
                         durationMin, booked, null, null, position
                 );
                 database.itineraryItemDao().insert(item);

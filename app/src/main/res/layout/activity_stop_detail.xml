@@ -113,6 +113,13 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="0 to 180 minutes before the incoming leg; blank uses your Profile default (15 min)" />
 
+            <include
+                android:id="@+id/cost_fields"
+                layout="@layout/view_cost_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md" />
+
             <TextView
                 android:id="@+id/text_pin_status"
                 android:layout_width="match_parent"

@@ -30,10 +30,12 @@ import com.google.android.material.timepicker.TimeFormat;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
+import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
+import com.itismob.s01.group01.tripfit.ui.CostFields;
 import com.itismob.s01.group01.tripfit.ui.PlaceSearchAdapter;
 import com.itismob.s01.group01.tripfit.viewmodel.AddDestinationViewModel;
 
@@ -54,6 +56,7 @@ public class AddDestinationActivity extends ScreenActivity {
     /** Optional: the itinerary's selected day, used as the new stop's default (P-118). */
     public static final String EXTRA_DAY = "extra_day";
     private static final long SEARCH_DEBOUNCE_MS = 350;
+    private static final String KEY_PENDING_ITEM = "pending_item_id";
     private static final String KEY_PLACE_ID = "place_id";
     private static final String KEY_PLACE_CITY = "place_city";
     private static final String KEY_PLACE_NAME = "place_name";
@@ -76,6 +79,8 @@ public class AddDestinationActivity extends ScreenActivity {
     private ChipGroup chipGroupCities;
     private TextView searchEmptyState;
     private AddDestinationViewModel viewModel;
+    private CostFields costFields;
+    private String pendingItemId;
     private PlaceSearchAdapter searchAdapter;
     private final Set<String> existingNames = new HashSet<>();
 
@@ -95,6 +100,9 @@ public class AddDestinationActivity extends ScreenActivity {
         }
 
         TripFitApp app = (TripFitApp) getApplication();
+        if (savedInstanceState != null) {
+            pendingItemId = savedInstanceState.getString(KEY_PENDING_ITEM);
+        }
         viewModel = new ViewModelProvider(this,
                 new AddDestinationViewModel.Factory(app.getTripRepository()))
                 .get(AddDestinationViewModel.class);
@@ -113,6 +121,9 @@ public class AddDestinationActivity extends ScreenActivity {
         searchEmptyState = findViewById(R.id.text_search_empty);
 
         tripDays = PrototypeStore.get().meta(tripId).getDays();
+        BudgetSettings budget = PrototypeStore.get().budget(tripId);
+        costFields = CostFields.bind(findViewById(R.id.cost_fields), budget.getHomeCurrency(),
+                budget.getLocalCurrency());
         if (savedInstanceState == null) {
             // The new stop starts on the itinerary's selected day (P-118).
             inputDay.setText(String.valueOf(TripSnapshots.clampDay(
@@ -170,6 +181,10 @@ public class AddDestinationActivity extends ScreenActivity {
                         Snackbar.LENGTH_SHORT).show();
                 finish();
             } else {
+                if (pendingItemId != null) {
+                    PrototypeStore.get().removeItemDetails(pendingItemId); // no stop was created
+                    pendingItemId = null;
+                }
                 findViewById(R.id.button_save).setEnabled(true);
                 Snackbar.make(findViewById(R.id.add_destination_root), R.string.error_save_failed,
                         Snackbar.LENGTH_SHORT).show();
@@ -331,6 +346,10 @@ public class AddDestinationActivity extends ScreenActivity {
             firstInvalid = firstInvalid == null ? inputDuration : firstInvalid;
         }
 
+        if (!costFields.validate()) {
+            firstInvalid = firstInvalid == null ? costFields.costInput() : firstInvalid;
+        }
+
         if (switchBooked.isChecked() && safeText(inputTime).isEmpty()) {
             layoutTime.setError(getString(R.string.error_time_required));
             firstInvalid = firstInvalid == null ? inputTime : firstInvalid;
@@ -408,6 +427,7 @@ public class AddDestinationActivity extends ScreenActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putString(KEY_PENDING_ITEM, pendingItemId);
         if (selectedPlace != null) {
             outState.putString(KEY_PLACE_ID, selectedPlace.getId());
             outState.putString(KEY_PLACE_CITY, selectedPlace.getCityId());
@@ -452,10 +472,14 @@ public class AddDestinationActivity extends ScreenActivity {
         boolean booked = switchBooked.isChecked();
         String time = booked ? safeText(inputTime) : null;
 
+        // The details are keyed by the new row's id; they are dropped again if the save fails.
+        pendingItemId = UUID.randomUUID().toString();
+        PrototypeStore.get().setItemDetails(pendingItemId, costFields.toDetails(null));
         if (selectedPlace != null && selectedPlace.getName().equals(name)) {
-            viewModel.saveFromPlace(tripId, selectedPlace, day, durationMin, booked, time);
+            viewModel.saveFromPlace(pendingItemId, tripId, selectedPlace, day, durationMin, booked,
+                    time);
         } else {
-            viewModel.save(tripId, name, day, durationMin, booked, time);
+            viewModel.save(pendingItemId, tripId, name, day, durationMin, booked, time);
         }
     }
 

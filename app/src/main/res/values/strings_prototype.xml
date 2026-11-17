@@ -133,7 +133,7 @@
 
     <!-- Budget -->
     <string name="budget_title">Budget</string>
-    <string name="budget_spent_label">Spent</string>
+    <string name="budget_spent_label">Logged expenses</string>
     <string name="budget_left">%1$s left</string>
     <string name="budget_over">%1$s over budget</string>
     <string name="budget_of_total">of %1$s</string>
@@ -162,6 +162,41 @@
     <string name="error_amount_required">Enter an amount</string>
     <string name="error_title_required">Enter a description</string>
     <string name="expense_added">Expense added</string>
+    <string name="field_paid_in">Paid in</string>
+    <string name="error_amount_range">Enter an amount from 0.01 to 100,000,000</string>
+    <string name="expense_remove">Remove</string>
+    <string name="expense_remove_cd">Remove %1$s</string>
+    <string name="expense_remove_title">Remove this expense?</string>
+    <string name="expense_remove_message">%1$s (%2$s) will be deleted from this trip\'s expenses.</string>
+    <string name="expense_removed">Expense removed</string>
+
+    <!-- Planned costs (stop estimates) -->
+    <string name="field_cost_hint">Estimated cost</string>
+    <string name="field_cost_currency_hint">Price currency</string>
+    <string name="field_cost_category_hint">Budget category</string>
+    <string name="cost_helper">Optional. Kept in the currency you pick, shown in %1$s on the itinerary.</string>
+    <string name="error_optional_amount_range">Enter an amount from 0 to 100,000,000, or leave blank</string>
+    <string name="stop_estimate">Est. %1$s</string>
+    <string name="budget_planned_label">Planned stop estimates</string>
+    <string name="budget_planned_note">Estimates from your itinerary. They are never added to your logged expenses.</string>
+    <string name="budget_planned_of">of %1$s budget</string>
+    <string name="budget_planned_none">No stop estimates yet. Add an estimated cost to a stop to plan with it.</string>
+    <string name="budget_planned_over_warning">Your planned stops (%1$s) are %2$s over your %3$s budget.</string>
+    <string name="budget_unknown_currency">No rate for %1$s, so those amounts are counted 1:1.</string>
+    <string name="category_planned">Planned %1$s</string>
+    <string name="category_planned_cd">%1$s, planned %2$s</string>
+
+    <!-- Currency calculator and notices -->
+    <string name="calc_title">Currency calculator</string>
+    <string name="calc_amount_hint">Amount</string>
+    <string name="calc_from_hint">From</string>
+    <string name="calc_result_sample">%1$s = %2$s · Sample rate</string>
+    <string name="calc_result_live">%1$s = %2$s · Rate as of %3$s</string>
+    <string name="calc_error">Enter an amount from 0 to 100,000,000</string>
+    <string name="budget_rates_notice">Exchange rates are sample or reference rates, not what a bank or card will charge. Stop costs are estimates.</string>
+    <string name="budget_find_cheap">Find budget-friendly food &amp; activities</string>
+    <string name="itinerary_subtitle_budget">%1$s · Budget %2$s</string>
+    <string name="itinerary_subtitle_full">%1$s · %2$s · Budget %3$s</string>
 
     <!-- Budget setup -->
     <string name="budget_setup_title">Budget setup</string>
@@ -175,9 +210,13 @@
         <item quantity="other">%1$s × %2$d days = %3$s trip total</item>
     </plurals>
     <string name="budget_split_sum">Split %1$s of %2$s trip budget</string>
+    <string name="budget_split_sum_daily">Split %1$s of %2$s daily budget</string>
+    <string name="budget_split_over_daily">Limits are %1$s over the %2$s daily budget</string>
+    <string name="budget_limits_daily_note">Category limits are per day in daily mode.</string>
     <string name="budget_split_over">Limits are %1$s over the %2$s trip budget</string>
     <string name="error_split_exceeds">Category limits add up to more than the budget</string>
     <string name="error_budget_required">Enter a budget amount</string>
+    <string name="error_limit_range">Enter 0 to 100,000,000, or leave blank</string>
     <string name="action_save_budget">Save budget</string>
     <string name="budget_currency_note">Prices are converted to your home currency (%1$s).</string>
 

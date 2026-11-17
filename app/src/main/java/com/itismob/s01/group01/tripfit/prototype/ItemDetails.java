@@ -24,6 +24,16 @@ public final class ItemDetails {
         this.outdoor = outdoor;
     }
 
+    /**
+     * Copy of {@code previous} (or fresh defaults, outdoor on) with a new cost, currency and
+     * category. The outdoor flag is kept, and {@code previous} is never changed.
+     */
+    public static ItemDetails withCost(ItemDetails previous, double cost, String costCurrency,
+                                       String category) {
+        boolean outdoor = previous == null || previous.outdoor;
+        return new ItemDetails(cost, costCurrency, category, outdoor);
+    }
+
     public double getCost() {
         return cost;
     }
