@@ -32,14 +32,30 @@ public interface TripRepository {
     LiveData<ItineraryItemWithPlace> observeItemWithPlace(String itemId);
 
     /** Adds a free-text stop (no database place match) at the end of its day. */
-    void addItineraryItem(String tripId, String customName, int day, String time,
-                           Integer durationMin, boolean booked, Result.Callback<Void> callback);
+    default void addItineraryItem(String tripId, String customName, int day, String time,
+                                  Integer durationMin, boolean booked,
+                                  Result.Callback<Void> callback) {
+        addItineraryItem(java.util.UUID.randomUUID().toString(), tripId, customName, day, time,
+                durationMin, booked, callback);
+    }
+
+    /** Same, but the caller picks the new row's id so it can key extras (cost) to it. */
+    void addItineraryItem(String itemId, String tripId, String customName, int day, String time,
+                          Integer durationMin, boolean booked, Result.Callback<Void> callback);
 
     /** Adds a stop backed by a searched-and-selected {@link PlaceDto}, caching it locally so its
      * name renders without a network round trip on every itinerary load. */
-    void addItineraryItemFromPlace(String tripId, PlaceDto place, int day, String time,
-                                    Integer durationMin, boolean booked,
-                                    Result.Callback<Void> callback);
+    default void addItineraryItemFromPlace(String tripId, PlaceDto place, int day, String time,
+                                           Integer durationMin, boolean booked,
+                                           Result.Callback<Void> callback) {
+        addItineraryItemFromPlace(java.util.UUID.randomUUID().toString(), tripId, place, day, time,
+                durationMin, booked, callback);
+    }
+
+    /** Same, but the caller picks the new row's id so it can key extras (cost) to it. */
+    void addItineraryItemFromPlace(String itemId, String tripId, PlaceDto place, int day,
+                                   String time, Integer durationMin, boolean booked,
+                                   Result.Callback<Void> callback);
 
     /** Creates a new trip and hands back its id so the caller can navigate into it. */
     void createTrip(String name, Result.Callback<String> callback);

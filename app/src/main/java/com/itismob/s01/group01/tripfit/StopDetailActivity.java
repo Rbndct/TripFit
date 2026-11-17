@@ -25,11 +25,14 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.itismob.s01.group01.tripfit.data.Result;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
+import com.itismob.s01.group01.tripfit.prototype.ItemDetails;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TravelMode;
+import com.itismob.s01.group01.tripfit.ui.CostFields;
 import com.itismob.s01.group01.tripfit.ui.Labels;
 import com.itismob.s01.group01.tripfit.ui.TimeFields;
 
@@ -68,6 +71,7 @@ public class StopDetailActivity extends ScreenActivity {
     private TextInputLayout layoutBuffer;
     private TextInputEditText inputBuffer;
     private MaterialSwitch switchBooked;
+    private CostFields costFields;
     private View rowDay;
     private View rowMode;
     private MaterialButton saveButton;
@@ -95,6 +99,7 @@ public class StopDetailActivity extends ScreenActivity {
         bindDuration();
         bindBooked();
         bindBuffer();
+        bindCost();
         bindPin();
         bindPhoto();
         saveButton = findViewById(R.id.button_save);
@@ -158,6 +163,7 @@ public class StopDetailActivity extends ScreenActivity {
         }
         // Blank means "use the profile default" (shown as a hint), so saving untouched keeps null.
         inputBuffer.setText(StopFormRules.bufferFieldText(row.item.getBufferMin()));
+        costFields.populate(PrototypeStore.get().itemDetails(itemId));
         switchBooked.setChecked(row.item.isBooked());
         layoutTime.setVisibility(row.item.isBooked() ? View.VISIBLE : View.GONE);
         if (fixedTime != null) {
@@ -280,6 +286,13 @@ public class StopDetailActivity extends ScreenActivity {
         clearErrorOnEdit(inputBuffer, layoutBuffer);
     }
 
+    /** The stop's estimate keeps its own currency; with none saved it starts in the local one. */
+    private void bindCost() {
+        BudgetSettings budget = PrototypeStore.get().budget(tripId);
+        costFields = CostFields.bind(findViewById(R.id.cost_fields), budget.getHomeCurrency(),
+                budget.getLocalCurrency());
+    }
+
     private static void clearErrorOnEdit(TextInputEditText input, TextInputLayout layout) {
         input.addTextChangedListener(new TextWatcher() {
             @Override
@@ -400,6 +413,9 @@ public class StopDetailActivity extends ScreenActivity {
             layoutBuffer.setError(getString(R.string.error_buffer_range));
             firstInvalid = firstInvalid == null ? inputBuffer : firstInvalid;
         }
+        if (!costFields.validate()) {
+            firstInvalid = firstInvalid == null ? costFields.costInput() : firstInvalid;
+        }
         if (booked && TextUtils.isEmpty(fixedTime)) {
             layoutTime.setError(getString(R.string.error_time_required));
             firstInvalid = firstInvalid == null ? inputTime : firstInvalid;
@@ -415,8 +431,10 @@ public class StopDetailActivity extends ScreenActivity {
             return;
         }
         setSaving(true);
+        ItemDetails details = costFields.toDetails(PrototypeStore.get().itemDetails(itemId));
         Result.Callback<Void> done = result -> {
             if (result.isSuccess()) {
+                PrototypeStore.get().setItemDetails(itemId, details);
                 finish();
             } else {
                 setSaving(false);
@@ -458,7 +476,9 @@ public class StopDetailActivity extends ScreenActivity {
                 .setNegativeButton(R.string.action_cancel, null)
                 .setPositiveButton(R.string.action_delete, (dialog, which) ->
                         repository.deleteItineraryItem(itemId, result -> {
-                            if (!result.isSuccess()) {
+                            if (result.isSuccess()) {
+                                PrototypeStore.get().removeItemDetails(itemId);
+                            } else {
                                 toast(R.string.error_update_failed);
                             }
                         }))

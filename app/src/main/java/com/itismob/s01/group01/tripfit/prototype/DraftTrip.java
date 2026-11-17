@@ -24,7 +24,7 @@ public class DraftTrip {
     public List<Entry> journal = new ArrayList<>();
     public List<String> weather = new ArrayList<>();
 
-    public String localCurrency() { return city.equals("Tokyo") ? "JPY" : "PHP"; }
+    public String localCurrency() { return MockData.currencyFor(city); }
     public String costCurrency(Stop stop) { return stop.currency==null || stop.currency.isEmpty()?localCurrency():stop.currency; }
     public double convertedCost(Stop stop) { return RoutePreview.convert(stop.cost,costCurrency(stop),homeCurrency); }
     public double totalBudget() { return budget * (dailyBudget ? days : 1); }

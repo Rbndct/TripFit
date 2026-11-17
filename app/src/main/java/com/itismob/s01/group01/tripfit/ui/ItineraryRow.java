@@ -32,8 +32,11 @@ public final class ItineraryRow {
     private final boolean placeholderLeg;
     private final TravelMode legMode;
     private final TravelMode explicitMode;
+    private final double estimateHome;
+    private final String homeCurrency;
 
-    private ItineraryRow(RoutePreview.Slot slot, RoutePreview.Slot previous, int indexInDay) {
+    private ItineraryRow(DraftTrip trip, RoutePreview.Slot slot, RoutePreview.Slot previous,
+                        int indexInDay) {
         DraftTrip.Stop stop = slot.stop;
         DraftTrip.Stop before = previous == null ? null : previous.stop;
         this.id = stop.id;
@@ -53,6 +56,8 @@ public final class ItineraryRow {
         this.placeholderLeg = before != null && (!before.hasLocation || !stop.hasLocation);
         this.legMode = before == null ? null : RoutePreview.legMode(before, stop);
         this.explicitMode = TripSnapshots.toMode(stop.mode);
+        this.estimateHome = trip.convertedCost(stop);
+        this.homeCurrency = trip.homeCurrency;
     }
 
     /** The day's rows in current (non-optimized) schedule order. */
@@ -60,7 +65,7 @@ public final class ItineraryRow {
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, day, false);
         List<ItineraryRow> rows = new ArrayList<>();
         for (int i = 0; i < slots.size(); i++) {
-            rows.add(new ItineraryRow(slots.get(i), i == 0 ? null : slots.get(i - 1), i + 1));
+            rows.add(new ItineraryRow(trip, slots.get(i), i == 0 ? null : slots.get(i - 1), i + 1));
         }
         return Collections.unmodifiableList(rows);
     }
@@ -121,4 +126,9 @@ public final class ItineraryRow {
 
     /** The mode stored for this stop's incoming leg; null means Suggested. */
     public TravelMode getExplicitMode() { return explicitMode; }
+
+    /** The stop's estimated cost converted to the trip's home currency; 0 when none was set. */
+    public double getEstimateHome() { return estimateHome; }
+
+    public String getHomeCurrency() { return homeCurrency; }
 }

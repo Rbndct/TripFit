@@ -10,9 +10,7 @@ import com.itismob.s01.group01.tripfit.data.TripRepositoryImpl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -202,7 +200,7 @@ public final class PrototypeStore {
         return Collections.unmodifiableList(converted);
     }
 
-    /** Logs an expense entered in the trip's local currency, converting it to home currency. */
+    /** Logs an expense in the currency it was paid in, keeping that currency and converting to home. */
     public synchronized Expense addExpense(String tripId, String title, Category category,
                                            double amountLocal, String localCurrency) {
         String home = budget(tripId).getHomeCurrency();
@@ -211,6 +209,19 @@ public final class PrototypeStore {
         seededExpenses(tripId).add(0, TripDocMapper.toRec(expense));
         docs.saveTrip(tripId);
         return expense;
+    }
+
+    /** Deletes one expense by id; false when this trip has no such expense. */
+    public synchronized boolean removeExpense(String tripId, String expenseId) {
+        List<TripDoc.ExpenseRec> recs = seededExpenses(tripId);
+        for (int i = 0; i < recs.size(); i++) {
+            if (expenseId != null && expenseId.equals(recs.get(i).id)) {
+                recs.remove(i);
+                docs.saveTrip(tripId);
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Expense toExpense(TripDoc.ExpenseRec rec, String home) {
@@ -242,13 +253,10 @@ public final class PrototypeStore {
                 CurrencyRates.convert(jpy, "JPY", home)));
     }
 
+    /** Default budget: a round amount in the home currency with the 30/40/20/10 category split. */
     private BudgetSettings defaultBudget(String home, String local) {
-        Map<Category, Double> limits = new EnumMap<>(Category.class);
-        limits.put(Category.FOOD, scale(4000, home));
-        limits.put(Category.ACTIVITIES, scale(5000, home));
-        limits.put(Category.TRANSPORT, scale(3000, home));
-        limits.put(Category.OTHER, scale(3000, home));
-        return new BudgetSettings(home, local, scale(BASE_BUDGET_PHP, home), false, limits);
+        double amount = scale(BASE_BUDGET_PHP, home);
+        return new BudgetSettings(home, local, amount, false, BudgetMath.defaultLimits(amount));
     }
 
     /** Converts a PHP-denominated demo figure into {@code home}, rounded to the nearest 100. */

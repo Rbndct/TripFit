@@ -1,5 +1,7 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -141,11 +143,9 @@ public final class RoutePreview {
         return 6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(Math.max(0,1-a)));
     }
     public static String time(int minute) { return String.format(Locale.US,"%02d:%02d",minute/60,minute%60); }
+    /** Converts with the app's single rates table; unknown currency codes pass through unchanged. */
     public static double convert(double amount,String from,String to) {
-        return amount*rate(from)/rate(to);
-    }
-    private static double rate(String currency) {
-        switch(currency) { case "JPY":return 0.38; case "USD":return 58; case "EUR":return 63; default:return 1; }
+        return CurrencyRates.convert(amount,from,to);
     }
     private RoutePreview() {}
 }

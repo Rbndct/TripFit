@@ -13,6 +13,7 @@ import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class AddDestinationViewModel extends ViewModel {
 
@@ -54,11 +55,18 @@ public class AddDestinationViewModel extends ViewModel {
     /** Saves a free-text stop with no database place match. */
     public void save(String tripId, String name, int day, Integer durationMin, boolean booked,
                       String time) {
+        save(UUID.randomUUID().toString(), tripId, name, day, durationMin, booked, time);
+    }
+
+    /** Saves a free-text stop under a caller-chosen id (so its cost can be keyed to it). */
+    public void save(String itemId, String tripId, String name, int day, Integer durationMin,
+                     boolean booked, String time) {
         if (saving) {
             return;
         }
         saving = true;
-        repository.addItineraryItem(tripId, name, day, time, durationMin, booked, this::finishSave);
+        repository.addItineraryItem(itemId, tripId, name, day, time, durationMin, booked,
+                this::finishSave);
     }
 
     private void finishSave(Result<Void> result) {
@@ -67,13 +75,13 @@ public class AddDestinationViewModel extends ViewModel {
     }
 
     /** Saves a stop backed by a place the user searched for and selected. */
-    public void saveFromPlace(String tripId, PlaceDto place, int day, Integer durationMin,
-                               boolean booked, String time) {
+    public void saveFromPlace(String itemId, String tripId, PlaceDto place, int day,
+                              Integer durationMin, boolean booked, String time) {
         if (saving) {
             return;
         }
         saving = true;
-        repository.addItineraryItemFromPlace(tripId, place, day, time, durationMin, booked,
+        repository.addItineraryItemFromPlace(itemId, tripId, place, day, time, durationMin, booked,
                 this::finishSave);
     }
 

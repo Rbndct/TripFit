@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -42,8 +43,21 @@ public final class TripExport {
             for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) categoryActual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
             text.append(String.format(Locale.US,"%s: limit %.2f / planned %.2f / logged %.2f\n",category,trip.categoryBudget(category),categoryPlanned,categoryActual));
         }
-        text.append("\nRates: 1 JPY = 0.38 PHP; 1 USD = 58 PHP; 1 EUR = 63 PHP (samples, not live).\nTravel leg costs must be estimated manually in Transport.\n");
+        text.append("\n").append(ratesLine(trip.homeCurrency)).append("\nTravel leg costs must be estimated manually in Transport.\n");
         return text.toString();
+    }
+    /** The rates footer, generated from the app's single rates table (sample or live wording). */
+    static String ratesLine(String home) {
+        StringBuilder line=new StringBuilder(CurrencyRates.isLive()
+            ? "Rates as of "+CurrencyRates.asOfDate()+" (reference rates, not a bank quote): "
+            : "Rates (samples, not live): ");
+        boolean first=true;
+        for(String code:new String[]{"JPY","USD","EUR"}) {
+            if(code.equals(home) || !CurrencyRates.has(code) || !CurrencyRates.has(home)) continue;
+            line.append(first?"":"; ").append(String.format(Locale.US,"1 %s = %.4f %s",code,CurrencyRates.convert(1,code,home),home));
+            first=false;
+        }
+        return line.append(first?"no conversions needed.":".").toString();
     }
     public static void pdf(DraftTrip trip,OutputStream output) throws IOException {
         PdfDocument document=new PdfDocument();

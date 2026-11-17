@@ -54,4 +54,13 @@ public final class BudgetSettings {
         Double limit = categoryLimits.get(category);
         return limit == null ? 0 : limit;
     }
+
+    /**
+     * Limit for one category over the whole trip: in daily mode the stored limit is per day, so it
+     * is multiplied by the trip length (at least 1). 0 still means "no limit".
+     */
+    public double limitFor(Category category, int days) {
+        double limit = limitFor(category);
+        return perDay ? limit * Math.max(1, days) : limit;
+    }
 }

@@ -18,15 +18,16 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.itismob.s01.group01.tripfit.prototype.AmountRules;
+import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
 /** Sets an overall or per-day trip budget, home currency, and optional category split. */
@@ -42,7 +43,9 @@ public class BudgetSetupActivity extends ScreenActivity {
     private MaterialSwitch switchSplit;
     private TextView splitSum;
     private TextView currencyNote;
-    private final List<TextInputLayout> limitLayouts = new ArrayList<>();
+    private final Map<Category, TextInputLayout> limitLayouts = new EnumMap<>(Category.class);
+    private MaterialButton saveButton;
+    private double lastAmount;
     private int days;
     private boolean isSaving;
 
@@ -67,13 +70,15 @@ public class BudgetSetupActivity extends ScreenActivity {
         limitInputs.put(Category.TRANSPORT, findViewById(R.id.input_limit_transport));
         limitInputs.put(Category.OTHER, findViewById(R.id.input_limit_other));
 
+        saveButton = findViewById(R.id.button_save_budget);
         bindCurrent();
-        findViewById(R.id.button_save_budget).setOnClickListener(v -> save());
+        saveButton.setOnClickListener(v -> save());
     }
 
     private void bindCurrent() {
         toggleMode.check(current.isPerDay() ? R.id.button_mode_daily : R.id.button_mode_overall);
-        inputBudget.setText(String.valueOf((long) current.getAmount()));
+        inputBudget.setText(AmountRules.format(current.getAmount()));
+        lastAmount = current.getAmount();
         inputCurrency.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
                 CurrencyRates.codes()));
         inputCurrency.setText(current.getHomeCurrency(), false);
@@ -83,12 +88,12 @@ public class BudgetSetupActivity extends ScreenActivity {
         findViewById(R.id.split_container).setVisibility(hasSplit ? View.VISIBLE : View.GONE);
         for (Category category : Category.values()) {
             double limit = current.limitFor(category);
-            limitInputs.get(category).setText(limit > 0 ? String.valueOf((long) limit) : "");
+            limitInputs.get(category).setText(limit > 0 ? AmountRules.format(limit) : "");
         }
         useLabelFont(inputBudget);
         useLabelFont(inputCurrency);
-        for (TextInputEditText input : limitInputs.values()) {
-            limitLayouts.add(useLabelFont(input));
+        for (Category category : Category.values()) {
+            limitLayouts.put(category, useLabelFont(limitInputs.get(category)));
         }
         refreshLabels();
         bindListeners();
@@ -104,15 +109,22 @@ public class BudgetSetupActivity extends ScreenActivity {
         inputCurrency.addTextChangedListener(new SimpleWatcher(this::refreshLabels));
         inputBudget.addTextChangedListener(new SimpleWatcher(() -> {
             layoutBudget.setError(null);
+            followDefaultSplit();
             refreshLabels();
         }));
         switchSplit.setOnCheckedChangeListener((button, checked) -> {
             findViewById(R.id.split_container).setVisibility(checked ? View.VISIBLE : View.GONE);
+            // Blank fields get the default split; untouched defaults already follow the amount.
+            if (checked && splitIsBlank()) {
+                showLimits(BudgetMath.defaultLimits(parse(inputBudget)));
+            }
             updateSplitSum();
         });
-        TextWatcher watcher = new SimpleWatcher(this::updateSplitSum);
-        for (TextInputEditText input : limitInputs.values()) {
-            input.addTextChangedListener(watcher);
+        for (Category category : Category.values()) {
+            limitInputs.get(category).addTextChangedListener(new SimpleWatcher(() -> {
+                limitLayouts.get(category).setError(null);
+                updateSplitSum();
+            }));
         }
         limitInputs.get(Category.OTHER).setOnEditorActionListener((v, actionId, event) -> {
             if (actionId != EditorInfo.IME_ACTION_DONE) {
@@ -160,19 +172,17 @@ public class BudgetSetupActivity extends ScreenActivity {
                         CurrencyRates.format(tripTotal(amount), home))
                 : null);
         currencyNote.setText(getString(R.string.budget_currency_note, home));
-        for (TextInputLayout layout : limitLayouts) {
+        findViewById(R.id.text_split_note).setVisibility(isPerDay() ? View.VISIBLE : View.GONE);
+        for (TextInputLayout layout : limitLayouts.values()) {
             layout.setPrefixText(home + " ");
         }
         updateSplitSum();
     }
 
+    /** Parsed amount for live feedback; blank or invalid text counts as 0 until Save validates it. */
     private double parse(TextInputEditText input) {
-        return parse(input.getText());
-    }
-
-    private double parse(CharSequence text) {
-        String trimmed = text == null ? "" : text.toString().trim();
-        return TextUtils.isEmpty(trimmed) ? 0 : Double.parseDouble(trimmed);
+        Double value = AmountRules.parseOptional(String.valueOf(input.getText()));
+        return value == null ? 0 : value;
     }
 
     private double splitTotal() {
@@ -183,16 +193,56 @@ public class BudgetSetupActivity extends ScreenActivity {
         return sum;
     }
 
-    /** Shows the split against the trip total; over-limit reads as words and in the error color. */
+    private boolean splitIsBlank() {
+        return splitTotal() == 0;
+    }
+
+    private Map<Category, Double> typedLimits() {
+        Map<Category, Double> limits = new EnumMap<>(Category.class);
+        for (Category category : Category.values()) {
+            limits.put(category, parse(limitInputs.get(category)));
+        }
+        return limits;
+    }
+
+    private void showLimits(Map<Category, Double> limits) {
+        for (Category category : Category.values()) {
+            double limit = limits.get(category);
+            limitInputs.get(category).setText(limit > 0 ? AmountRules.format(limit) : "");
+        }
+    }
+
+    /**
+     * Keeps the 30/40/20/10 default split in step with the budget, even while the split section
+     * is hidden: limits that still equal the default split of the previous amount follow the new
+     * amount; numbers the user changed are left alone.
+     */
+    private void followDefaultSplit() {
+        double amount = parse(inputBudget);
+        Map<Category, Double> typed = typedLimits();
+        Map<Category, Double> next = BudgetMath.followDefaultSplit(typed, lastAmount, amount);
+        if (next != typed) {
+            showLimits(next);
+        }
+        lastAmount = amount;
+    }
+
+    /**
+     * Shows the split against the budget in the unit being edited (trip or per day), because in
+     * daily mode the limits are per day too. Over-limit reads as words and in the error color.
+     */
     private void updateSplitSum() {
         String home = homeCode();
         double split = splitTotal();
-        double budget = tripTotal(parse(inputBudget));
-        boolean isOver = split > budget;
+        double budget = parse(inputBudget);
+        boolean isOver = !AmountRules.fitsWithin(split, budget);
+        boolean daily = isPerDay();
+        int overRes = daily ? R.string.budget_split_over_daily : R.string.budget_split_over;
+        int sumRes = daily ? R.string.budget_split_sum_daily : R.string.budget_split_sum;
         splitSum.setText(isOver
-                ? getString(R.string.budget_split_over, CurrencyRates.format(split - budget, home),
+                ? getString(overRes, CurrencyRates.format(split - budget, home),
                         CurrencyRates.format(budget, home))
-                : getString(R.string.budget_split_sum, CurrencyRates.format(split, home),
+                : getString(sumRes, CurrencyRates.format(split, home),
                         CurrencyRates.format(budget, home)));
         splitSum.setTextColor(MaterialColors.getColor(splitSum, isOver
                 ? androidx.appcompat.R.attr.colorError
@@ -203,27 +253,43 @@ public class BudgetSetupActivity extends ScreenActivity {
         if (isSaving) {
             return;
         }
-        double amount = parse(inputBudget);
-        if (amount <= 0) {
-            layoutBudget.setError(getString(R.string.error_budget_required));
+        String amountText = String.valueOf(inputBudget.getText()).trim();
+        Double amount = AmountRules.parseBudget(amountText);
+        if (amount == null) {
+            layoutBudget.setError(getString(amountText.isEmpty()
+                    ? R.string.error_budget_required : R.string.error_amount_range));
             inputBudget.requestFocus();
             return;
         }
         Map<Category, Double> limits = new EnumMap<>(Category.class);
-        if (switchSplit.isChecked()) {
-            if (splitTotal() > tripTotal(amount)) {
-                toast(R.string.error_split_exceeds);
-                limitInputs.get(Category.FOOD).requestFocus();
-                return;
-            }
-            for (Category category : Category.values()) {
-                limits.put(category, parse(limitInputs.get(category)));
-            }
+        if (switchSplit.isChecked() && !collectLimits(amount, limits)) {
+            return;
         }
         isSaving = true;
+        saveButton.setEnabled(false);
         store.setBudget(tripId, new BudgetSettings(homeCode(), current.getLocalCurrency(), amount,
                 isPerDay(), limits));
         finish();
+    }
+
+    /** Validates each limit (0..1e8) and that they fit the budget; fills {@code out} when valid. */
+    private boolean collectLimits(double amount, Map<Category, Double> out) {
+        for (Category category : Category.values()) {
+            Double limit = AmountRules.parseOptional(
+                    String.valueOf(limitInputs.get(category).getText()));
+            if (limit == null) {
+                limitLayouts.get(category).setError(getString(R.string.error_limit_range));
+                limitInputs.get(category).requestFocus();
+                return false;
+            }
+            out.put(category, limit);
+        }
+        if (!AmountRules.fitsWithin(splitTotal(), amount)) {
+            toast(R.string.error_split_exceeds);
+            limitInputs.get(Category.FOOD).requestFocus();
+            return false;
+        }
+        return true;
     }
 
     /** Runs a callback on every text change; keeps the watcher boilerplate in one place. */

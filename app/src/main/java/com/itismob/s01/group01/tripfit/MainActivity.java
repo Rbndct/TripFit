@@ -27,6 +27,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.itismob.s01.group01.tripfit.data.Result;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
+import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.MockData;
 import com.itismob.s01.group01.tripfit.prototype.MockPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
@@ -178,7 +180,17 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         TripMeta meta = store.meta(tripId);
         TextView subtitle = findViewById(R.id.text_trip_subtitle);
         String dates = meta.getDates();
-        subtitle.setText(dates.isEmpty() ? meta.getCity() : meta.getCity() + " · " + dates);
+        BudgetSettings budget = store.budget(tripId);
+        double total = budget.tripTotal(meta.getDays());
+        String budgetText = CurrencyRates.format(total, budget.getHomeCurrency());
+        String city = meta.getCity();
+        if (total <= 0) {
+            subtitle.setText(dates.isEmpty() ? city : city + " · " + dates);
+        } else if (dates.isEmpty()) {
+            subtitle.setText(getString(R.string.itinerary_subtitle_budget, city, budgetText));
+        } else {
+            subtitle.setText(getString(R.string.itinerary_subtitle_full, city, dates, budgetText));
+        }
     }
 
     @Override
@@ -272,7 +284,13 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         for (int i = 0; i < outdoor.size(); i++) {
             String replacement = indoor.get(i % indoor.size()).getName();
             repository.addItineraryItem(tripId, replacement, day, null, null, false, report);
-            repository.deleteItineraryItem(outdoor.get(i).item.getId(), report);
+            String removedId = outdoor.get(i).item.getId();
+            repository.deleteItineraryItem(removedId, result -> {
+                if (result.isSuccess()) {
+                    store.removeItemDetails(removedId);
+                }
+                report.onResult(result);
+            });
         }
         Snackbar.make(findViewById(R.id.main),
                 getResources().getQuantityString(R.plurals.weather_swapped, outdoor.size(),

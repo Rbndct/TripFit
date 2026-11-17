@@ -91,6 +91,11 @@ public final class CurrencyRates {
         return name == null ? code : name;
     }
 
+    /** True when the current table knows this currency (otherwise convert passes it through 1:1). */
+    public static boolean has(@Nullable String code) {
+        return code != null && current.perUsd.containsKey(code);
+    }
+
     public static boolean isLive() {
         return current.live;
     }

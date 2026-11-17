@@ -1,10 +1,13 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
+import com.itismob.s01.group01.tripfit.data.CurrencyRates;
+import org.junit.Before;
 import org.junit.Test;
 import java.util.List;
 import static org.junit.Assert.*;
 
 public class RoutePreviewTest {
+    @Before public void useSampleRates() { CurrencyRates.useFallback(); }
     @Test public void fixedBookingsKeepTheirTimeAndFlexibleStopsFitAroundThem() {
         DraftTrip trip=new DraftTrip();
         DraftTrip.Stop longVisit=new DraftTrip.Stop(); longVisit.name="Long visit"; longVisit.duration=180;
@@ -30,8 +33,8 @@ public class RoutePreviewTest {
         b.mode="Driving"; assertTrue(RoutePreview.travel(a,b)<walking);
     }
     @Test public void currencyAndDailyBudgetAreConsistent() {
-        assertEquals(380,RoutePreview.convert(1000,"JPY","PHP"),.001);
-        assertEquals(1000,RoutePreview.convert(380,"PHP","JPY"),.001);
+        assertEquals(56,RoutePreview.convert(150,"JPY","PHP"),.001);
+        assertEquals(150,RoutePreview.convert(56,"PHP","JPY"),.001);
         DraftTrip trip=new DraftTrip(); trip.budget=100; trip.days=3; trip.dailyBudget=true;
         assertEquals(300,trip.totalBudget(),.001);
     }

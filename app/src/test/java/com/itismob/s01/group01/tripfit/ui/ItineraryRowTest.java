@@ -109,4 +109,25 @@ public class ItineraryRowTest {
         assertEquals(20, ItineraryRow.travelMinutes(rows));
         assertEquals(0, ItineraryRow.stayMinutes(ItineraryRow.build(trip, 2)));
     }
+
+    @Test
+    public void estimate_isConvertedToTheHomeCurrencyAndKeepsTheStopCurrency() {
+        com.itismob.s01.group01.tripfit.data.CurrencyRates.useFallback();
+        DraftTrip trip = new DraftTrip();
+        trip.homeCurrency = "PHP";
+        DraftTrip.Stop a = stop("a", 30, 15);
+        a.cost = 150;
+        a.currency = "JPY";
+        trip.stops.add(a);
+        ItineraryRow row = ItineraryRow.build(trip, 1).get(0);
+        assertEquals(56.0, row.getEstimateHome(), 0.0001);
+        assertEquals("PHP", row.getHomeCurrency());
+    }
+
+    @Test
+    public void estimate_zeroCostMeansNoEstimate() {
+        DraftTrip trip = new DraftTrip();
+        trip.stops.add(stop("a", 30, 15));
+        assertEquals(0.0, ItineraryRow.build(trip, 1).get(0).getEstimateHome(), 0.0);
+    }
 }

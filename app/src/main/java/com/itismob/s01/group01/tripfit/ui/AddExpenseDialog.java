@@ -1,5 +1,6 @@
 package com.itismob.s01.group01.tripfit.ui;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -20,17 +21,22 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.itismob.s01.group01.tripfit.R;
+import com.itismob.s01.group01.tripfit.prototype.AmountRules;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
-/** Dialog for logging an expense in the trip's local currency, with a live home-currency preview. */
+/**
+ * Dialog for logging an expense in the currency it was paid in (default: the trip's local
+ * currency), with a live home-currency preview. The expense keeps that original currency.
+ */
 public final class AddExpenseDialog {
 
     private static final String KEY_TITLE = "expense_title";
     private static final String KEY_AMOUNT = "expense_amount";
     private static final String KEY_CATEGORY = "expense_category";
+    private static final String KEY_CURRENCY = "expense_currency";
 
     private AddExpenseDialog() { }
 
@@ -84,25 +90,22 @@ public final class AddExpenseDialog {
         TextInputEditText title = dialog.findViewById(R.id.input_expense_title);
         TextInputEditText amount = dialog.findViewById(R.id.input_expense_amount);
         MaterialAutoCompleteTextView category = dialog.findViewById(R.id.input_expense_category);
-        if (title == null || amount == null || category == null) {
+        MaterialAutoCompleteTextView currency = dialog.findViewById(R.id.input_expense_currency);
+        if (title == null || amount == null || category == null || currency == null) {
             return null;
         }
         Bundle draft = new Bundle();
         draft.putString(KEY_TITLE, String.valueOf(title.getText()));
         draft.putString(KEY_AMOUNT, String.valueOf(amount.getText()));
+        draft.putString(KEY_CURRENCY, String.valueOf(currency.getText()));
         draft.putInt(KEY_CATEGORY, Form.indexOfLabel(dialog.getContext(),
                 String.valueOf(category.getText())));
         return draft;
     }
 
-    /** Parses a positive amount, returning null for blank, malformed, or non-positive input. */
+    /** Parses 0.01..100,000,000, returning null for blank, malformed, or out-of-range input. */
     static Double parseAmount(String text) {
-        try {
-            double value = Double.parseDouble(text.trim());
-            return value > 0 ? value : null;
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return AmountRules.parseExpense(text);
     }
 
     /** The dialog's views plus the state needed to validate and save. */
@@ -118,6 +121,8 @@ public final class AddExpenseDialog {
         final TextInputEditText inputAmount;
         final TextView preview;
         final MaterialAutoCompleteTextView inputCategory;
+        final MaterialAutoCompleteTextView inputCurrency;
+        final TextInputLayout layoutCurrency;
         final Category[] categories = Category.values();
         final String[] labels = new String[categories.length];
         int chosen = 0;
@@ -133,8 +138,16 @@ public final class AddExpenseDialog {
             inputAmount = view.findViewById(R.id.input_expense_amount);
             preview = view.findViewById(R.id.text_conversion_preview);
             inputCategory = view.findViewById(R.id.input_expense_category);
-            layoutAmount.setHint(activity.getString(R.string.field_amount,
-                    budget.getLocalCurrency()));
+            inputCurrency = view.findViewById(R.id.input_expense_currency);
+            layoutCurrency = view.findViewById(R.id.layout_expense_currency);
+            layoutCurrency.setTypeface(Typeface.DEFAULT);
+            inputCurrency.setAdapter(new NoFilterAdapter(activity, CurrencyRates.codes()));
+            inputCurrency.setText(budget.getLocalCurrency(), false);
+            refreshAmountHint();
+            inputCurrency.addTextChangedListener(new SimpleWatcher(s -> {
+                refreshAmountHint();
+                updatePreview(inputAmount.getText() == null ? "" : inputAmount.getText());
+            }));
             bindCategory();
             inputTitle.addTextChangedListener(new SimpleWatcher(s -> layoutTitle.setError(null)));
             inputAmount.addTextChangedListener(new SimpleWatcher(s -> {
@@ -153,7 +166,18 @@ public final class AddExpenseDialog {
             inputCategory.setOnItemClickListener((parent, v, position, id) -> chosen = position);
         }
 
+        /** The currency the expense was paid in; the trip's local one when the field is blank. */
+        String paidIn() {
+            String code = String.valueOf(inputCurrency.getText()).trim();
+            return code.isEmpty() ? budget.getLocalCurrency() : code;
+        }
+
+        private void refreshAmountHint() {
+            layoutAmount.setHint(activity.getString(R.string.field_amount, paidIn()));
+        }
+
         void restore(Bundle draft) {
+            inputCurrency.setText(draft.getString(KEY_CURRENCY, budget.getLocalCurrency()), false);
             chosen = Math.max(0, Math.min(categories.length - 1, draft.getInt(KEY_CATEGORY, 0)));
             inputCategory.setText(labels[chosen], false);
             inputTitle.setText(draft.getString(KEY_TITLE, ""));
@@ -176,9 +200,13 @@ public final class AddExpenseDialog {
                 preview.setVisibility(View.INVISIBLE);
                 return;
             }
+            if (paidIn().equals(budget.getHomeCurrency())) {
+                preview.setVisibility(View.INVISIBLE);
+                return;
+            }
             preview.setVisibility(View.VISIBLE);
             String converted = CurrencyRates.format(CurrencyRates.convert(amount,
-                    budget.getLocalCurrency(), budget.getHomeCurrency()), budget.getHomeCurrency());
+                    paidIn(), budget.getHomeCurrency()), budget.getHomeCurrency());
             // Say "demo" only when the built-in table is in use; live ECB rates carry their date.
             preview.setText(CurrencyRates.isLive()
                     ? activity.getString(R.string.conversion_preview_live, converted,
@@ -195,8 +223,10 @@ public final class AddExpenseDialog {
             boolean titleMissing = TextUtils.isEmpty(title);
             layoutTitle.setError(titleMissing
                     ? activity.getString(R.string.error_title_required) : null);
-            layoutAmount.setError(amount == null
-                    ? activity.getString(R.string.error_amount_required) : null);
+            String amountText = inputAmount.getText() == null
+                    ? "" : inputAmount.getText().toString().trim();
+            layoutAmount.setError(amount != null ? null : activity.getString(amountText.isEmpty()
+                    ? R.string.error_amount_required : R.string.error_amount_range));
             if (titleMissing) {
                 inputTitle.requestFocus();
                 return false;
@@ -205,7 +235,7 @@ public final class AddExpenseDialog {
                 inputAmount.requestFocus();
                 return false;
             }
-            store.addExpense(tripId, title, categories[chosen], amount, budget.getLocalCurrency());
+            store.addExpense(tripId, title, categories[chosen], amount, paidIn());
             return true;
         }
     }
