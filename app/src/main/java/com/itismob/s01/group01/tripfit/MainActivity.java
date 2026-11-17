@@ -27,20 +27,20 @@ import com.google.android.material.snackbar.Snackbar;
 import com.itismob.s01.group01.tripfit.data.Result;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
-import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 import com.itismob.s01.group01.tripfit.prototype.MockData;
 import com.itismob.s01.group01.tripfit.prototype.MockPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
-import com.itismob.s01.group01.tripfit.prototype.TravelMode;
+import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripDates;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.ItineraryAdapter;
 import com.itismob.s01.group01.tripfit.ui.ItineraryRow;
-import com.itismob.s01.group01.tripfit.ui.Labels;
+import com.itismob.s01.group01.tripfit.ui.LegSettingsDialog;
 import com.itismob.s01.group01.tripfit.viewmodel.ItineraryViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeSet;
 
 /**
  * Itinerary hub for a single trip, loaded from Room via {@link ItineraryViewModel}. Days render
@@ -49,14 +49,19 @@ import java.util.TreeSet;
  */
 public class MainActivity extends AppCompatActivity implements ItineraryAdapter.Listener {
 
+    private static final String KEY_SELECTED_DAY = "selected_day";
+    private static final String LEG_DIALOG_TAG = "leg_settings";
+
     private final ItineraryAdapter adapter = new ItineraryAdapter(this);
     private final PrototypeStore store = PrototypeStore.get();
     private List<ItineraryItemWithPlace> allItems = new ArrayList<>();
-    private Integer selectedDay;
+    private int selectedDay = 1;
+    private int tripDays = 1;
     private String tripId;
     private TripRepository repository;
     private LinearLayout dayTabContainer;
     private TextView daySummary;
+    private TextView dayHeading;
     private TextView weatherBanner;
     private View emptyState;
     private RecyclerView recyclerView;
@@ -83,6 +88,10 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         }
         dayTabContainer = findViewById(R.id.day_tab_container);
         daySummary = findViewById(R.id.text_day_summary);
+        dayHeading = findViewById(R.id.text_day_heading);
+        if (savedInstanceState != null) {
+            selectedDay = savedInstanceState.getInt(KEY_SELECTED_DAY, 1);
+        }
         weatherBanner = findViewById(R.id.banner_weather);
         emptyState = findViewById(R.id.empty_state);
 
@@ -108,15 +117,11 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         recyclerView.setAdapter(adapter);
         viewModel.getItems().observe(this, items -> {
             allItems = items;
-            if (selectedDay == null || !distinctDays(items).contains(selectedDay)) {
-                selectedDay = distinctDays(items).isEmpty() ? 1 : distinctDays(items).first();
-            }
-            renderDayTabs();
-            renderSelectedDayStops();
+            render();
         });
 
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_add_destination);
-        fab.setOnClickListener(v -> open(AddDestinationActivity.class));
+        fab.setOnClickListener(v -> openWithDay(AddDestinationActivity.class));
         findViewById(R.id.button_empty_discover).setOnClickListener(v -> open(DiscoverActivity.class));
         weatherBanner.setOnClickListener(v -> showWeatherDialog());
     }
@@ -181,48 +186,42 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         super.onResume();
         if (!isFinishing()) {
             bindSubtitle(); // Trip settings may have changed the city or dates
+            render();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_SELECTED_DAY, selectedDay);
+    }
+
+    private void openWithDay(Class<?> screen) {
+        Intent intent = new Intent(this, screen);
+        intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
+        intent.putExtra(AddDestinationActivity.EXTRA_DAY, selectedDay);
+        startActivity(intent);
     }
 
     // ---- stop / leg taps ----
 
     @Override
     public void onStopClick(ItineraryRow row) {
-        ItineraryItemEntity item = row.getItem();
         Intent intent = new Intent(this, StopDetailActivity.class);
         intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
-        intent.putExtra(StopDetailActivity.EXTRA_ITEM_ID, item.getId());
-        intent.putExtra(StopDetailActivity.EXTRA_NAME, item.displayName(row.getPlaceName()));
-        intent.putExtra(StopDetailActivity.EXTRA_DAY, item.getDay());
-        intent.putExtra(StopDetailActivity.EXTRA_POSITION, item.getPosition());
-        intent.putExtra(StopDetailActivity.EXTRA_TIME, item.getTime());
-        intent.putExtra(StopDetailActivity.EXTRA_DURATION,
-                item.getDurationMin() == null ? -1 : item.getDurationMin());
-        intent.putExtra(StopDetailActivity.EXTRA_BOOKED, item.isBooked());
-        intent.putExtra(StopDetailActivity.EXTRA_MAX_DAY, Math.max(2, maxDay() + 1));
+        intent.putExtra(StopDetailActivity.EXTRA_ITEM_ID, row.getId());
         startActivity(intent);
     }
 
     @Override
-    public void onLegClick(ItineraryRow row) {
-        ItineraryItemEntity item = row.getItem();
-        double km = PrototypeStore.legKm(item.getId());
-        TravelMode[] modes = TravelMode.values();
-        String[] labels = new String[modes.length];
-        for (int i = 0; i < modes.length; i++) {
-            labels[i] = getString(R.string.leg_option, Labels.mode(this, modes[i]),
-                    modes[i].minutesFor(km));
+    public void onLegClick(ItineraryRow destination) {
+        if (getSupportFragmentManager().findFragmentByTag(LEG_DIALOG_TAG) != null) {
+            return; // a rotation-restored dialog is already showing
         }
-        int checked = store.legMode(item.getId(), km).ordinal();
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.leg_dialog_title)
-                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
-                    store.setLegMode(item.getId(), modes[which]);
-                    dialog.dismiss();
-                    renderSelectedDayStops();
-                })
-                .setNegativeButton(R.string.action_cancel, null)
-                .show();
+        LegSettingsDialog.newInstance(destination.getId(), destination.getName(),
+                destination.getExplicitMode(), destination.getExplicitBuffer(),
+                PrototypeStore.get().getBufferMin())
+                .show(getSupportFragmentManager(), LEG_DIALOG_TAG);
     }
 
     // ---- weather-aware rescheduling ----
@@ -282,34 +281,27 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
 
     // ---- rendering ----
 
-    private int maxDay() {
-        TreeSet<Integer> days = distinctDays(allItems);
-        return days.isEmpty() ? 1 : days.last();
-    }
-
-    private TreeSet<Integer> distinctDays(List<ItineraryItemWithPlace> items) {
-        TreeSet<Integer> days = new TreeSet<>();
-        for (ItineraryItemWithPlace item : items) {
-            days.add(item.item.getDay());
-        }
-        return days;
+    /** Rebuilds the tabs, heading, summary and cards from the latest rows and trip details. */
+    private void render() {
+        TripMeta meta = store.meta(tripId);
+        DraftTrip trip = TripSnapshots.from(tripId, meta, allItems, store);
+        tripDays = trip.days;
+        selectedDay = TripSnapshots.clampDay(selectedDay, tripDays);
+        renderDayTabs();
+        renderSelectedDayStops(trip, meta);
     }
 
     private void renderDayTabs() {
         dayTabContainer.removeAllViews();
-        TreeSet<Integer> days = distinctDays(allItems);
-        if (days.isEmpty()) {
-            days.add(1);
-        }
         LayoutInflater inflater = LayoutInflater.from(this);
-        for (int day : days) {
+        for (int day = 1; day <= tripDays; day++) {
+            final int tabDay = day;
             TextView tab = (TextView) inflater.inflate(R.layout.item_day_tab, dayTabContainer, false);
             tab.setText(getString(R.string.day_label, day));
             bindTabSelectedState(tab, day == selectedDay);
             tab.setOnClickListener(v -> {
-                selectedDay = day;
-                renderDayTabs();
-                renderSelectedDayStops();
+                selectedDay = tabDay;
+                render();
                 recyclerView.scrollToPosition(0);
             });
             dayTabContainer.addView(tab);
@@ -324,22 +316,15 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         ViewCompat.setStateDescription(tab, selected ? getString(R.string.state_selected) : null);
     }
 
-    private void renderSelectedDayStops() {
-        List<ItineraryRow> rows = new ArrayList<>();
-        int index = 1;
-        int travelMin = 0;
-        for (ItineraryItemWithPlace item : allItems) {
-            if (item.item.getDay() == selectedDay) {
-                rows.add(new ItineraryRow(item.item, item.placeName, index++));
-            }
-        }
-        for (int i = 0; i < rows.size() - 1; i++) {
-            travelMin += ItineraryAdapter.legMinutes(rows.get(i).getItem());
-        }
+    private void renderSelectedDayStops(DraftTrip trip, TripMeta meta) {
+        List<ItineraryRow> rows = ItineraryRow.build(trip, selectedDay);
         adapter.submitRows(rows);
         emptyState.setVisibility(rows.isEmpty() ? View.VISIBLE : View.GONE);
-        daySummary.setText(getResources().getQuantityString(
-                R.plurals.day_summary, rows.size(), rows.size(), travelMin));
+        String date = TripDates.dayDateLabel(meta.getStartDateIso(), selectedDay);
+        dayHeading.setText(date.isEmpty() ? getString(R.string.day_label, selectedDay)
+                : getString(R.string.day_heading_dated, selectedDay, date));
+        daySummary.setText(getResources().getQuantityString(R.plurals.day_summary, rows.size(),
+                rows.size(), ItineraryRow.stayMinutes(rows), ItineraryRow.travelMinutes(rows)));
         renderWeatherBanner();
     }
 }

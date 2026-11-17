@@ -20,6 +20,7 @@ public class AddDestinationViewModel extends ViewModel {
     private final MutableLiveData<Result<Void>> saveResult = new MutableLiveData<>();
     private final MutableLiveData<Result<List<CityDto>>> citiesResult = new MutableLiveData<>();
     private final MutableLiveData<Result<List<PlaceDto>>> searchResult = new MutableLiveData<>();
+    private boolean saving;
 
     public AddDestinationViewModel(TripRepository repository) {
         this.repository = repository;
@@ -53,15 +54,27 @@ public class AddDestinationViewModel extends ViewModel {
     /** Saves a free-text stop with no database place match. */
     public void save(String tripId, String name, int day, Integer durationMin, boolean booked,
                       String time) {
-        repository.addItineraryItem(tripId, name, day, time, durationMin, booked,
-                saveResult::setValue);
+        if (saving) {
+            return;
+        }
+        saving = true;
+        repository.addItineraryItem(tripId, name, day, time, durationMin, booked, this::finishSave);
+    }
+
+    private void finishSave(Result<Void> result) {
+        saving = false; // cleared first so a failed save can be retried
+        saveResult.setValue(result);
     }
 
     /** Saves a stop backed by a place the user searched for and selected. */
     public void saveFromPlace(String tripId, PlaceDto place, int day, Integer durationMin,
                                boolean booked, String time) {
+        if (saving) {
+            return;
+        }
+        saving = true;
         repository.addItineraryItemFromPlace(tripId, place, day, time, durationMin, booked,
-                saveResult::setValue);
+                this::finishSave);
     }
 
     public static class Factory implements ViewModelProvider.Factory {

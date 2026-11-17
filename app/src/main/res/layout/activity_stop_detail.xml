@@ -32,6 +32,10 @@
                 android:id="@+id/row_day"
                 layout="@layout/item_setting" />
 
+            <include
+                android:id="@+id/row_mode"
+                layout="@layout/item_setting" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/layout_duration"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -81,21 +85,52 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/switch_buffer"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_buffer"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:minHeight="56dp"
-                android:text="@string/buffer_switch" />
+                android:hint="@string/field_buffer_hint"
+                app:suffixText="@string/field_duration_suffix">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_buffer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:imeOptions="actionDone"
+                    android:inputType="number"
+                    android:maxLength="3" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/text_buffer_helper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/space_md"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="15 min for parking, queues and rest stops" />
+                tools:text="0 to 180 minutes before the incoming leg; blank uses your Profile default (15 min)" />
+
+            <TextView
+                android:id="@+id/text_pin_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:fontFamily="monospace"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurface"
+                tools:text="Selected pin: 35.71480, 139.79670" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_adjust_pin"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:minHeight="48dp"
+                android:text="@string/action_adjust_pin" />
 
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"

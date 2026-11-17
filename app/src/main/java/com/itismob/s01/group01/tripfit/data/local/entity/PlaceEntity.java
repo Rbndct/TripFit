@@ -60,6 +60,23 @@ public class PlaceEntity {
         this.cleanedAt = cleanedAt;
     }
 
+    /**
+     * A pin place at new coordinates. Details (category, address, price, rating, image, city, ...)
+     * are copied from {@code previous} when present; {@code fallbackCityId} is used otherwise.
+     */
+    public static PlaceEntity pinned(@NonNull String id, String fallbackCityId, String name,
+                                     double lat, double lng, PlaceEntity previous) {
+        if (previous == null) {
+            return new PlaceEntity(id, fallbackCityId, name, null, lat, lng, null, null, null,
+                    false, null, null, null, null, null, null);
+        }
+        String cityId = previous.cityId != null ? previous.cityId : fallbackCityId;
+        return new PlaceEntity(id, cityId, name, previous.category, lat, lng, previous.address,
+                previous.priceTier, previous.rating, previous.isHiddenGem, previous.description,
+                previous.imageUrl, previous.wikidataId, previous.osmId, previous.sourcesJson,
+                previous.cleanedAt);
+    }
+
     @NonNull
     public String getId() {
         return id;

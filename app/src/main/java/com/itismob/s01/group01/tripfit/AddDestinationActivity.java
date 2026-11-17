@@ -30,6 +30,10 @@ import com.google.android.material.timepicker.TimeFormat;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
+import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
+import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.PlaceSearchAdapter;
 import com.itismob.s01.group01.tripfit.viewmodel.AddDestinationViewModel;
 
@@ -47,11 +51,22 @@ import java.util.UUID;
  */
 public class AddDestinationActivity extends ScreenActivity {
 
+    /** Optional: the itinerary's selected day, used as the new stop's default (P-118). */
+    public static final String EXTRA_DAY = "extra_day";
     private static final long SEARCH_DEBOUNCE_MS = 350;
+    private static final String KEY_PLACE_ID = "place_id";
+    private static final String KEY_PLACE_CITY = "place_city";
+    private static final String KEY_PLACE_NAME = "place_name";
+    private static final String KEY_PLACE_CATEGORY = "place_category";
+    private static final String KEY_PLACE_ADDRESS = "place_address";
+    private static final String KEY_PLACE_LAT = "place_lat";
+    private static final String KEY_PLACE_LNG = "place_lng";
 
     private TextInputLayout layoutName;
     private TextInputLayout layoutDay;
     private TextInputLayout layoutTime;
+    private TextInputLayout layoutDuration;
+    private int tripDays = 1;
     private TextInputEditText inputName;
     private TextInputEditText inputDay;
     private TextInputEditText inputDuration;
@@ -87,6 +102,7 @@ public class AddDestinationActivity extends ScreenActivity {
         layoutName = findViewById(R.id.layout_name);
         layoutDay = findViewById(R.id.layout_day);
         layoutTime = findViewById(R.id.layout_time);
+        layoutDuration = findViewById(R.id.layout_duration);
         inputName = findViewById(R.id.input_name);
         inputDay = findViewById(R.id.input_day);
         inputDuration = findViewById(R.id.input_duration);
@@ -96,8 +112,18 @@ public class AddDestinationActivity extends ScreenActivity {
         chipGroupCities = findViewById(R.id.chip_group_cities);
         searchEmptyState = findViewById(R.id.text_search_empty);
 
+        tripDays = PrototypeStore.get().meta(tripId).getDays();
+        if (savedInstanceState == null) {
+            // The new stop starts on the itinerary's selected day (P-118).
+            inputDay.setText(String.valueOf(TripSnapshots.clampDay(
+                    getIntent().getIntExtra(EXTRA_DAY, 1), tripDays)));
+        }
+        clearErrorOnEdit(inputName, layoutName);
+        clearErrorOnEdit(inputDay, layoutDay);
+        clearErrorOnEdit(inputDuration, layoutDuration);
         setUpSearch();
         setUpMapPicker();
+        renderPin();
 
         switchBooked.setOnCheckedChangeListener((button, checked) ->
                 layoutTime.setVisibility(checked ? View.VISIBLE : View.GONE));
@@ -144,6 +170,7 @@ public class AddDestinationActivity extends ScreenActivity {
                         Snackbar.LENGTH_SHORT).show();
                 finish();
             } else {
+                findViewById(R.id.button_save).setEnabled(true);
                 Snackbar.make(findViewById(R.id.add_destination_root), R.string.error_save_failed,
                         Snackbar.LENGTH_SHORT).show();
             }
@@ -164,6 +191,7 @@ public class AddDestinationActivity extends ScreenActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (suppressNameWatcher) return;
                 selectedPlace = null;
+                renderPin();
                 scheduleSearch(s.toString());
             }
 
@@ -179,6 +207,7 @@ public class AddDestinationActivity extends ScreenActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (!suppressNameWatcher) {
                     selectedPlace = null;
+                    renderPin();
                 }
             }
 
@@ -194,8 +223,13 @@ public class AddDestinationActivity extends ScreenActivity {
                         return;
                     }
                     Intent data = result.getData();
-                    double lat = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT, 0);
-                    double lng = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LNG, 0);
+                    double lat = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LAT, Double.NaN);
+                    double lng = data.getDoubleExtra(MapPickerActivity.EXTRA_RESULT_LNG, Double.NaN);
+                    if (!StopFormRules.isPinValid(lat, lng)) {
+                        Snackbar.make(findViewById(R.id.add_destination_root),
+                                R.string.error_pin_invalid, Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
                     String name = data.getStringExtra(MapPickerActivity.EXTRA_RESULT_NAME);
                     if (TextUtils.isEmpty(name)) {
                         name = getString(R.string.map_picker_fallback_name);
@@ -252,14 +286,14 @@ public class AddDestinationActivity extends ScreenActivity {
         inputSearch.setText("");
         suppressNameWatcher = false;
         selectedPlace = place;
+        renderPin();
     }
 
-    private int pickedHour = -1;
-    private int pickedMinute = -1;
-
     private void showTimePicker() {
-        int hour = pickedHour >= 0 ? pickedHour : 9;
-        int minute = pickedMinute >= 0 ? pickedMinute : 0;
+        String typed = safeText(inputTime);
+        int minuteOfDay = typed.isEmpty() ? ScheduleMath.DAY_START_MIN : ScheduleMath.parse(typed);
+        int hour = minuteOfDay / 60;
+        int minute = minuteOfDay % 60;
 
         MaterialTimePicker picker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_24H)
@@ -269,9 +303,7 @@ public class AddDestinationActivity extends ScreenActivity {
                 .build();
 
         picker.addOnPositiveButtonClickListener(v -> {
-            pickedHour = picker.getHour();
-            pickedMinute = picker.getMinute();
-            inputTime.setText(String.format(Locale.getDefault(), "%02d:%02d", pickedHour, pickedMinute));
+            inputTime.setText(ScheduleMath.format(picker.getHour() * 60 + picker.getMinute()));
             layoutTime.setError(null);
         });
 
@@ -294,7 +326,12 @@ public class AddDestinationActivity extends ScreenActivity {
             firstInvalid = inputDay;
         }
 
-        if (switchBooked.isChecked() && pickedHour < 0) {
+        if (!StopFormRules.isDurationValid(safeText(inputDuration))) {
+            layoutDuration.setError(getString(R.string.error_duration_range));
+            firstInvalid = firstInvalid == null ? inputDuration : firstInvalid;
+        }
+
+        if (switchBooked.isChecked() && safeText(inputTime).isEmpty()) {
             layoutTime.setError(getString(R.string.error_time_required));
             firstInvalid = firstInvalid == null ? inputTime : firstInvalid;
         } else if (!switchBooked.isChecked()) {
@@ -302,7 +339,13 @@ public class AddDestinationActivity extends ScreenActivity {
         }
 
         if (firstInvalid != null) {
-            firstInvalid.requestFocus();
+            if (firstInvalid == inputTime) {
+                // Picker-only field: scroll to it instead of focusing.
+                layoutTime.requestRectangleOnScreen(
+                        new android.graphics.Rect(0, 0, layoutTime.getWidth(), layoutTime.getHeight()));
+            } else {
+                firstInvalid.requestFocus();
+            }
             return;
         }
 
@@ -319,14 +362,78 @@ public class AddDestinationActivity extends ScreenActivity {
         persist(name);
     }
 
-    /** Returns an error message for the day field, or null when it holds a day of 1 or more. */
+    /** Returns an error message for the day field, or null when it is a day of 1..trip days. */
     @Nullable
     private String validateDay() {
         String text = safeText(inputDay);
         if (TextUtils.isEmpty(text)) {
             return getString(R.string.error_day_required);
         }
-        return Integer.parseInt(text) < 1 ? getString(R.string.error_day_invalid) : null;
+        return StopFormRules.isDayValid(text, tripDays)
+                ? null : getString(R.string.error_day_range, tripDays);
+    }
+
+    private static void clearErrorOnEdit(TextInputEditText input, TextInputLayout layout) {
+        input.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                layout.setError(null);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
+    }
+
+    // ---- picked place / pin draft (survives rotation) ----
+
+    private void renderPin() {
+        TextView status = findViewById(R.id.text_pin_status);
+        status.setText(selectedPlace == null ? getString(R.string.pin_none)
+                : getString(R.string.pin_selected, String.format(Locale.US, "%.5f, %.5f",
+                        selectedPlace.getLat(), selectedPlace.getLng())));
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (pendingSearch != null) {
+            searchHandler.removeCallbacks(pendingSearch);
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (selectedPlace != null) {
+            outState.putString(KEY_PLACE_ID, selectedPlace.getId());
+            outState.putString(KEY_PLACE_CITY, selectedPlace.getCityId());
+            outState.putString(KEY_PLACE_NAME, selectedPlace.getName());
+            outState.putString(KEY_PLACE_CATEGORY, selectedPlace.getCategory());
+            outState.putString(KEY_PLACE_ADDRESS, selectedPlace.getAddress());
+            outState.putDouble(KEY_PLACE_LAT, selectedPlace.getLat());
+            outState.putDouble(KEY_PLACE_LNG, selectedPlace.getLng());
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+        // After the views restored their text: the name watcher has already cleared any pick.
+        restorePlace(state);
+        renderPin();
+    }
+
+    private void restorePlace(Bundle state) {
+        if (state.getString(KEY_PLACE_ID) != null) {
+            selectedPlace = new PlaceDto(state.getString(KEY_PLACE_ID), state.getString(KEY_PLACE_CITY),
+                    state.getString(KEY_PLACE_NAME), state.getString(KEY_PLACE_CATEGORY),
+                    state.getDouble(KEY_PLACE_LAT), state.getDouble(KEY_PLACE_LNG),
+                    state.getString(KEY_PLACE_ADDRESS), null, null, false, null, null);
+        }
     }
 
     private void observeExistingNames(TripFitApp app) {
@@ -339,13 +446,11 @@ public class AddDestinationActivity extends ScreenActivity {
     }
 
     private void persist(String name) {
+        findViewById(R.id.button_save).setEnabled(false); // re-enabled if the save fails
         int day = Integer.parseInt(safeText(inputDay));
-        String durationText = safeText(inputDuration);
-        Integer durationMin = durationText.isEmpty() ? null : Integer.parseInt(durationText);
+        int durationMin = StopFormRules.durationOrDefault(safeText(inputDuration));
         boolean booked = switchBooked.isChecked();
-        String time = booked
-                ? String.format(Locale.getDefault(), "%02d:%02d", pickedHour, pickedMinute)
-                : null;
+        String time = booked ? safeText(inputTime) : null;
 
         if (selectedPlace != null && selectedPlace.getName().equals(name)) {
             viewModel.saveFromPlace(tripId, selectedPlace, day, durationMin, booked, time);

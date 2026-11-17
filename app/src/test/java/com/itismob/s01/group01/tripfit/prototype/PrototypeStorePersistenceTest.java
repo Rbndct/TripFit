@@ -151,18 +151,12 @@ public class PrototypeStorePersistenceTest {
     }
 
     @Test
-    public void legModesBuffersAndGlobals_survive() {
-        store.setLegMode("item-1", TravelMode.CYCLE);
-        store.setStopBuffer("item-1", 25);
+    public void bufferAndHomeCurrencyGlobals_survive() {
         store.setBufferMin(40);
         store.setDefaultHomeCurrency("EUR");
 
         PrototypeStore fresh = reload();
 
-        assertEquals(TravelMode.CYCLE, fresh.legMode("item-1", 50));
-        assertEquals(TravelMode.DRIVE, fresh.legMode("other", 50));
-        assertEquals(Integer.valueOf(25), fresh.stopBuffer("item-1"));
-        assertNull(fresh.stopBuffer("other"));
         assertEquals(40, fresh.getBufferMin());
         assertEquals("EUR", fresh.getDefaultHomeCurrency());
     }
@@ -304,12 +298,10 @@ public class PrototypeStorePersistenceTest {
     public void unknownEnumValues_fallBackSafely() {
         storage.putString("trip.t", "{\"expenses\":[{\"id\":\"e1\",\"title\":\"x\","
                 + "\"category\":\"WAT\",\"localCurrency\":\"PHP\",\"amountLocal\":3.0}]}");
-        storage.putString("global", "{\"legModes\":{\"i\":\"TELEPORT\"}}");
 
         PrototypeStore fresh = reload();
 
         assertEquals(Category.OTHER, fresh.expenses("t").get(0).getCategory());
-        assertEquals(TravelMode.WALK, fresh.legMode("i", 0.5));
     }
 
     @Test
@@ -375,8 +367,6 @@ public class PrototypeStorePersistenceTest {
 
     @Test
     public void corruptGlobal_isQuarantinedAndDefaultsApply() {
-        store.setLegMode("i", TravelMode.CYCLE);
-        store.setStopBuffer("i", 30);
         store.setItemDetails("i", new ItemDetails(1, "JPY", "Food", false));
         String raw = storage.getString("global");
         String broken = raw.substring(0, raw.length() - 5);
@@ -385,8 +375,6 @@ public class PrototypeStorePersistenceTest {
         PrototypeStore fresh = reload();
 
         assertEquals(15, fresh.getBufferMin());
-        assertEquals(TravelMode.WALK, fresh.legMode("i", 0.5));
-        assertNull(fresh.stopBuffer("i"));
         assertNull(fresh.itemDetails("i"));
         assertEquals(broken, storage.getString("global.corrupt"));
     }

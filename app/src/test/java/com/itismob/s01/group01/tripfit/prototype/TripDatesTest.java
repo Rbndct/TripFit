@@ -38,4 +38,22 @@ public class TripDatesTest {
         assertEquals(3, TripDates.daysBetweenInclusive(1796083200000L, 1796083200000L + 2 * 86400000L));
         assertEquals(1, TripDates.daysBetweenInclusive(1796083200000L, 1796083200000L));
     }
+
+    @Test
+    public void dayDateLabel_showsWeekdayMonthAndDay() {
+        assertEquals("Tue, Dec 1", TripDates.dayDateLabel("2026-12-01", 1));
+        assertEquals("Wed, Dec 2", TripDates.dayDateLabel("2026-12-01", 2));
+    }
+
+    @Test
+    public void dayDateLabel_crossesMonthAndYearBoundaries() {
+        assertEquals("Fri, Jan 1", TripDates.dayDateLabel("2026-12-30", 3));
+    }
+
+    @Test
+    public void dayDateLabel_badDateOrDayIsEmpty() {
+        assertEquals("", TripDates.dayDateLabel("", 1));
+        assertEquals("", TripDates.dayDateLabel("2026-13-40", 1));
+        assertEquals("", TripDates.dayDateLabel("2026-12-01", 0));
+    }
 }

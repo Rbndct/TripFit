@@ -1,11 +1,17 @@
 package com.itismob.s01.group01.tripfit.prototype;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
-/** Deterministic frontend estimates; these are not street routing or live transit times. */
+/**
+ * The single planning engine: deterministic frontend estimates, not street routing or live
+ * transit times. Booked stops are anchors that never move; flexible stops flow around them.
+ */
 public final class RoutePreview {
     public static class Slot {
         public DraftTrip.Stop stop;
@@ -15,54 +21,120 @@ public final class RoutePreview {
             this.stop=stop; this.start=start; this.end=start+stop.duration; this.travel=travel; this.conflict=conflict;
         }
     }
+
+    /** Current order versus the nearest-neighbour preview for one day. */
+    public static final class Comparison {
+        public final List<Slot> current, preview;
+        public final int currentTravel, previewTravel;
+        public final boolean orderChanged;
+        Comparison(List<Slot> current,List<Slot> preview) {
+            this.current=Collections.unmodifiableList(current);
+            this.preview=Collections.unmodifiableList(preview);
+            this.currentTravel=totalTravel(current);
+            this.previewTravel=totalTravel(preview);
+            this.orderChanged=differsInOrder(current,preview);
+        }
+    }
+
     public static List<Slot> day(DraftTrip trip,int day,boolean optimize) {
         List<DraftTrip.Stop> flexible=new ArrayList<>(), fixed=new ArrayList<>();
         for(DraftTrip.Stop stop:trip.stops) if(stop.day==day) (stop.booked?fixed:flexible).add(stop);
         fixed.sort(Comparator.comparingInt(s->s.fixedMinute));
         List<Slot> result=new ArrayList<>();
-        int cursor=540;
+        int cursor=ScheduleMath.DAY_START_MIN;
         DraftTrip.Stop previous=null;
         for(int anchor=0;anchor<=fixed.size();anchor++) {
             DraftTrip.Stop booked=anchor<fixed.size()?fixed.get(anchor):null;
             while(!flexible.isEmpty()) {
-                DraftTrip.Stop chosen=null;
-                double nearest=Double.MAX_VALUE;
-                for(DraftTrip.Stop candidate:flexible) {
-                    int arrival=cursor+travel(previous,candidate)+(previous==null?0:candidate.buffer);
-                    int departure=arrival+candidate.duration;
-                    if(booked!=null && departure+travel(candidate,booked)+booked.buffer>booked.fixedMinute) continue;
-                    double distance=previous==null?0:distance(previous.lat,previous.lng,candidate.lat,candidate.lng);
-                    if(chosen==null || (optimize && distance<nearest)) { chosen=candidate; nearest=distance; }
-                    if(!optimize) break;
-                }
+                DraftTrip.Stop chosen=pickNext(flexible,previous,booked,cursor,optimize);
                 if(chosen==null) break;
                 int minutes=travel(previous,chosen);
                 int start=cursor+minutes+(previous==null?0:chosen.buffer);
-                Slot slot=new Slot(chosen,start,minutes,start+chosen.duration>1200);
+                Slot slot=new Slot(chosen,start,minutes,start+chosen.duration>ScheduleMath.LATE_END_MIN);
                 result.add(slot); cursor=slot.end; previous=chosen; flexible.remove(chosen);
             }
             if(booked!=null) {
                 int minutes=travel(previous,booked);
-                int earliest=cursor+minutes+(previous==null?0:booked.buffer);
-                Slot slot=new Slot(booked,booked.fixedMinute,minutes,earliest>booked.fixedMinute || booked.fixedMinute+booked.duration>1440);
+                boolean arrivesLate=previous!=null && cursor+minutes+booked.buffer>booked.fixedMinute;
+                Slot slot=new Slot(booked,booked.fixedMinute,minutes,arrivesLate || booked.fixedMinute+booked.duration>ScheduleMath.DAY_END_MIN);
                 result.add(slot); cursor=Math.max(cursor,slot.end); previous=booked;
             }
         }
         return result;
     }
+
+    /** The next flexible stop that still fits before {@code booked}; nearest-first when optimizing. */
+    private static DraftTrip.Stop pickNext(List<DraftTrip.Stop> flexible,DraftTrip.Stop previous,DraftTrip.Stop booked,int cursor,boolean optimize) {
+        DraftTrip.Stop chosen=null;
+        double nearest=Double.MAX_VALUE;
+        boolean chosenPinned=false;
+        for(DraftTrip.Stop candidate:flexible) {
+            int arrival=cursor+travel(previous,candidate)+(previous==null?0:candidate.buffer);
+            int departure=arrival+candidate.duration;
+            if(booked!=null && departure+travel(candidate,booked)+booked.buffer>booked.fixedMinute) continue;
+            boolean measurable=previous!=null && previous.hasLocation && candidate.hasLocation;
+            double distance=measurable?distance(previous.lat,previous.lng,candidate.lat,candidate.lng):0;
+            // Pinned candidates outrank unpinned ones (no coordinates); ties keep the original order.
+            boolean better=chosen==null || (optimize && ((candidate.hasLocation && !chosenPinned) || (candidate.hasLocation==chosenPinned && distance<nearest)));
+            if(better) { chosen=candidate; nearest=distance; chosenPinned=candidate.hasLocation; }
+            if(!optimize) break;
+        }
+        return chosen;
+    }
+
+    /** Sum of incoming-leg minutes over a day's slots. */
+    public static int totalTravel(List<Slot> slots) {
+        int total=0;
+        for(Slot slot:slots) total+=slot.travel;
+        return total;
+    }
+
+    /** Current order (optimize=false) versus preview order (optimize=true); never mutates the trip. */
+    public static Comparison compare(DraftTrip trip,int day) {
+        return new Comparison(day(trip,day,false),day(trip,day,true));
+    }
+
+    /**
+     * New day for every FLEXIBLE stop so loads (duration + buffer) even out across all trip days.
+     * Booked stops never move and count toward their day's load when it is inside 1..days.
+     */
+    public static Map<String,Integer> balance(DraftTrip trip) {
+        Map<String,Integer> result=new LinkedHashMap<>();
+        int days=Math.max(1,trip.days);
+        int[] loads=new int[days];
+        for(DraftTrip.Stop s:trip.stops) if(s.booked && s.day>=1 && s.day<=days) loads[s.day-1]+=s.duration+s.buffer;
+        for(DraftTrip.Stop s:trip.stops) {
+            if(s.booked) continue;
+            int lowest=0;
+            for(int i=1;i<days;i++) if(loads[i]<loads[lowest]) lowest=i;
+            loads[lowest]+=s.duration+s.buffer;
+            result.put(s.id,lowest+1);
+        }
+        return result;
+    }
+
+    private static boolean differsInOrder(List<Slot> a,List<Slot> b) {
+        if(a.size()!=b.size()) return true;
+        for(int i=0;i<a.size();i++) if(a.get(i).stop!=b.get(i).stop) return true;
+        return false;
+    }
+
     public static int travel(DraftTrip.Stop from,DraftTrip.Stop to) {
         if(from==null) return 0;
-        if(!from.hasLocation || !to.hasLocation) return 20;
-        double km=distance(from.lat,from.lng,to.lat,to.lng)*1.25;
-        String mode=mode(from,to);
-        double speed=mode.equals("Walking")?4.5:mode.equals("Cycling")?15:mode.equals("Transit")?18:25;
-        return Math.max(1,(int)Math.ceil(km/speed*60)+(mode.equals("Transit")?8:0));
+        if(!from.hasLocation || !to.hasLocation) return ScheduleMath.PLACEHOLDER_TRAVEL_MIN;
+        return resolve(from,to).minutesFor(distance(from.lat,from.lng,to.lat,to.lng));
     }
     public static String mode(DraftTrip.Stop from,DraftTrip.Stop to) {
-        if(!to.mode.equals("Suggested")) return to.mode;
-        if(from==null || !from.hasLocation || !to.hasLocation) return "Walking";
-        double km=distance(from.lat,from.lng,to.lat,to.lng);
-        return km<1.2?"Walking":km<4?"Cycling":"Transit";
+        return TripSnapshots.modeName(resolve(from,to));
+    }
+    /** The mode a leg actually uses: the destination's explicit mode, else Suggested by distance. */
+    public static TravelMode legMode(DraftTrip.Stop from,DraftTrip.Stop to) { return resolve(from,to); }
+    /** Explicit mode on the destination wins; otherwise Suggested by straight-line distance. */
+    private static TravelMode resolve(DraftTrip.Stop from,DraftTrip.Stop to) {
+        TravelMode explicit=TripSnapshots.toMode(to.mode);
+        if(explicit!=null) return explicit;
+        if(from==null || !from.hasLocation || !to.hasLocation) return TravelMode.WALK;
+        return TravelMode.suggestFor(distance(from.lat,from.lng,to.lat,to.lng));
     }
     public static double distance(double lat1,double lng1,double lat2,double lng2) {
         double a=Math.pow(Math.sin(Math.toRadians(lat2-lat1)/2),2)+Math.cos(Math.toRadians(lat1))*Math.cos(Math.toRadians(lat2))*Math.pow(Math.sin(Math.toRadians(lng2-lng1)/2),2);

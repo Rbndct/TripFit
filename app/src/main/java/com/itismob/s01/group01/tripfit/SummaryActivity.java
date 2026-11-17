@@ -25,7 +25,9 @@ import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
+import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.Labels;
 import com.itismob.s01.group01.tripfit.ui.TripPdfWriter;
 
@@ -34,7 +36,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Printable trip summary: per-day schedule plus budget breakdown. Export PDF writes a real
@@ -86,11 +87,9 @@ public class SummaryActivity extends ScreenActivity {
         lines.clear();
         ViewGroup container = findViewById(R.id.container_summary);
         container.removeAllViews();
-        Map<Integer, List<ItineraryItemWithPlace>> byDay = new TreeMap<>();
-        for (ItineraryItemWithPlace entry : items) {
-            byDay.computeIfAbsent(entry.item.getDay(), d -> new ArrayList<>()).add(entry);
-        }
-        for (Map.Entry<Integer, List<ItineraryItemWithPlace>> day : byDay.entrySet()) {
+        Map<Integer, List<RoutePreview.Slot>> byDay = TripSnapshots.schedule(
+                tripId, store.meta(tripId), items, store);
+        for (Map.Entry<Integer, List<RoutePreview.Slot>> day : byDay.entrySet()) {
             addDay(day.getKey(), day.getValue(), container);
         }
         addBudget(container);
@@ -99,21 +98,14 @@ public class SummaryActivity extends ScreenActivity {
         updateActions();
     }
 
-    private void addDay(int day, List<ItineraryItemWithPlace> entries, ViewGroup container) {
-        List<ScheduleMath.Stop> stops = new ArrayList<>();
-        for (ItineraryItemWithPlace entry : entries) {
-            stops.add(new ScheduleMath.Stop(entry.item.displayName(entry.placeName),
-                    entry.item.isBooked() ? entry.item.getTime() : null,
-                    entry.item.getDurationMin()));
-        }
+    private void addDay(int day, List<RoutePreview.Slot> slots, ViewGroup container) {
         String heading = getString(R.string.day_label, day);
         List<Line> sectionLines = new ArrayList<>();
         lines.add(heading);
-        for (ScheduleMath.Slot slot : ScheduleMath.build(stops, store.getBufferMin())) {
-            String time = ScheduleMath.format(slot.getStartMin()) + "–"
-                    + ScheduleMath.format(slot.getEndMin());
-            sectionLines.add(new Line(slot.getName(), time));
-            lines.add("  " + time + "  " + slot.getName());
+        for (RoutePreview.Slot slot : slots) {
+            String time = ScheduleMath.format(slot.start) + "–" + ScheduleMath.format(slot.end);
+            sectionLines.add(new Line(slot.stop.name, time));
+            lines.add("  " + time + "  " + slot.stop.name);
         }
         lines.add("");
         String count = getResources().getQuantityString(R.plurals.summary_stop_count,

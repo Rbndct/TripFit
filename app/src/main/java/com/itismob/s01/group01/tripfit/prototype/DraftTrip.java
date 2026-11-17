@@ -37,6 +37,8 @@ public class DraftTrip {
     public static class Stop {
         public String id = UUID.randomUUID().toString();
         public String name = "", address = "", category = "Activities", mode = "Suggested", currency = "";
+        /** The stop's own stored buffer; null means it follows the profile default. */
+        public Integer explicitBuffer;
         public int day = 1, duration = 60, buffer = 15, fixedMinute = 540;
         public double lat, lng, cost;
         public boolean hasLocation, booked, outdoor = true;
