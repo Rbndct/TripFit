@@ -205,4 +205,43 @@
     <string name="summary_remaining">Remaining after expenses</string>
     <string name="export_saving">Saving…</string>
     <string name="export_save_failed">Could not save the file. Choose a different location and try again.</string>
+
+    <string name="action_remove">Remove</string>
+    <string name="group_local_notice">Companions and votes are saved on this device. The sample code adds a demo companion. No invitations are sent automatically.</string>
+    <string name="group_organizer">Organizer</string>
+    <string name="group_add">Add companion</string>
+    <string name="group_name_hint">Companion name</string>
+    <string name="group_name_required">Enter a name</string>
+    <string name="group_duplicate">This person is already listed</string>
+    <string name="group_join">Join with sample code</string>
+    <string name="group_join_action">Join</string>
+    <string name="group_code_hint">Sample join code</string>
+    <string name="group_invalid_code">Use the sample code %1$s</string>
+    <string name="group_remove_title">Remove %1$s from this trip?</string>
+    <string name="group_remove_cd">Remove %1$s</string>
+    <string name="group_one_vote">1 vote · You</string>
+    <string name="group_no_votes">0 votes</string>
+    <string name="group_votes_empty">No catalog activities are available for this destination.</string>
+    <string name="group_equal_notice">Equal split preview only. Planned estimates and logged expenses are shown separately.</string>
+    <string name="group_split_totals">Trip totals</string>
+    <string name="group_split_line">Planned %1$s · Logged %2$s</string>
+
+    <string name="journal_notice">Save a note or photo to remember your trip. Journal entries stay on this device.</string>
+    <string name="journal_day_hint">Trip day</string>
+    <string name="journal_whole_day">Whole day</string>
+    <string name="journal_edit">Edit memory</string>
+    <string name="journal_edit_cd">Edit memory for %1$s</string>
+    <string name="journal_remove_cd">Remove memory for %1$s</string>
+    <string name="journal_remove_title">Remove this journal entry?</string>
+    <string name="journal_remove_message">The original photo will stay in your gallery.</string>
+    <string name="journal_no_photo">No photo selected</string>
+    <string name="journal_photo_local">Photo attached · visible only in this local journal</string>
+    <string name="journal_photo_description">Attached travel photo</string>
+    <string name="journal_clear_photo">Remove photo from draft</string>
+    <string name="journal_note_or_photo">Add a note or choose a photo</string>
+    <string name="journal_photo_permission">Could not keep access to this photo. Choose another image.</string>
+    <string name="journal_photo_invalid">This image cannot be displayed. Choose another photo.</string>
+    <string name="journal_photo_unavailable">This photo is no longer accessible. Edit this memory to choose it again.</string>
+    <string name="journal_photo_picker_unavailable">No document picker is available to choose a photo.</string>
+    <string name="journal_entry_unavailable">This journal entry is no longer available.</string>
 </resources>

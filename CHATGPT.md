@@ -62,8 +62,8 @@ Branch: **`feat/ui-prototype-step5`**
 | 6 | Discover & Suggestions Catalog | **DONE** | One Tokyo and Manila sample catalog |
 | 7 | Weather Screen | **DONE** | Saved forecasts and indoor alternatives |
 | 8 | Calendar & Export | **DONE** | Calendar and PDF file export, plus summary sharing |
-| **9** | **Group & Journal** | **NEXT** | Companions, voting, and persistable image URIs |
-| 10 | Remove Duplicate Screens | *Pending* | Delete obsolete classes in `prototype/*Activity` |
+| 9 | Group & Journal | **DONE** | Local companions, votes, and editable journal entries with photos |
+| **10** | **Remove Duplicate Screens** | **NEXT** | Delete obsolete classes in `prototype/*Activity` |
 | 11 | Naming & Docs | *Pending* | Finalize Trippings naming across strings and docs |
 | 12 | Final Verification | *Pending* | Full emulator walkthrough & lint sweep |
 

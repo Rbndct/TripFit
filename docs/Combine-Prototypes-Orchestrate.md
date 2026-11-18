@@ -17,10 +17,11 @@
 | 5 Budget and currency | done | fb2da5c |
 | 6 | done | 99a8050 |
 | 7 | done | a704ad2 |
-| 8 | done | |
-| 9-12 | not started | |
+| 8 | done | 5d50188 |
+| 9 | done | |
+| 10-12 | not started | |
 
-Next is Step 9 (Group and journal). Step 5 notes: one rates table
+Next is Step 10 (Remove duplicate screens). Step 5 notes: one rates table
 (`CurrencyMock` behind `CurrencyRates`, `RoutePreview.convert` and the export footer delegate to it); per-stop cost,
 currency and category live in the store's `ItemDetails` keyed by item id; planned and logged are never summed;
 daily mode applies category limits per day (`BudgetSettings#limitFor(category, days)`); `AmountRules` validates

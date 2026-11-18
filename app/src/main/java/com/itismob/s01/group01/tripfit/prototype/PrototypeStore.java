@@ -139,7 +139,7 @@ public final class PrototypeStore {
     public synchronized List<String> members(String tripId) {
         List<String> saved = docs.trip(tripId).members;
         if (saved != null) {
-            return Collections.unmodifiableList(new ArrayList<>(saved));
+            return Collections.unmodifiableList(normalizedMembers(saved));
         }
         return isSample(tripId)
                 ? Collections.unmodifiableList(Arrays.asList(SELF_MEMBER, SAMPLE_MEMBER))
@@ -147,8 +147,43 @@ public final class PrototypeStore {
     }
 
     public synchronized void setMembers(String tripId, List<String> names) {
-        docs.trip(tripId).members = new ArrayList<>(names);
+        docs.trip(tripId).members = normalizedMembers(names);
         docs.saveTrip(tripId);
+    }
+
+    public synchronized boolean addCompanion(String tripId, String name) {
+        String cleaned = name.trim();
+        List<String> names = new ArrayList<>(members(tripId));
+        if (cleaned.isEmpty() || names.stream().anyMatch(cleaned::equalsIgnoreCase)) {
+            return false;
+        }
+        names.add(cleaned);
+        setMembers(tripId, names);
+        return true;
+    }
+
+    public synchronized boolean removeCompanion(String tripId, String name) {
+        String cleaned = name.trim();
+        List<String> names = new ArrayList<>(members(tripId));
+        if (SELF_MEMBER.equalsIgnoreCase(cleaned) || !names.removeIf(cleaned::equalsIgnoreCase)) {
+            return false;
+        }
+        setMembers(tripId, names);
+        return true;
+    }
+
+    private static List<String> normalizedMembers(List<String> names) {
+        List<String> normalized = new ArrayList<>();
+        normalized.add(SELF_MEMBER);
+        for (String name : names) {
+            if (name != null) {
+                String cleaned = name.trim();
+                if (!cleaned.isEmpty() && normalized.stream().noneMatch(cleaned::equalsIgnoreCase)) {
+                    normalized.add(cleaned);
+                }
+            }
+        }
+        return normalized;
     }
 
     /** Per-day weather labels; empty when none were set. */
@@ -303,7 +338,12 @@ public final class PrototypeStore {
     public synchronized List<JournalEntry> journal(String tripId) {
         List<JournalEntry> entries = new ArrayList<>();
         for (TripDoc.JournalRec rec : seededJournal(tripId)) {
-            entries.add(TripDocMapper.fromRec(rec));
+            if (SEED_JOURNAL_ID.equals(rec.id) && rec.photoUri == null && rec.hasPhoto) {
+                // Earlier installs shipped a sample note with a photo marker but no document.
+                entries.add(new JournalEntry(rec.id, rec.day, rec.stopName, rec.stopId, rec.note, null));
+            } else {
+                entries.add(TripDocMapper.fromRec(rec));
+            }
         }
         return Collections.unmodifiableList(entries);
     }
@@ -311,6 +351,26 @@ public final class PrototypeStore {
     public synchronized void addJournalEntry(String tripId, JournalEntry entry) {
         seededJournal(tripId).add(0, TripDocMapper.toRec(entry));
         docs.saveTrip(tripId);
+    }
+
+    public synchronized boolean updateJournalEntry(String tripId, JournalEntry entry) {
+        List<TripDoc.JournalRec> entries = seededJournal(tripId);
+        for (int i = 0; i < entries.size(); i++) {
+            if (entry.getId().equals(entries.get(i).id)) {
+                entries.set(i, TripDocMapper.toRec(entry));
+                docs.saveTrip(tripId);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized boolean removeJournalEntry(String tripId, String id) {
+        if (!seededJournal(tripId).removeIf(entry -> id.equals(entry.id))) {
+            return false;
+        }
+        docs.saveTrip(tripId);
+        return true;
     }
 
     private List<TripDoc.JournalRec> seededJournal(String tripId) {
@@ -321,7 +381,7 @@ public final class PrototypeStore {
                 doc.journal.add(TripDocMapper.toRec(new JournalEntry(SEED_JOURNAL_ID, 1,
                         "Senso-ji Temple", null,
                         "Got there early — no crowds. Drew an omikuji fortune: small blessing.",
-                        true, null)));
+                        false, null)));
             }
             docs.saveTrip(tripId);
         }
@@ -330,10 +390,9 @@ public final class PrototypeStore {
 
     // ---- group votes (per trip) ----
 
-    /** Demo vote tally: a stable 2-4 base per destination plus the user's own vote. */
+    /** Local preview, with only the user's own vote. */
     public synchronized int voteCount(String tripId, String destination) {
-        int base = 2 + Math.abs(destination.hashCode()) % 3;
-        return base + (docs.trip(tripId).votes.contains(destination) ? 1 : 0);
+        return hasVoted(tripId, destination) ? 1 : 0;
     }
 
     public synchronized boolean hasVoted(String tripId, String destination) {

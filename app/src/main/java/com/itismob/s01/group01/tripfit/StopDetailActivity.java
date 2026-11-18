@@ -3,7 +3,6 @@ package com.itismob.s01.group01.tripfit;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -12,7 +11,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
@@ -78,7 +76,6 @@ public class StopDetailActivity extends ScreenActivity {
     private View rowMode;
     private MaterialButton saveButton;
     private boolean saving;
-    private ActivityResultLauncher<PickVisualMediaRequest> photoPicker;
     private ActivityResultLauncher<Intent> pinPicker;
 
     @Override
@@ -387,16 +384,12 @@ public class StopDetailActivity extends ScreenActivity {
     }
 
     private void bindPhoto() {
-        MaterialButton attach = findViewById(R.id.button_attach_photo);
-        photoPicker = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
-                (Uri uri) -> {
-                    if (uri != null) {
-                        attach.setText(R.string.photo_attached);
-                    }
-                });
-        attach.setOnClickListener(v -> photoPicker.launch(new PickVisualMediaRequest.Builder()
-                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                .build()));
+        findViewById(R.id.button_attach_photo).setOnClickListener(v -> {
+            Intent journal = new Intent(this, JournalActivity.class);
+            journal.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
+            journal.putExtra(JournalActivity.EXTRA_JOURNAL_STOP, itemId);
+            startActivity(journal);
+        });
     }
 
     // ---- save / delete ----

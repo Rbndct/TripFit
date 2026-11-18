@@ -15,13 +15,13 @@ Branch: `feat/ui-prototype-step5`
 | 5 Budget and currency | **done** | `fb2da5c` | Unified budget model, planned vs actual costs, currency rates |
 | 6 Discover and catalog | **done** | `99a8050` | One Tokyo and Manila sample catalog |
 | 7 Weather screen | **done** | `a704ad2` | Saved forecasts, outdoor warnings, and indoor alternatives |
-| 8 Calendar and export | **done** | | Calendar and PDF file export, plus summary sharing |
-| 9 Group and journal | **next** | | Companions, voting, persistable photo URIs |
-| 10 Remove duplicate screens | pending | | Remove obsolete `prototype/*Activity` classes |
+| 8 Calendar and export | **done** | `5d50188` | Calendar and PDF file export, plus summary sharing |
+| 9 Group and journal | **done** | | Local companions, votes, and editable journal entries with photos |
+| 10 Remove duplicate screens | **next** | | Remove obsolete `prototype/*Activity` classes |
 | 11 Naming and docs | pending | | App name consistency across strings and docs |
 | 12 Final verification | pending | | Full test sweep and emulator walkthrough |
 
-Next is **Step 9 (Group and journal)**.
+Next is **Step 10 (Remove duplicate screens)**.
 
 ---
 
