@@ -1,5 +1,7 @@
 # Plan: Combine the two frontend prototypes
 
+_For ChatGPT prompts and guidelines, see [CHATGPT.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/CHATGPT.md). A shared copy of this plan is in [docs/Combine-Prototypes-Plan.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Combine-Prototypes-Plan.md)._
+
 ## Progress (updated 2026-11-17)
 
 | Step | Status | Commit |
@@ -42,7 +44,7 @@ opposite (Kevin's screens as the base), stop after step 1 and re-plan.
 
 ## Rules for every step
 
-- One commit per step, conventional message, **no `Co-Authored-By` or other Claude attribution**.
+- One commit per step, conventional message, **no `Co-Authored-By` or other AI attribution**.
 - Refinement only: keep every Named Rule in `DESIGN.md` (fixed navy shell, monospace for data only, 16dp outlined
   cards, touch targets >= 48dp, strings in resources, colors in both `values` and `values-night`).
 - Java 11, no new dependencies (Gson is already present through Retrofit's converter).

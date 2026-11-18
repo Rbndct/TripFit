@@ -19,6 +19,15 @@ Android trip-planning app (itinerary building, route optimization, calendar sync
 ./gradlew lint                 # Android lint
 ```
 
+## AI Guidelines & Shared Plans
+
+- **ChatGPT Guide & Prompts:** See [CHATGPT.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/CHATGPT.md) for step-by-step copy-paste prompts for ChatGPT.
+- **Universal Agent Instructions:** See [AGENTS.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/AGENTS.md).
+- **Combine Prototypes Roadmap:** See [docs/Combine-Prototypes-Plan.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Combine-Prototypes-Plan.md) and [docs/Prototype-Merge-Map.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Prototype-Merge-Map.md).
+
 ## Rules
 
-Follows `~/.claude/rules/ecc/common/*` (coding style, testing, security, git workflow). Because source is Java, not Kotlin, `~/.claude/rules/ecc/java/*` applies for language-specific overrides (not the `kotlin/` set) — e.g. compile-check with `./gradlew compileDebugJavaWithJavac` instead of Kotlin-specific tooling.
+- **Language:** Strictly Java 11 for all `app/src/main/java` sources. Compile-check with `./gradlew compileDebugJavaWithJavac`.
+- **UI & Layout:** Classic Views, Material Components 3, `ScreenActivity` base shell. No Jetpack Compose.
+- **Design Guidelines:** Follow `DESIGN.md` (16dp outlined cards, 48dp touch targets, strings in `res/values/strings.xml`, colors in `values` and `values-night`).
+- **Git Commits:** Conventional commit messages (`feat:`, `fix:`, `refactor:`, `docs:`), no AI attribution tags. Run `./gradlew compileDebugJavaWithJavac testDebugUnitTest lintDebug` before committing.
