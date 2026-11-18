@@ -120,6 +120,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md" />
 
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switch_outdoor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:minHeight="48dp"
+                android:text="@string/weather_outdoor_setting" />
+
             <TextView
                 android:id="@+id/text_pin_status"
                 android:layout_width="match_parent"

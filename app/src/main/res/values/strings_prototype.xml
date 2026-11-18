@@ -59,18 +59,7 @@
         <item quantity="other">%1$d stops · %2$d min at stops · %3$d min travel, plus buffers</item>
     </plurals>
     <string name="state_selected">Selected</string>
-    <plurals name="weather_banner">
-        <item quantity="one">Rain expected on Day %1$d · %2$d outdoor stop. Tap to review</item>
-        <item quantity="other">Rain expected on Day %1$d · %2$d outdoor stops. Tap to review</item>
-    </plurals>
-    <string name="weather_title">Rain on Day %1$d</string>
-    <string name="weather_message">Forecast: 80%% chance of rain. These outdoor stops may need an indoor backup:\n%1$s\n\nBooked stops stay as they are.</string>
-    <string name="action_swap_indoor">Swap with indoor stops</string>
     <string name="action_keep_plan">Keep plan</string>
-    <plurals name="weather_swapped">
-        <item quantity="one">Swapped %1$d outdoor stop for an indoor one</item>
-        <item quantity="other">Swapped %1$d outdoor stops for indoor ones</item>
-    </plurals>
     <string name="leg_label">%1$s · ~%2$d min travel + %3$d min buffer</string>
     <string name="leg_placeholder">No map pin yet · travel uses a 20 min placeholder</string>
     <string name="leg_dialog_title">Travel to %1$s</string>

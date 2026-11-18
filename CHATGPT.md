@@ -59,9 +59,9 @@ Branch: **`feat/ui-prototype-step5`**
 | 3 | Single Entry Flow | **DONE** | `LoginActivity` -> `HomeActivity` -> `MainActivity` |
 | 4 | Planning & Scheduling Logic | **DONE** | Unified `RouteMath`, `ScheduleMath`, buffer & conflict detection |
 | 5 | Budget & Currency | **DONE** | Unified budget model, separate planned/actual costs, live exchange rates |
-| **6** | **Discover & Suggestions Catalog** | **NEXT** | Merge `DemoCatalog` & `MockData` into one catalog |
-| 7 | Weather Screen | *Pending* | Port `WeatherActivity` to navy `ScreenActivity` |
-| 8 | Calendar & Export | *Pending* | Real `.ics` file generation and PDF export |
+| 6 | Discover & Suggestions Catalog | **DONE** | One Tokyo and Manila sample catalog |
+| 7 | Weather Screen | **DONE** | Saved forecasts and indoor alternatives |
+| **8** | **Calendar & Export** | **NEXT** | Real `.ics` file generation and PDF export |
 | 9 | Group & Journal | *Pending* | Companions, voting, and persistable image URIs |
 | 10 | Remove Duplicate Screens | *Pending* | Delete obsolete classes in `prototype/*Activity` |
 | 11 | Naming & Docs | *Pending* | Finalize Trippings naming across strings and docs |

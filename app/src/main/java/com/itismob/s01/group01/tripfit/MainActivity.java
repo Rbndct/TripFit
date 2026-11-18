@@ -21,21 +21,18 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.itismob.s01.group01.tripfit.data.Result;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
-import com.itismob.s01.group01.tripfit.prototype.MockData;
-import com.itismob.s01.group01.tripfit.prototype.MockPlace;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
+import com.itismob.s01.group01.tripfit.prototype.WeatherPlanning;
+import com.itismob.s01.group01.tripfit.prototype.WeatherPlanning.Condition;
 import com.itismob.s01.group01.tripfit.ui.ItineraryAdapter;
 import com.itismob.s01.group01.tripfit.ui.ItineraryRow;
 import com.itismob.s01.group01.tripfit.ui.LegSettingsDialog;
@@ -125,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_add_destination);
         fab.setOnClickListener(v -> openWithDay(AddDestinationActivity.class));
         findViewById(R.id.button_empty_discover).setOnClickListener(v -> openWithDay(DiscoverActivity.class));
-        weatherBanner.setOnClickListener(v -> showWeatherDialog());
+        weatherBanner.setOnClickListener(v -> openWithDay(WeatherActivity.class));
     }
 
     /** Navy status bar with light icons, matching Home and every ScreenActivity. */
@@ -156,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
             open(NewTripActivity.class);
         } else if (id == R.id.action_discover) {
             openWithDay(DiscoverActivity.class);
+        } else if (id == R.id.action_weather) {
+            openWithDay(WeatherActivity.class);
         } else if (id == R.id.action_calendar) {
             open(CalendarSyncActivity.class);
         } else if (id == R.id.action_summary) {
@@ -238,63 +237,15 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
 
     // ---- weather-aware rescheduling ----
 
-    private List<ItineraryItemWithPlace> outdoorFlexibleStops(int day) {
-        List<ItineraryItemWithPlace> outdoor = new ArrayList<>();
-        for (ItineraryItemWithPlace entry : allItems) {
-            String name = entry.item.displayName(entry.placeName);
-            if (entry.item.getDay() == day && !entry.item.isBooked() && MockData.isOutdoor(name)) {
-                outdoor.add(entry);
-            }
-        }
-        return outdoor;
-    }
-
     private void renderWeatherBanner() {
-        int day = selectedDay;
-        int count = MockData.isRainy(day) ? outdoorFlexibleStops(day).size() : 0;
+        Condition condition = WeatherPlanning.conditionAt(store.weather(tripId), selectedDay);
+        int count = WeatherPlanning.conflicts(allItems, selectedDay, condition, store).size();
         weatherBanner.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
-        weatherBanner.setText(getResources().getQuantityString(
-                R.plurals.weather_banner, count, day, count));
-    }
-
-    private void showWeatherDialog() {
-        int day = selectedDay;
-        List<ItineraryItemWithPlace> outdoor = outdoorFlexibleStops(day);
-        StringBuilder names = new StringBuilder();
-        for (ItineraryItemWithPlace entry : outdoor) {
-            names.append("• ").append(entry.item.displayName(entry.placeName)).append('\n');
+        if (count > 0) {
+            int banner = condition == Condition.STORM ? R.plurals.weather_banner_storm
+                    : R.plurals.weather_banner_rain;
+            weatherBanner.setText(getResources().getQuantityString(banner, count, selectedDay, count));
         }
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.weather_title, day))
-                .setMessage(getString(R.string.weather_message, names.toString().trim()))
-                .setNegativeButton(R.string.action_keep_plan, null)
-                .setPositiveButton(R.string.action_swap_indoor, (dialog, which) ->
-                        swapForIndoor(day, outdoor))
-                .show();
-    }
-
-    private void swapForIndoor(int day, List<ItineraryItemWithPlace> outdoor) {
-        List<MockPlace> indoor = MockData.indoorAlternatives();
-        Result.Callback<Void> report = result -> {
-            if (!result.isSuccess()) {
-                Snackbar.make(findViewById(R.id.main), R.string.error_update_failed,
-                        Snackbar.LENGTH_SHORT).show();
-            }
-        };
-        for (int i = 0; i < outdoor.size(); i++) {
-            String replacement = indoor.get(i % indoor.size()).getName();
-            repository.addItineraryItem(tripId, replacement, day, null, null, false, report);
-            String removedId = outdoor.get(i).item.getId();
-            repository.deleteItineraryItem(removedId, result -> {
-                if (result.isSuccess()) {
-                    store.removeItemDetails(removedId);
-                }
-                report.onResult(result);
-            });
-        }
-        Snackbar.make(findViewById(R.id.main),
-                getResources().getQuantityString(R.plurals.weather_swapped, outdoor.size(),
-                        outdoor.size()), Snackbar.LENGTH_SHORT).show();
     }
 
     // ---- rendering ----

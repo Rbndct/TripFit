@@ -6,7 +6,7 @@
 **Steps**: 12
 **Scope**: all
 
-## Progress (updated 2026-11-17)
+## Progress (updated 2026-11-18)
 
 | Step | Status | Commit |
 |---|---|---|
@@ -15,9 +15,11 @@
 | 3 Single entry flow | done | aa277b6 |
 | 4 Itinerary planning logic | done | 4a41e48 |
 | 5 Budget and currency | done | fb2da5c |
-| 6-12 | not started | |
+| 6 | done | 99a8050 |
+| 7 | done | |
+| 8-12 | not started | |
 
-Next: step 6 (Discover and suggestions catalog; fold `data/OfflineData` in too). Step 5 notes: one rates table
+Next is Step 8 (Calendar and export). Step 5 notes: one rates table
 (`CurrencyMock` behind `CurrencyRates`, `RoutePreview.convert` and the export footer delegate to it); per-stop cost,
 currency and category live in the store's `ItemDetails` keyed by item id; planned and logged are never summed;
 daily mode applies category limits per day (`BudgetSettings#limitFor(category, days)`); `AmountRules` validates

@@ -161,6 +161,19 @@ public final class PrototypeStore {
         docs.saveTrip(tripId);
     }
 
+    public synchronized void setForecastCondition(String tripId, int day,
+                                                   WeatherPlanning.Condition condition) {
+        if (day < 1) {
+            throw new IllegalArgumentException("Forecast day must be positive");
+        }
+        List<String> forecast = new ArrayList<>(weather(tripId));
+        while (forecast.size() < day) {
+            forecast.add(WeatherPlanning.conditionAt(forecast, forecast.size() + 1).storedLabel);
+        }
+        forecast.set(day - 1, condition.storedLabel);
+        setWeather(tripId, forecast);
+    }
+
     // ---- budget & expenses ----
 
     public synchronized BudgetSettings budget(String tripId) {

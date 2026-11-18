@@ -75,6 +75,10 @@ public interface TripRepository {
     void replaceWithCatalogPlace(String tripId, String itemId, DemoCatalog.Place place,
                                  Result.Callback<Void> callback);
 
+    /** Exchanges a flexible outdoor stop's slot with a flexible indoor stop on another day. */
+    void swapWeatherStops(String tripId, String outdoorId, String indoorId,
+                          Result.Callback<Void> callback);
+
     /** Creates a new trip and hands back its id so the caller can navigate into it. */
     void createTrip(String name, Result.Callback<String> callback);
 

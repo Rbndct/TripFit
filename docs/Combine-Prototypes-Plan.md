@@ -13,15 +13,15 @@ Branch: `feat/ui-prototype-step5`
 | 3 Single entry flow | **done** | `aa277b6` | Login opens `HomeActivity`; `NewTripActivity` creates trips |
 | 4 Itinerary planning logic | **done** | `4a41e48` | Per-leg buffers, conflict detection, booking locks, travel modes |
 | 5 Budget and currency | **done** | `fb2da5c` | Unified budget model, planned vs actual costs, currency rates |
-| 6 Discover and catalog | **next** | | Merge `DemoCatalog` & `MockData` into one catalog |
-| 7 Weather screen | pending | | Port `WeatherActivity` to navy `ScreenActivity` |
-| 8 Calendar and export | pending | | `.ics` and PDF export with file picker |
+| 6 Discover and catalog | **done** | `99a8050` | One Tokyo and Manila sample catalog |
+| 7 Weather screen | **done** | | Saved forecasts, outdoor warnings, and indoor alternatives |
+| 8 Calendar and export | **next** | | `.ics` and PDF export with file picker |
 | 9 Group and journal | pending | | Companions, voting, persistable photo URIs |
 | 10 Remove duplicate screens | pending | | Remove obsolete `prototype/*Activity` classes |
 | 11 Naming and docs | pending | | App name consistency across strings and docs |
 | 12 Final verification | pending | | Full test sweep and emulator walkthrough |
 
-Next: **Step 6 (Discover and suggestions catalog; fold `data/OfflineData` in too).**
+Next is **Step 8 (Calendar and export)**.
 
 ---
 
@@ -69,7 +69,7 @@ Unified budget model with separate planned and actual costs, currency calculator
 
 ---
 
-## Step 6: Discover and suggestions catalog (NEXT)
+## Step 6: Discover and suggestions catalog
 
 Merge Kevin's `DemoCatalog` and our `MockData` into one catalog (Tokyo and Manila; places with coordinates, suggested duration, price). Use it in `DiscoverActivity`, `SuggestionsActivity` and `AddDestinationActivity` offline search; skip places already in the itinerary; add picks to the selected day.
 

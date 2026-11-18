@@ -32,6 +32,7 @@ import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TravelMode;
+import com.itismob.s01.group01.tripfit.prototype.WeatherPlanning;
 import com.itismob.s01.group01.tripfit.ui.CostFields;
 import com.itismob.s01.group01.tripfit.ui.Labels;
 import com.itismob.s01.group01.tripfit.ui.TimeFields;
@@ -40,7 +41,7 @@ import java.util.Locale;
 
 /**
  * Edits one itinerary stop, loaded by id: day, stay, booked time, buffer and travel mode before
- * the stop, and its map pin. Everything except notes and photo persists to Room in one UPDATE.
+ * the stop, its map pin, cost and outdoor status. Room holds the stop; PrototypeStore holds extras.
  * The form is bound from Room once; later edits and rotation never reload over what was typed.
  */
 public class StopDetailActivity extends ScreenActivity {
@@ -71,6 +72,7 @@ public class StopDetailActivity extends ScreenActivity {
     private TextInputLayout layoutBuffer;
     private TextInputEditText inputBuffer;
     private MaterialSwitch switchBooked;
+    private MaterialSwitch switchOutdoor;
     private CostFields costFields;
     private View rowDay;
     private View rowMode;
@@ -100,6 +102,7 @@ public class StopDetailActivity extends ScreenActivity {
         bindBooked();
         bindBuffer();
         bindCost();
+        switchOutdoor = findViewById(R.id.switch_outdoor);
         bindPin();
         bindPhoto();
         saveButton = findViewById(R.id.button_save);
@@ -164,6 +167,7 @@ public class StopDetailActivity extends ScreenActivity {
         // Blank means "use the profile default" (shown as a hint), so saving untouched keeps null.
         inputBuffer.setText(StopFormRules.bufferFieldText(row.item.getBufferMin()));
         costFields.populate(PrototypeStore.get().itemDetails(itemId));
+        switchOutdoor.setChecked(WeatherPlanning.isOutdoor(row, PrototypeStore.get()));
         switchBooked.setChecked(row.item.isBooked());
         layoutTime.setVisibility(row.item.isBooked() ? View.VISIBLE : View.GONE);
         if (fixedTime != null) {
@@ -431,7 +435,8 @@ public class StopDetailActivity extends ScreenActivity {
             return;
         }
         setSaving(true);
-        ItemDetails details = costFields.toDetails(PrototypeStore.get().itemDetails(itemId));
+        ItemDetails details = costFields.toDetails(PrototypeStore.get().itemDetails(itemId))
+                .withOutdoor(switchOutdoor.isChecked());
         Result.Callback<Void> done = result -> {
             if (result.isSuccess()) {
                 PrototypeStore.get().setItemDetails(itemId, details);
