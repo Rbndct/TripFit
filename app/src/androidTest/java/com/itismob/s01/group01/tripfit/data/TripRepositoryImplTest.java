@@ -446,6 +446,48 @@ public class TripRepositoryImplTest {
         assertEquals("18:00", firstItem("Tokyo Skytree").getTime());
     }
 
+    @Test
+    public void weatherSwap_exchangesSlotsAndKeepsStopDetails() throws InterruptedException {
+        awaitSeed();
+        String trip = TripRepositoryImpl.SEED_TRIP_ID;
+        ItineraryItemEntity outdoor = firstItem("Meiji Shrine");
+        DemoCatalog.Place museum = DemoCatalog.findById("offline-nezu-museum");
+        assertTrue(awaitVoid(cb -> repository.addCatalogPlaces(trip,
+                java.util.Collections.singletonList(museum), 1, false, cb)).isSuccess());
+        ItineraryItemEntity indoor = firstItem(museum.name);
+        awaitVoid(cb -> repository.updateLegSettings(outdoor.getId(), 12, "WALK", cb));
+
+        assertTrue(awaitVoid(cb -> repository.swapWeatherStops(trip,
+                outdoor.getId(), indoor.getId(), cb)).isSuccess());
+
+        ItineraryItemEntity movedOutdoor = awaitSingle(outdoor.getId()).item;
+        ItineraryItemEntity movedIndoor = awaitSingle(indoor.getId()).item;
+        assertEquals(indoor.getDay(), movedOutdoor.getDay());
+        assertEquals(indoor.getPosition(), movedOutdoor.getPosition());
+        assertEquals(outdoor.getDay(), movedIndoor.getDay());
+        assertEquals(outdoor.getPosition(), movedIndoor.getPosition());
+        assertEquals(outdoor.getDurationMin(), movedOutdoor.getDurationMin());
+        assertEquals(Integer.valueOf(12), movedOutdoor.getBufferMin());
+        assertEquals("WALK", movedOutdoor.getTransportMode());
+        assertEquals(indoor.getPlaceId(), movedIndoor.getPlaceId());
+    }
+
+    @Test
+    public void weatherSwap_rejectsBookedAlternativeWithoutMovingEitherStop()
+            throws InterruptedException {
+        awaitSeed();
+        ItineraryItemEntity outdoor = firstItem("Meiji Shrine");
+        ItineraryItemEntity booked = firstItem("Tokyo Skytree");
+
+        Result<Void> result = awaitVoid(cb -> repository.swapWeatherStops(
+                TripRepositoryImpl.SEED_TRIP_ID, outdoor.getId(), booked.getId(), cb));
+
+        assertEquals(TripRepository.CATALOG_STOP_UNAVAILABLE, result.getErrorMessage());
+        assertEquals(outdoor.getDay(), awaitSingle(outdoor.getId()).item.getDay());
+        assertEquals(booked.getDay(), awaitSingle(booked.getId()).item.getDay());
+        assertEquals("18:00", awaitSingle(booked.getId()).item.getTime());
+    }
+
     private ItineraryItemWithPlace awaitSingle(String id) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         ItineraryItemWithPlace[] holder = new ItineraryItemWithPlace[1];

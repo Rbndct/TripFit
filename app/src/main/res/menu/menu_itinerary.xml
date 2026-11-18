@@ -30,6 +30,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_weather"
+        android:title="@string/weather_screen_title"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_calendar"
         android:title="@string/action_calendar"
         app:showAsAction="never" />

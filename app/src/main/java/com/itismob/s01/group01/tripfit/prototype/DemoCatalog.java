@@ -193,6 +193,16 @@ public final class DemoCatalog {
         return null;
     }
 
+    static Place findByName(String name) {
+        String key = nameKey(name);
+        for (Place place : ALL) {
+            if (nameKey(place.name).equals(key)) {
+                return place;
+            }
+        }
+        return null;
+    }
+
     public static String nameKey(String name) {
         String key = name.trim().toLowerCase(Locale.ROOT);
         switch (key) {

@@ -20,6 +20,7 @@ import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
+import com.itismob.s01.group01.tripfit.prototype.WeatherPlanning;
 
 import android.util.Log;
 
@@ -162,6 +163,29 @@ public class TripRepositoryImpl implements TripRepository {
             }
             saveCatalogDetails(itemId, place.itemDetails(), previous);
         });
+    }
+
+    @Override
+    public void swapWeatherStops(String tripId, String outdoorId, String indoorId,
+                                 Result.Callback<Void> callback) {
+        runVoid("", callback, () -> database.runInTransaction(() -> {
+            ItineraryItemDao dao = database.itineraryItemDao();
+            ItineraryItemWithPlace outdoor = null;
+            ItineraryItemWithPlace indoor = null;
+            for (ItineraryItemWithPlace stop : dao.listWithPlaceSync(tripId)) {
+                if (stop.item.getId().equals(outdoorId)) {
+                    outdoor = stop;
+                } else if (stop.item.getId().equals(indoorId)) {
+                    indoor = stop;
+                }
+            }
+            if (outdoor == null || indoor == null
+                    || !WeatherPlanning.canTradeDays(outdoor, indoor, PrototypeStore.get())) {
+                throw new IllegalStateException(CATALOG_STOP_UNAVAILABLE);
+            }
+            dao.updateDayAndPosition(outdoorId, indoor.item.getDay(), indoor.item.getPosition());
+            dao.updateDayAndPosition(indoorId, outdoor.item.getDay(), outdoor.item.getPosition());
+        }));
     }
 
     private int validatedTripDays(String tripId, int day) {

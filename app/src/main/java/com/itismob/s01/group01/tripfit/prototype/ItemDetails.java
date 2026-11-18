@@ -34,6 +34,10 @@ public final class ItemDetails {
         return new ItemDetails(cost, costCurrency, category, outdoor);
     }
 
+    public ItemDetails withOutdoor(boolean value) {
+        return new ItemDetails(cost, costCurrency, category, value);
+    }
+
     public double getCost() {
         return cost;
     }

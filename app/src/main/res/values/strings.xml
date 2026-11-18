@@ -139,4 +139,32 @@
     <string name="catalog_swap_empty">No flexible stops to swap.</string>
     <string name="catalog_swap_unavailable">This stop is no longer available to swap.</string>
     <string name="catalog_swapped">Stop swapped</string>
+
+    <string name="weather_screen_title">Weather</string>
+    <string name="weather_sample_notice">Sample forecast only. Check live weather before your trip.</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_storm">Storm</string>
+    <string name="weather_sample_reading">%1$s · %2$d°C · %3$d%% chance of rain</string>
+    <string name="weather_change_forecast">Change forecast</string>
+    <string name="weather_change_forecast_cd">Change forecast for Day %1$d</string>
+    <string name="weather_outdoor_setting">Outdoor activity (check weather)</string>
+    <string name="weather_no_conflicts">No sample weather conflicts.</string>
+    <string name="weather_no_outdoor_stops">No outdoor stops to flag on this day.</string>
+    <string name="weather_booked_conflict">Booked: review with your provider</string>
+    <string name="weather_flexible_conflict">Outdoor stop · Consider an indoor alternative</string>
+    <string name="weather_indoor_action">Indoor alternatives</string>
+    <string name="weather_indoor_action_cd">Indoor alternatives for %1$s</string>
+    <string name="weather_trade_days">Swap days with %1$s (Day %2$d)</string>
+    <string name="weather_replace_stop">Replace with %1$s · sample suggestion</string>
+    <string name="weather_no_alternatives">No flexible indoor alternatives. Add one through Discover or edit the stop manually.</string>
+    <string name="weather_itinerary_updated">Itinerary updated. Review the new schedule.</string>
+    <plurals name="weather_banner_rain">
+        <item quantity="one">Rain expected on Day %1$d · %2$d outdoor stop. Tap to review</item>
+        <item quantity="other">Rain expected on Day %1$d · %2$d outdoor stops. Tap to review</item>
+    </plurals>
+    <plurals name="weather_banner_storm">
+        <item quantity="one">Storm expected on Day %1$d · %2$d outdoor stop. Tap to review</item>
+        <item quantity="other">Storm expected on Day %1$d · %2$d outdoor stops. Tap to review</item>
+    </plurals>
 </resources>
