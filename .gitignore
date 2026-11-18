@@ -5,6 +5,8 @@
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
+/.idea/vcs.xml
+/.idea/.name
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
@@ -14,9 +16,8 @@
 .cxx
 local.properties
 
-# Local Claude Code agent config — keep local, never commit
-.claude/
-CLAUDE.md
+# Local machine-specific Claude Code settings
+.claude/*.local.json
 
 # claude-mem local session/memory files — keep local, never commit
 docs/memory/
