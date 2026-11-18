@@ -16,10 +16,11 @@
 | 4 Itinerary planning logic | done | 4a41e48 |
 | 5 Budget and currency | done | fb2da5c |
 | 6 | done | 99a8050 |
-| 7 | done | |
-| 8-12 | not started | |
+| 7 | done | a704ad2 |
+| 8 | done | |
+| 9-12 | not started | |
 
-Next is Step 8 (Calendar and export). Step 5 notes: one rates table
+Next is Step 9 (Group and journal). Step 5 notes: one rates table
 (`CurrencyMock` behind `CurrencyRates`, `RoutePreview.convert` and the export footer delegate to it); per-stop cost,
 currency and category live in the store's `ItemDetails` keyed by item id; planned and logged are never summed;
 daily mode applies category limits per day (`BudgetSettings#limitFor(category, days)`); `AmountRules` validates

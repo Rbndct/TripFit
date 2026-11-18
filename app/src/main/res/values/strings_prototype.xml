@@ -47,7 +47,7 @@
     <string name="action_budget">Budget</string>
     <string name="action_suggestions">Nearby food &amp; activities</string>
     <string name="action_discover">Discover places</string>
-    <string name="action_calendar">Sync to Google Calendar</string>
+    <string name="action_calendar">Calendar export</string>
     <string name="action_summary">Trip summary</string>
     <string name="action_group">Group trip</string>
     <string name="action_journal">Journal</string>
@@ -234,51 +234,13 @@
     <string name="discover_adding">Adding…</string>
     <string name="city_dialog_title">Choose a city</string>
 
-    <!-- Calendar sync -->
-    <string name="calendar_title">Calendar sync</string>
-    <string name="calendar_account">Google account</string>
-    <plurals name="calendar_events_header">
-        <item quantity="one">%1$d event will be created</item>
-        <item quantity="other">%1$d events will be created</item>
-    </plurals>
-    <plurals name="calendar_events_synced">
-        <item quantity="one">%1$d event on your calendar</item>
-        <item quantity="other">%1$d events on your calendar</item>
-    </plurals>
-    <plurals name="action_sync_calendar">
-        <item quantity="one">Sync %1$d event</item>
-        <item quantity="other">Sync %1$d events</item>
-    </plurals>
-    <string name="action_resync">Re-sync (updates existing events)</string>
-    <string name="calendar_syncing">Syncing…</string>
-    <plurals name="calendar_success">
-        <item quantity="one">%1$d event added to your calendar</item>
-        <item quantity="other">%1$d events added to your calendar</item>
-    </plurals>
-    <string name="calendar_resynced">Calendar updated. No duplicates were created.</string>
-    <string name="action_open_calendar">Open Google Calendar</string>
-    <string name="calendar_open_failed">No calendar app found</string>
-    <string name="calendar_event_day">Day %1$d</string>
-    <string name="calendar_event_time">%1$s–%2$s</string>
-    <string name="calendar_empty">Add stops to your itinerary before syncing.</string>
-
-    <!-- Trip summary -->
     <string name="summary_title">Trip summary</string>
     <string name="summary_budget_title">Budget</string>
-    <string name="summary_spent_of">%1$s of %2$s spent</string>
-    <string name="action_export_pdf">Export PDF</string>
     <string name="action_share_summary">Share summary</string>
-    <string name="summary_share_subject">TripFit itinerary: %1$s</string>
-    <string name="pdf_failed">Could not create the PDF. Try again.</string>
-    <string name="summary_exporting">Preparing PDF…</string>
-    <string name="summary_spent_label">Spent</string>
-    <string name="summary_spent_value">%1$s of %2$s</string>
-    <string name="summary_spent_only">%1$s spent</string>
     <plurals name="summary_stop_count">
         <item quantity="one">%1$d stop</item>
         <item quantity="other">%1$d stops</item>
     </plurals>
-    <string name="summary_empty">No stops yet. Add places on the itinerary and they will appear here.</string>
 
     <!-- Group trip -->
     <string name="group_title">Group trip</string>

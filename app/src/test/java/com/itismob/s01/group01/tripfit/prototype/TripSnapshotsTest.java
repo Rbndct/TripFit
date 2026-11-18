@@ -210,4 +210,28 @@ public class TripSnapshotsTest {
         assertEquals("2:0", first.get("c"));
         assertEquals("3:0", first.get("a"));
     }
+    @Test
+    public void exportSnapshotUsesSavedDateAddressAndBudget() {
+        PrototypeStore store = PrototypeStore.forStorage(new InMemoryKeyValueStorage());
+        store.setMeta("trip", new TripMeta("Manila", "", 2, "PHP", "2027-03-02"));
+        store.setBudget("trip", new BudgetSettings("PHP", "PHP", 900, true,
+                java.util.Collections.singletonMap(Category.FOOD, 400.0)));
+        store.addExpense("trip", "Lunch", Category.FOOD, 200, "PHP");
+        ItineraryItemWithPlace row = new ItineraryItemWithPlace();
+        row.item = new ItineraryItemEntity("stop", "trip", "place", null, 1,
+                null, 45, false, null, null, 0);
+        row.placeName = "Cafe";
+        row.placeAddress = "1 Main St, Manila";
+
+        DraftTrip trip = TripSnapshots.forExport("trip", "Manila Break",
+                java.util.Collections.singletonList(row), store);
+
+        assertEquals("2027-03-02", trip.startDate);
+        assertEquals("Manila Break", trip.name);
+        assertEquals("1 Main St, Manila", trip.stops.get(0).address);
+        assertEquals(1800, trip.totalBudget(), 0.0);
+        assertEquals(800, trip.categoryBudget("Food"), 0.0);
+        assertEquals(200, trip.expenses.get(0).amount, 0.0);
+        assertTrue(TripExport.summary(trip).contains("No stops planned yet."));
+    }
 }

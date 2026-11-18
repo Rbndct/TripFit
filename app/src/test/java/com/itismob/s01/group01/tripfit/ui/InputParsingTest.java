@@ -30,11 +30,11 @@ public class InputParsingTest {
 
     @Test
     public void safeName_stripsSpecialCharacters() {
-        assertEquals("tripfit-tokyo-trip", TripPdfWriter.safeName("Tokyo Trip!"));
+        assertEquals("trippings-tokyo-trip", ExportNames.safeName("Tokyo Trip!"));
     }
 
     @Test
     public void safeName_emptyTitle_fallsBackToDefault() {
-        assertEquals("tripfit-itinerary", TripPdfWriter.safeName("???"));
+        assertEquals("trippings-itinerary", ExportNames.safeName("???"));
     }
 }

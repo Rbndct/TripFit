@@ -78,11 +78,39 @@ public final class TripSnapshots {
         return trip;
     }
 
+    /** Adds persisted dates, budget and original expense currencies to the route snapshot. */
+    public static DraftTrip forExport(String tripId, String name, List<ItineraryItemWithPlace> items,
+                                      PrototypeStore store) {
+        TripMeta meta = store.meta(tripId);
+        DraftTrip trip = from(tripId, meta, items, store);
+        trip.name = name;
+        trip.startDate = meta.getStartDateIso();
+        BudgetSettings budget = store.budget(tripId);
+        // Budget and Suggestions use configured trip length for the limits, even on older trips
+        // with a stop beyond that length. Export those same whole-trip amounts.
+        trip.budget = budget.tripTotal(meta.getDays());
+        trip.foodBudget = budget.limitFor(Category.FOOD, meta.getDays());
+        trip.activityBudget = budget.limitFor(Category.ACTIVITIES, meta.getDays());
+        trip.transportBudget = budget.limitFor(Category.TRANSPORT, meta.getDays());
+        trip.otherBudget = budget.limitFor(Category.OTHER, meta.getDays());
+        for (Expense expense : store.expenses(tripId)) {
+            DraftTrip.Expense saved = new DraftTrip.Expense();
+            saved.id = expense.getId();
+            saved.title = expense.getTitle();
+            saved.category = BudgetMath.categoryName(expense.getCategory());
+            saved.currency = expense.getLocalCurrency();
+            saved.amount = expense.getAmountLocal();
+            trip.expenses.add(saved);
+        }
+        return trip;
+    }
+
     private static DraftTrip.Stop stopFrom(ItineraryItemWithPlace entry, PrototypeStore store) {
         ItineraryItemEntity item = entry.item;
         DraftTrip.Stop stop = new DraftTrip.Stop();
         stop.id = item.getId();
         stop.name = item.displayName(entry.placeName);
+        stop.address = entry.placeAddress == null ? "" : entry.placeAddress;
         stop.day = item.getDay();
         stop.duration = item.getDurationMin() != null
                 ? item.getDurationMin() : ScheduleMath.DEFAULT_STAY_MIN;

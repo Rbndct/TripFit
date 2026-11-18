@@ -61,8 +61,8 @@ Branch: **`feat/ui-prototype-step5`**
 | 5 | Budget & Currency | **DONE** | Unified budget model, separate planned/actual costs, live exchange rates |
 | 6 | Discover & Suggestions Catalog | **DONE** | One Tokyo and Manila sample catalog |
 | 7 | Weather Screen | **DONE** | Saved forecasts and indoor alternatives |
-| **8** | **Calendar & Export** | **NEXT** | Real `.ics` file generation and PDF export |
-| 9 | Group & Journal | *Pending* | Companions, voting, and persistable image URIs |
+| 8 | Calendar & Export | **DONE** | Calendar and PDF file export, plus summary sharing |
+| **9** | **Group & Journal** | **NEXT** | Companions, voting, and persistable image URIs |
 | 10 | Remove Duplicate Screens | *Pending* | Delete obsolete classes in `prototype/*Activity` |
 | 11 | Naming & Docs | *Pending* | Finalize Trippings naming across strings and docs |
 | 12 | Final Verification | *Pending* | Full emulator walkthrough & lint sweep |

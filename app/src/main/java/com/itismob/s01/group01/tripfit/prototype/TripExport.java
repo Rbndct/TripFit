@@ -9,12 +9,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /** User-initiated local exports. Nothing is sent to a calendar or another account. */
 public final class TripExport {
     public static String summary(DraftTrip trip) {
-        StringBuilder text=new StringBuilder("TRIPPINGS\n").append(trip.name).append("\n").append(trip.city).append(" · ").append(trip.startDate).append(" · ").append(trip.days).append(" days\n\n")
+        StringBuilder text=new StringBuilder("TRIPPINGS\n").append(trip.name).append("\n").append(trip.city).append(" · ").append(TripFormRules.isValidIsoDate(trip.startDate) ? trip.startDate : "Dates not set").append(" · ").append(trip.days).append(" days\n\n")
             .append("PROTOTYPE: sample prices, exchange rates and travel estimates. Verify bookings, opening hours and routing before travel.\n\n");
         for(int day=1;day<=trip.days;day++) {
             text.append("DAY ").append(day).append("\n");
@@ -52,7 +57,7 @@ public final class TripExport {
             ? "Rates as of "+CurrencyRates.asOfDate()+" (reference rates, not a bank quote): "
             : "Rates (samples, not live): ");
         boolean first=true;
-        for(String code:new String[]{"JPY","USD","EUR"}) {
+        for(String code:new String[]{"PHP","JPY","USD","EUR"}) {
             if(code.equals(home) || !CurrencyRates.has(code) || !CurrencyRates.has(home)) continue;
             line.append(first?"":"; ").append(String.format(Locale.US,"1 %s = %.4f %s",code,CurrencyRates.convert(1,code,home),home));
             first=false;
@@ -71,7 +76,13 @@ public final class TripExport {
                     while(!paragraph.isEmpty()) {
                         int count=paint.breakText(paragraph,true,515,null);
                         if(count<paragraph.length()) { int space=paragraph.lastIndexOf(' ',count); if(space>0) count=space; }
-                        count=Math.max(1,count); wrapped.add(paragraph.substring(0,count)); paragraph=paragraph.substring(count).trim();
+                        if (count > 0 && count < paragraph.length()
+                                && Character.isSurrogatePair(paragraph.charAt(count - 1), paragraph.charAt(count))) {
+                            count--;
+                        }
+                        count = Math.max(Character.charCount(paragraph.codePointAt(0)), count);
+                        wrapped.add(paragraph.substring(0, count));
+                        paragraph = paragraph.substring(count).trim();
                     }
                 }
                 // Keep each stop and the category-budget breakdown together when possible.
@@ -95,35 +106,100 @@ public final class TripExport {
             document.close();
         }
     }
+    public static String calendarZoneId(String city) {
+        switch (city) {
+            case "Tokyo": return "Asia/Tokyo";
+            case "Manila": return "Asia/Manila";
+            case "Seoul": return "Asia/Seoul";
+            case "Singapore": return "Asia/Singapore";
+            case "Paris": return "Europe/Paris";
+            case "New York": return "America/New_York";
+            default: return "UTC";
+        }
+    }
+
+    public static String location(DraftTrip trip, DraftTrip.Stop stop) {
+        if (stop.address != null && !stop.address.trim().isEmpty()) {
+            return stop.address.trim();
+        }
+        return stop.hasLocation ? String.format(Locale.US, "%.5f, %.5f", stop.lat, stop.lng)
+                : trip.city;
+    }
+
     public static String calendar(DraftTrip trip) {
-        StringBuilder ics=new StringBuilder("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Trippings//Local Prototype//EN\r\nCALSCALE:GREGORIAN\r\n");
-        SimpleDateFormat stamp=new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'",Locale.US); stamp.setTimeZone(TimeZone.getTimeZone("UTC"));
-        for(int day=1;day<=trip.days;day++) for(RoutePreview.Slot slot:RoutePreview.day(trip,day,false)) {
-            String address=slot.stop.address.isEmpty()?slot.stop.hasLocation?String.format(Locale.US,"%.5f, %.5f",slot.stop.lat,slot.stop.lng):trip.city:slot.stop.address;
-            ics.append("BEGIN:VEVENT\r\nUID:").append(slot.stop.id).append("@trippings.local\r\nDTSTAMP:").append(stamp.format(new Date())).append("\r\n")
-                .append("DTSTART:").append(utc(trip,day,slot.start)).append("\r\nDTEND:").append(utc(trip,day,slot.end)).append("\r\n")
-                .append(fold("SUMMARY:"+escape(slot.stop.name))).append("\r\n")
-                .append(fold("LOCATION:"+escape(address))).append("\r\n")
-                .append(fold("DESCRIPTION:"+escape("Trippings prototype. Sample travel estimates; verify this plan before travel."+(slot.stop.booked?" Booked time is fixed.":"")+(slot.conflict?" Schedule conflict: review before import.":"")))).append("\r\nEND:VEVENT\r\n");
+        if (!TripFormRules.isValidIsoDate(trip.startDate)) {
+            throw new IllegalArgumentException("Invalid trip date");
+        }
+        Calendar start = Calendar.getInstance(TimeZone.getTimeZone(calendarZoneId(trip.city)), Locale.US);
+        start.clear();
+        start.set(Integer.parseInt(trip.startDate.substring(0, 4)),
+                Integer.parseInt(trip.startDate.substring(5, 7)) - 1,
+                Integer.parseInt(trip.startDate.substring(8, 10)));
+        SimpleDateFormat stamp = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US);
+        stamp.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timestamp = stamp.format(new Date());
+
+        StringBuilder ics = new StringBuilder("BEGIN:VCALENDAR\r\nVERSION:2.0\r\n")
+                .append("PRODID:-//Trippings//Local Prototype//EN\r\nCALSCALE:GREGORIAN\r\n");
+        for (int day = 1; day <= trip.days; day++) {
+            for (RoutePreview.Slot slot : RoutePreview.day(trip, day, false)) {
+                Date eventStart = localTime(start, day, slot.start);
+                Date eventEnd = localTime(start, day, slot.end);
+                if (!eventEnd.after(eventStart)) {
+                    // A skipped local hour can move the start past the scheduled end.
+                    eventEnd = new Date(eventStart.getTime() + (slot.end - slot.start) * 60_000L);
+                }
+                ics.append("BEGIN:VEVENT\r\n")
+                        .append(fold("UID:" + escape(slot.stop.id) + "@trippings.local")).append("\r\n")
+                        .append("DTSTAMP:").append(timestamp).append("\r\n")
+                        .append("DTSTART:").append(stamp.format(eventStart)).append("\r\n")
+                        .append("DTEND:").append(stamp.format(eventEnd)).append("\r\n")
+                        .append(fold("SUMMARY:" + escape(slot.stop.name))).append("\r\n")
+                        .append(fold("LOCATION:" + escape(location(trip, slot.stop)))).append("\r\n")
+                        .append(fold("DESCRIPTION:" + escape(eventDescription(slot))))
+                        .append("\r\nEND:VEVENT\r\n");
+            }
         }
         return ics.append("END:VCALENDAR\r\n").toString();
     }
-    private static String utc(DraftTrip trip,int day,int minute) {
-        try {
-            TimeZone zone=TimeZone.getTimeZone(trip.city.equals("Tokyo")?"Asia/Tokyo":"Asia/Manila");
-            SimpleDateFormat date=new SimpleDateFormat("yyyy-MM-dd",Locale.US); date.setLenient(false); date.setTimeZone(zone);
-            Calendar calendar=Calendar.getInstance(zone); calendar.setTime(date.parse(trip.startDate)); calendar.add(Calendar.DATE,day-1); calendar.add(Calendar.MINUTE,minute);
-            SimpleDateFormat output=new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'",Locale.US); output.setTimeZone(TimeZone.getTimeZone("UTC")); return output.format(calendar.getTime());
-        } catch(java.text.ParseException e) { throw new IllegalArgumentException("Invalid trip date",e); }
+
+    private static String eventDescription(RoutePreview.Slot slot) {
+        return "Trippings prototype. Sample travel estimates; verify this plan before travel."
+                + (slot.stop.booked ? " Booked time is fixed." : "")
+                + (slot.conflict ? " Schedule conflict: review before import." : "");
     }
-    private static String escape(String text) { return text.replace("\\","\\\\").replace("\n","\\n").replace("\r","").replace(";","\\;").replace(",","\\,"); }
+
+    private static Date localTime(Calendar start, int day, int minute) {
+        Calendar local = (Calendar) start.clone();
+        local.add(Calendar.DATE, day - 1 + Math.floorDiv(minute, 1440));
+        int wallTime = Math.floorMod(minute, 1440);
+        local.set(Calendar.HOUR_OF_DAY, wallTime / 60);
+        local.set(Calendar.MINUTE, wallTime % 60);
+        return local.getTime();
+    }
+
+    private static String escape(String text) {
+        return text.replace("\\", "\\\\").replace("\r\n", "\n")
+                .replace("\r", "\n").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,");
+    }
+
     private static String fold(String line) {
-        StringBuilder result=new StringBuilder(); int bytes=0;
-        for(int i=0;i<line.length();) {
-            int codePoint=line.codePointAt(i); String value=new String(Character.toChars(codePoint)); int length=value.getBytes(StandardCharsets.UTF_8).length;
-            if(bytes+length>73) { result.append("\r\n "); bytes=1; } result.append(value); bytes+=length; i+=Character.charCount(codePoint);
+        StringBuilder result = new StringBuilder();
+        int bytes = 0;
+        for (int i = 0; i < line.length(); ) {
+            int codePoint = line.codePointAt(i);
+            String value = new String(Character.toChars(codePoint));
+            int length = value.getBytes(StandardCharsets.UTF_8).length;
+            if (bytes + length > 75) {
+                result.append("\r\n ");
+                bytes = 1;
+            }
+            result.append(value);
+            bytes += length;
+            i += Character.charCount(codePoint);
         }
         return result.toString();
     }
-    private TripExport() {}
+
+    private TripExport() { }
 }

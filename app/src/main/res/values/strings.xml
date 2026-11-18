@@ -167,4 +167,42 @@
         <item quantity="one">Storm expected on Day %1$d · %2$d outdoor stop. Tap to review</item>
         <item quantity="other">Storm expected on Day %1$d · %2$d outdoor stops. Tap to review</item>
     </plurals>
+
+    <string name="calendar_title">Calendar export</string>
+    <string name="calendar_notice">Review your events and save a calendar file to import into your calendar.</string>
+    <string name="calendar_review_preview">Review calendar preview</string>
+    <string name="calendar_preview_message">%1$s. Times use %2$s.\n\n%3$s\n\nThis preview runs locally and sends no events to Google.</string>
+    <string name="calendar_mark_reviewed">Mark reviewed</string>
+    <string name="calendar_preview_reviewed">Preview reviewed · No events have been synced</string>
+    <string name="calendar_save_ics">Save calendar file (.ics)</string>
+    <string name="calendar_filename" translatable="false">Trippings-itinerary.ics</string>
+    <string name="calendar_file_saved">Calendar file saved. Import it into your calendar when ready.</string>
+    <string name="calendar_empty">Add at least one destination before exporting calendar events.</string>
+    <string name="calendar_invalid_date">Invalid trip date. Set a start date in Trip settings.</string>
+    <string name="calendar_open_failed">No calendar app found</string>
+    <string name="action_open_calendar">Open calendar</string>
+    <string name="calendar_booked">Booked</string>
+    <string name="calendar_event_conflict">⚠ Schedule conflict</string>
+    <string name="calendar_event_time">%1$s–%2$s</string>
+    <plurals name="calendar_events_header">
+        <item quantity="one">%1$d event to review</item>
+        <item quantity="other">%1$d events to review</item>
+    </plurals>
+    <plurals name="export_schedule_warnings">
+        <item quantity="one">%1$d schedule warning</item>
+        <item quantity="other">%1$d schedule warnings</item>
+    </plurals>
+    <string name="action_export_pdf">Save PDF</string>
+    <string name="action_share_pdf">Share PDF</string>
+    <string name="summary_share_subject">%1$s · Trippings</string>
+    <string name="summary_filename" translatable="false">Trippings-trip-summary.pdf</string>
+    <string name="summary_file_saved">Trip summary saved</string>
+    <string name="summary_exporting">Preparing PDF…</string>
+    <string name="summary_day_empty">No stops planned yet.</string>
+    <string name="summary_limit">Trip limit</string>
+    <string name="summary_logged">Logged expenses</string>
+    <string name="summary_category_logged">%1$s logged</string>
+    <string name="summary_remaining">Remaining after expenses</string>
+    <string name="export_saving">Saving…</string>
+    <string name="export_save_failed">Could not save the file. Choose a different location and try again.</string>
 </resources>

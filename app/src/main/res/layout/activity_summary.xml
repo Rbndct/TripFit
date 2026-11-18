@@ -29,12 +29,11 @@
                 tools:text="Tokyo Trip" />
 
             <TextView
-                android:id="@+id/text_empty"
+                android:id="@+id/text_schedule_warnings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
                 android:paddingBottom="@dimen/space_md"
-                android:text="@string/summary_empty"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
@@ -63,6 +62,15 @@
             android:enabled="false"
             android:minHeight="48dp"
             android:text="@string/action_export_pdf" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_share_pdf"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:minHeight="48dp"
+            android:text="@string/action_share_pdf" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_share"
