@@ -90,8 +90,7 @@
     <string name="pin_none">No pin selected · you can still add a stop by name</string>
     <string name="error_pin_invalid">Latitude must be -90 to 90 and longitude -180 to 180</string>
     <string name="field_notes_hint">Notes</string>
-    <string name="action_attach_photo">Attach photo</string>
-    <string name="photo_attached">Photo attached</string>
+    <string name="action_attach_photo">Add photo in Journal</string>
     <string name="action_nearby">Nearby food &amp; activities</string>
     <string name="action_delete_stop">Delete stop</string>
     <string name="delete_stop_title">Delete this stop?</string>
@@ -245,48 +244,29 @@
     <!-- Group trip -->
     <string name="group_title">Group trip</string>
     <string name="group_members">Travelers</string>
-    <string name="group_you">You (owner)</string>
-    <string name="group_joined">Joined</string>
-    <string name="invite_code_label">Invite code</string>
+    <string name="invite_code_label">Sample code</string>
     <string name="action_copy_code">Copy</string>
     <string name="code_copied">Invite code copied</string>
-    <string name="action_share_invite">Share invite</string>
-    <string name="invite_message">Join my TripFit trip! Code: %1$s</string>
+    <string name="action_share_invite">Share code</string>
+    <string name="invite_message">Try the Trippings sample join code %1$s in Group trip.</string>
     <string name="group_votes">Vote on destinations</string>
     <string name="action_vote">Vote</string>
     <string name="action_voted">Voted</string>
-    <plurals name="vote_count">
-        <item quantity="one">%1$d vote</item>
-        <item quantity="other">%1$d votes</item>
-    </plurals>
-    <plurals name="vote_count_yours">
-        <item quantity="one">%1$d vote, including yours</item>
-        <item quantity="other">%1$d votes, including yours</item>
-    </plurals>
     <string name="vote_cd">Vote for %1$s</string>
     <string name="vote_remove_cd">Voted for %1$s, tap to remove</string>
     <string name="cd_copy_code">Copy invite code</string>
-    <string name="split_you">You</string>
-    <string name="split_you_share">You · %1$d%% share</string>
     <string name="group_split">Cost split</string>
-    <string name="split_even">Even</string>
-    <string name="split_custom">Custom</string>
-    <string name="split_total">Estimated total</string>
-    <string name="split_member_sub">%1$d%% share</string>
 
     <!-- Journal -->
     <string name="journal_title">Journal</string>
     <string name="action_add_entry">Add entry</string>
-    <string name="journal_empty">No entries yet. Tap Add entry to jot a note or mark a photo from your day.</string>
+    <string name="journal_empty">No entries yet. Tap Add entry to save a note or photo.</string>
     <string name="journal_entry_sub">Day %1$d · %2$s</string>
-    <string name="journal_photo_tag">Photo attached</string>
     <string name="field_entry_hint">What happened?</string>
-    <string name="entry_stop_label">Attach to</string>
+    <string name="entry_stop_label">Destination (optional)</string>
     <string name="action_pick_photo">Add photo</string>
     <string name="action_save_entry">Save entry</string>
     <string name="journal_saved_to">Entry saved to %1$s</string>
-    <string name="photo_attached_change">Photo attached · tap to change</string>
-    <string name="error_note_required">Write a short note</string>
     <string name="journal_general">General</string>
 
     <!-- New trip -->

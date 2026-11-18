@@ -50,7 +50,7 @@
                         android:fontFamily="monospace"
                         android:textAppearance="?attr/textAppearanceHeadlineMedium"
                         android:textColor="?attr/colorOnSurface"
-                        tools:text="TRIP-7K2Q" />
+                        tools:text="TRIP-DEMO" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -85,6 +85,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
+                android:text="@string/group_local_notice"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_group_join"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/space_md"
+                android:minHeight="48dp"
+                android:text="@string/group_join" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/space_md"
                 android:paddingBottom="@dimen/space_sm"
                 android:accessibilityHeading="true"
                 android:text="@string/group_members"
@@ -93,6 +110,42 @@
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/list_members"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_group_add"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/space_md"
+                android:minHeight="48dp"
+                android:text="@string/group_add" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/space_md"
+                android:paddingTop="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm"
+                android:accessibilityHeading="true"
+                android:text="@string/group_split"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm"
+                android:text="@string/group_equal_notice"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/list_split"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
@@ -117,77 +170,23 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
             <TextView
+                android:id="@+id/text_group_votes_empty"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="@dimen/space_md"
-                android:paddingTop="@dimen/space_md"
                 android:paddingBottom="@dimen/space_sm"
-                android:accessibilityHeading="true"
-                android:text="@string/group_split"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurface" />
+                android:text="@string/group_votes_empty"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
-                android:id="@+id/toggle_split"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_group_discover"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="@dimen/space_md"
-                app:selectionRequired="true"
-                app:singleSelection="true">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_split_even"
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:text="@string/split_even" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_split_custom"
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:minHeight="48dp"
-                    android:text="@string/split_custom" />
-
-            </com.google.android.material.button.MaterialButtonToggleGroup>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="@dimen/space_md">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/split_total"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <TextView
-                    android:id="@+id/text_split_total"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_sm"
-                    android:fontFamily="monospace"
-                    android:textAppearance="?attr/textAppearanceLabelLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="₱15,000" />
-
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/list_split"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                android:minHeight="48dp"
+                android:text="@string/action_discover" />
 
         </LinearLayout>
 

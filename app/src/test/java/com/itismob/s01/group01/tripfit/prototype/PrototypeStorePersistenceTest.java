@@ -450,4 +450,42 @@ public class PrototypeStorePersistenceTest {
 
         assertEquals("EUR", reload().meta("t8").getHomeCurrency());
     }
+    @Test
+    public void companionEditsKeepTheOrganizerAndRejectDuplicateNames() {
+        store.setMembers("t1", Arrays.asList(" Ana ", "ANA", "you", ""));
+        assertEquals(Arrays.asList("You", "Ana"), store.members("t1"));
+        assertFalse(store.addCompanion("t1", "ana"));
+        assertTrue(store.addCompanion("t1", " Marco "));
+        assertFalse(store.removeCompanion("t1", "YOU"));
+        assertTrue(store.removeCompanion("t1", "Ana"));
+        assertEquals(Arrays.asList("You", "Marco"), reload().members("t1"));
+        assertEquals(Arrays.asList("You"), reload().members("other"));
+    }
+
+    @Test
+    public void voteCountsOnlyIncludeYourLocalVote() {
+        assertEquals(0, store.voteCount("trip", "Gallery"));
+        store.toggleVote("trip", "Gallery");
+        assertEquals(1, reload().voteCount("trip", "Gallery"));
+        assertEquals(0, reload().voteCount("other", "Gallery"));
+    }
+
+    @Test
+    public void journalEditsKeepTheIdAndPositionAndCanBeDeleted() {
+        JournalEntry first = new JournalEntry("one", 1, "", null, "First", null);
+        JournalEntry second = new JournalEntry("two", 2, "Museum", "stop", "", "content://photos/image");
+        store.addJournalEntry("trip", first);
+        store.addJournalEntry("trip", second);
+        assertTrue(store.updateJournalEntry("trip",
+                new JournalEntry("one", 2, "", null, "Edited", null)));
+
+        PrototypeStore restored = reload();
+        assertEquals("two", restored.journal("trip").get(0).getId());
+        assertEquals("Edited", restored.journal("trip").get(1).getNote());
+        assertEquals("content://photos/image", restored.journal("trip").get(0).getPhotoUri());
+        assertTrue(restored.removeJournalEntry("trip", "two"));
+        assertFalse(restored.removeJournalEntry("trip", "two"));
+        assertEquals(1, reload().journal("trip").size());
+        assertFalse(reload().journal(TripRepositoryImpl.SEED_TRIP_ID).get(0).hasPhoto());
+    }
 }
