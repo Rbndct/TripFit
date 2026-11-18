@@ -16,6 +16,11 @@ Trippings is an Android trip-planning app (itinerary building, route optimizatio
 * **Package Name:** `com.itismob.s01.group01.tripfit`
 * **Test Suite:** JUnit 4 (unit tests) & AndroidX Espresso (instrumented tests).
 
+### Core Plan Documents (Must Read)
+* **[.claude/plans/combine-prototypes.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/.claude/plans/combine-prototypes.md)**: Master 12-step prototype unification plan.
+* **[.claude/plans/combine-prototypes.orchestrate.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/.claude/plans/combine-prototypes.orchestrate.md)**: Detailed step-by-step execution directives, scope, intent, and acceptance criteria.
+* **[docs/Prototype-Merge-Map.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Prototype-Merge-Map.md)**: 138-item feature mapping and checklist.
+
 ---
 
 ## 2. Core Rules & Guidelines for ChatGPT
@@ -74,8 +79,11 @@ You can copy and paste the prompts below directly into ChatGPT when working on e
 ```text
 I am continuing the Trippings Android prototype merge plan on branch `feat/ui-prototype-step5`. We have completed Steps 1 through 5. Now we are implementing Step 6: Discover and Suggestions Catalog.
 
-Context & Reference:
-- Read `docs/Prototype-Merge-Map.md` section F2, F5 and items P-47 through P-60.
+Context & Reference Documents (Please read these in the repo):
+- Plan files:
+  * `.claude/plans/combine-prototypes.md` (Step 6)
+  * `.claude/plans/combine-prototypes.orchestrate.md` (Step 6 details & acceptance criteria)
+  * `docs/Prototype-Merge-Map.md` section F2, F5 (checklist items P-47 through P-60)
 - Existing catalogs: `app/src/main/java/com/itismob/s01/group01/tripfit/prototype/DemoCatalog.java`, `com/itismob/s01/group01/tripfit/data/MockData.java`, and `com/itismob/s01/group01/tripfit/data/OfflineData.java`.
 - Consumer activities: `DiscoverActivity.java`, `SuggestionsActivity.java`, and `AddDestinationActivity.java`.
 
