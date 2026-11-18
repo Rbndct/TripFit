@@ -11,6 +11,9 @@ import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
+import com.itismob.s01.group01.tripfit.prototype.ItemDetails;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +25,7 @@ public class AddDestinationViewModel extends ViewModel {
     private final MutableLiveData<Result<List<CityDto>>> citiesResult = new MutableLiveData<>();
     private final MutableLiveData<Result<List<PlaceDto>>> searchResult = new MutableLiveData<>();
     private boolean saving;
+    private int searchVersion;
 
     public AddDestinationViewModel(TripRepository repository) {
         this.repository = repository;
@@ -43,13 +47,27 @@ public class AddDestinationViewModel extends ViewModel {
         repository.fetchCities(citiesResult::setValue);
     }
 
-    /** Searches the given city's places; an empty/blank query clears the results without a network call. */
+    public void invalidateSearch() {
+        searchVersion++;
+        searchResult.setValue(null);
+    }
+
+    /** A blank query lists the bundled city catalog without a remote call. */
     public void search(String cityId, String query) {
-        if (cityId == null || query == null || query.trim().isEmpty()) {
+        int version = ++searchVersion;
+        if (cityId == null) {
             searchResult.setValue(Result.success(Collections.emptyList()));
             return;
         }
-        repository.searchPlaces(cityId, query.trim(), searchResult::setValue);
+        repository.searchPlaces(cityId, query.trim(), result -> {
+            if (version == searchVersion) {
+                searchResult.setValue(result);
+            }
+        });
+    }
+
+    public boolean isSaving() {
+        return saving;
     }
 
     /** Saves a free-text stop with no database place match. */
@@ -82,6 +100,16 @@ public class AddDestinationViewModel extends ViewModel {
         }
         saving = true;
         repository.addItineraryItemFromPlace(itemId, tripId, place, day, time, durationMin, booked,
+                this::finishSave);
+    }
+
+    public void saveFromCatalog(String itemId, String tripId, DemoCatalog.Place place, int day,
+                                int durationMin, boolean booked, String time, ItemDetails details) {
+        if (saving) {
+            return;
+        }
+        saving = true;
+        repository.addCatalogPlace(itemId, tripId, place, day, time, durationMin, booked, details,
                 this::finishSave);
     }
 

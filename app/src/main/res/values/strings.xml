@@ -79,7 +79,7 @@
 
     <!-- Destination search -->
     <string name="field_search_hint">Search places</string>
-    <string name="search_empty_state">No places found. You can still add it by name below.</string>
+    <string name="search_empty_state">No sample matches. Add a name or choose a map pin.</string>
     <string name="search_error">Could not search right now</string>
     <string name="divider_or_manual">or add manually</string>
     <string name="hidden_gem_label">Hidden gem</string>
@@ -94,4 +94,49 @@
     <string name="map_picker_finding">Finding place…</string>
     <string name="action_use_location">Use this location</string>
     <string name="map_picker_fallback_name">Pinned location</string>
+
+    <string name="catalog_notice">Sample places. Names, ratings, reviews and prices are illustrative. Distances are straight-line estimates.</string>
+    <string name="catalog_empty">No sample places match these filters…</string>
+    <string name="catalog_all_places">All places</string>
+    <string name="catalog_famous">Famous</string>
+    <string name="catalog_filter">Filter sample places</string>
+    <string name="catalog_search">Search sample places</string>
+    <string name="catalog_choose_day">Choose a day</string>
+    <string name="catalog_day">Day %1$d</string>
+    <string name="catalog_nearby">Nearby %1$s</string>
+    <string name="catalog_city_centre">city centre</string>
+    <string name="catalog_popular">POPULAR PICK</string>
+    <string name="catalog_hidden">HIDDEN GEM</string>
+    <string name="catalog_outdoors">Outdoors</string>
+    <string name="catalog_indoors">Indoors</string>
+    <string name="catalog_free">Free</string>
+    <string name="catalog_price_low">$</string>
+    <string name="catalog_price_high">$$</string>
+    <plurals name="catalog_reviews">
+        <item quantity="one">%1$,d review</item>
+        <item quantity="other">%1$,d reviews</item>
+    </plurals>
+    <string name="catalog_card">%1$s · %2$s · %3$s\n%4$s\n★ %5$.1f · %6$s · %7$.1f km\n%8$s · %9$s ≈ %10$s · %11$d min</string>
+    <string name="catalog_remaining">%1$s remaining in %2$s</string>
+    <string name="catalog_no_limit">No category budget set</string>
+    <string name="catalog_over_budget">Over category budget</string>
+    <string name="catalog_already_planned">Already in your itinerary</string>
+    <string name="catalog_build">Build a suggested itinerary</string>
+    <string name="catalog_plan_title">Choose stops for your suggested itinerary</string>
+    <string name="catalog_plan_option">%1$s · %2$s</string>
+    <string name="catalog_plan_add">Add selected stops</string>
+    <string name="catalog_plan_empty">No unplanned sample attractions are available.</string>
+    <plurals name="catalog_plan_added">
+        <item quantity="one">%d stop added to your itinerary</item>
+        <item quantity="other">%d stops added across your trip days</item>
+    </plurals>
+    <string name="catalog_select">Select</string>
+    <string name="catalog_remove">Remove</string>
+    <string name="catalog_swap">Swap</string>
+    <string name="catalog_swap_cd">Swap a flexible stop for %1$s</string>
+    <string name="catalog_swap_title">Swap with a flexible stop</string>
+    <string name="catalog_swap_option">Day %1$d · %2$s</string>
+    <string name="catalog_swap_empty">No flexible stops to swap.</string>
+    <string name="catalog_swap_unavailable">This stop is no longer available to swap.</string>
+    <string name="catalog_swapped">Stop swapped</string>
 </resources>

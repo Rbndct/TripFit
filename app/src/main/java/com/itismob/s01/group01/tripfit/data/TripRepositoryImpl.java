@@ -11,6 +11,10 @@ import com.itismob.s01.group01.tripfit.data.local.entity.PlaceEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
+import com.itismob.s01.group01.tripfit.data.local.dao.ItineraryItemDao;
+import com.itismob.s01.group01.tripfit.prototype.CatalogSuggestions;
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
+import com.itismob.s01.group01.tripfit.prototype.ItemDetails;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
@@ -20,7 +24,11 @@ import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class TripRepositoryImpl implements TripRepository {
@@ -99,12 +107,7 @@ public class TripRepositoryImpl implements TripRepository {
                                           Result.Callback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-                database.placeDao().upsert(new PlaceEntity(
-                        place.getId(), place.getCityId(), place.getName(), place.getCategory(),
-                        place.getLat(), place.getLng(), place.getAddress(), place.getPriceTier(),
-                        place.getRating(), place.isHiddenGem(), place.getDescription(),
-                        place.getImageUrl(), null, null, null, null
-                ));
+                cachePlace(place);
                 int position = database.itineraryItemDao().nextPositionSync(tripId, day);
                 ItineraryItemEntity item = new ItineraryItemEntity(
                         itemId, tripId, place.getId(), null, day, time,
@@ -116,6 +119,133 @@ public class TripRepositoryImpl implements TripRepository {
                 deliver(callback, Result.error("Could not save destination: " + e.getMessage()));
             }
         });
+    }
+
+    @Override
+    public void addCatalogPlaces(String tripId, List<DemoCatalog.Place> places, int targetDay,
+                                 boolean spread, Result.Callback<Void> callback) {
+        List<DemoCatalog.Place> picks = new ArrayList<>(places);
+        writeCatalog(callback, previous -> {
+            int tripDays = validatedTripDays(tripId, targetDay);
+            Set<String> names = catalogNames(tripId);
+            for (int i = 0; i < picks.size(); i++) {
+                DemoCatalog.Place place = picks.get(i);
+                requireUnplanned(names, place);
+                int day = CatalogSuggestions.dayForPick(targetDay, tripDays, i, spread);
+                insertCatalogStop(UUID.randomUUID().toString(), tripId, place, day, null,
+                        place.minutes, false, place.itemDetails(), previous);
+            }
+        });
+    }
+
+    @Override
+    public void addCatalogPlace(String itemId, String tripId, DemoCatalog.Place place, int day,
+                                String time, int durationMin, boolean booked, ItemDetails details,
+                                Result.Callback<Void> callback) {
+        writeCatalog(callback, previous -> {
+            validatedTripDays(tripId, day);
+            requireUnplanned(catalogNames(tripId), place);
+            insertCatalogStop(itemId, tripId, place, day, time, durationMin, booked,
+                    details, previous);
+        });
+    }
+
+    @Override
+    public void replaceWithCatalogPlace(String tripId, String itemId, DemoCatalog.Place place,
+                                        Result.Callback<Void> callback) {
+        writeCatalog(callback, previous -> {
+            requireUnplanned(catalogNames(tripId), place);
+            cacheCatalogPlace(place);
+            if (database.itineraryItemDao().replaceFlexiblePlace(tripId, itemId,
+                    place.id, place.minutes) != 1) {
+                throw new IllegalStateException(CATALOG_STOP_UNAVAILABLE);
+            }
+            saveCatalogDetails(itemId, place.itemDetails(), previous);
+        });
+    }
+
+    private int validatedTripDays(String tripId, int day) {
+        int days = PrototypeStore.get().meta(tripId).getDays();
+        if (day < 1 || day > days) {
+            throw new IllegalArgumentException("Day out of range");
+        }
+        return days;
+    }
+
+    private Set<String> catalogNames(String tripId) {
+        return CatalogSuggestions.plannedNames(database.itineraryItemDao().listWithPlaceSync(tripId));
+    }
+
+    private static void requireUnplanned(Set<String> names, DemoCatalog.Place place) {
+        if (!names.add(DemoCatalog.nameKey(place.name))) {
+            throw new IllegalStateException(CATALOG_ALREADY_PLANNED);
+        }
+    }
+
+    private void insertCatalogStop(String id, String tripId, DemoCatalog.Place place, int day,
+                                   String time, int minutes, boolean booked, ItemDetails details,
+                                   Map<String, ItemDetails> previous) {
+        cacheCatalogPlace(place);
+        ItineraryItemDao dao = database.itineraryItemDao();
+        dao.insertNew(new ItineraryItemEntity(id, tripId, place.id, null, day, time, minutes,
+                booked, null, null, dao.nextPositionSync(tripId, day)));
+        saveCatalogDetails(id, details, previous);
+    }
+
+    private void cacheCatalogPlace(DemoCatalog.Place place) {
+        cacheCity(OfflineData.toDto(place.catalogCity));
+        cachePlace(OfflineData.toDto(place));
+    }
+
+    private void cachePlace(PlaceDto place) {
+        database.placeDao().upsert(new PlaceEntity(
+                place.getId(), place.getCityId(), place.getName(), place.getCategory(),
+                place.getLat(), place.getLng(), place.getAddress(), place.getPriceTier(),
+                place.getRating(), place.isHiddenGem(), place.getDescription(),
+                place.getImageUrl(), null, null, null, null
+        ));
+    }
+
+    private void cacheCity(CityDto city) {
+        database.cityDao().upsert(new CityEntity(
+                city.getId(), city.getName(), city.getCountry(), city.getLat(), city.getLng(),
+                null, null, System.currentTimeMillis()));
+    }
+
+    private void writeCatalog(Result.Callback<Void> callback,
+                              java.util.function.Consumer<Map<String, ItemDetails>> work) {
+        executors.diskIO().execute(() -> {
+            try {
+                catalogTransaction(work);
+                deliver(callback, Result.success(null));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error(e.getMessage()));
+            }
+        });
+    }
+
+    private void catalogTransaction(java.util.function.Consumer<Map<String, ItemDetails>> work) {
+        Map<String, ItemDetails> previous = new HashMap<>();
+        try {
+            database.runInTransaction(() -> work.accept(previous));
+        } catch (RuntimeException e) {
+            PrototypeStore store = PrototypeStore.get();
+            previous.forEach((id, details) -> {
+                if (details == null) {
+                    store.removeItemDetails(id);
+                } else {
+                    store.setItemDetails(id, details);
+                }
+            });
+            throw e;
+        }
+    }
+
+    private static void saveCatalogDetails(String id, ItemDetails details,
+                                           Map<String, ItemDetails> previous) {
+        PrototypeStore store = PrototypeStore.get();
+        previous.put(id, store.itemDetails(id));
+        store.setItemDetails(id, details);
     }
 
     @Override
@@ -158,16 +288,19 @@ public class TripRepositoryImpl implements TripRepository {
     public void ensureSeedData(Result.Callback<Void> callback) {
         executors.diskIO().execute(() -> {
             try {
-                if (database.tripDao().countSync() == 0) {
+                catalogTransaction(previous -> {
+                    if (database.tripDao().countSync() != 0) {
+                        return;
+                    }
                     database.tripDao().insert(new TripEntity(
                             SEED_TRIP_ID, null, "Tokyo Trip", null, null, null, null));
-                    insertSeedStop("Senso-ji Temple", 1, 0, 45, false, null);
-                    insertSeedStop("Nakamise Shopping Street", 1, 1, 30, false, null);
-                    insertSeedStop("Tokyo Skytree", 1, 2, null, true, "18:00");
-                    insertSeedStop("Meiji Shrine", 2, 0, 40, false, null);
-                    insertSeedStop("Shibuya Crossing", 2, 1, 20, false, null);
-                    insertSeedStop("teamLab Planets", 2, 2, null, true, "15:30");
-                }
+                    insertSeedStop("offline-senso-ji", 1, null, previous);
+                    insertSeedStop("offline-nakamise", 1, null, previous);
+                    insertSeedStop("offline-skytree", 1, "18:00", previous);
+                    insertSeedStop("offline-meiji", 2, null, previous);
+                    insertSeedStop("offline-shibuya", 2, null, previous);
+                    insertSeedStop("offline-teamlab", 2, "15:30", previous);
+                });
                 if (database.tripDao().countByIdSync(SEED_TRIP_ID) > 0) {
                     seedStoreState();
                 }
@@ -181,34 +314,46 @@ public class TripRepositoryImpl implements TripRepository {
     @Override
     public void fetchCities(Result.Callback<List<CityDto>> callback) {
         executors.diskIO().execute(() -> {
-            List<CityDto> cities;
+            List<CityDto> cities = new ArrayList<>();
             try {
-                cities = remoteDataSource.fetchCitiesSync();
+                cities.addAll(remoteDataSource.fetchCitiesSync());
             } catch (IOException | RuntimeException e) {
                 Log.w(TAG, "Supabase cities unavailable, using offline demo data: " + e.getMessage());
-                cities = OfflineData.cities();
             }
-            // Cache locally so places selected from search can reference a city that
-            // already satisfies PlaceEntity's foreign key.
-            for (CityDto city : cities) {
-                database.cityDao().upsert(new CityEntity(
-                        city.getId(), city.getName(), city.getCountry(), city.getLat(),
-                        city.getLng(), null, null, System.currentTimeMillis()
-                ));
+            for (CityDto sample : OfflineData.cities()) {
+                if (cities.stream().noneMatch(city -> sample.getName().equalsIgnoreCase(city.getName()))) {
+                    cities.add(sample);
+                }
             }
-            deliver(callback, Result.success(cities));
+            try {
+                cities.forEach(this::cacheCity);
+                deliver(callback, Result.success(cities));
+            } catch (RuntimeException e) {
+                deliver(callback, Result.error(e.getMessage()));
+            }
         });
     }
 
     @Override
     public void searchPlaces(String cityId, String query, Result.Callback<List<PlaceDto>> callback) {
         executors.diskIO().execute(() -> {
-            List<PlaceDto> places;
-            try {
-                places = remoteDataSource.searchPlacesSync(cityId, query, PLACE_SEARCH_LIMIT);
-            } catch (IOException | RuntimeException e) {
-                Log.w(TAG, "Supabase search unavailable, using offline demo data: " + e.getMessage());
-                places = OfflineData.search(cityId, query);
+            String catalogCity = DemoCatalog.city(cityId) == null
+                    ? database.cityDao().nameByIdSync(cityId) : cityId;
+            List<PlaceDto> places = OfflineData.search(catalogCity, query);
+            if (!query.isEmpty() && DemoCatalog.city(cityId) == null) {
+                try {
+                    List<PlaceDto> remote = remoteDataSource.searchPlacesSync(
+                            cityId, query, PLACE_SEARCH_LIMIT);
+                    for (PlaceDto place : remote) {
+                        String name = DemoCatalog.nameKey(place.getName());
+                        if (places.stream().noneMatch(sample ->
+                                DemoCatalog.nameKey(sample.getName()).equals(name))) {
+                            places.add(place);
+                        }
+                    }
+                } catch (IOException | RuntimeException e) {
+                    Log.w(TAG, "Supabase search unavailable, using sample places: " + e.getMessage());
+                }
             }
             deliver(callback, Result.success(places));
         });
@@ -332,11 +477,11 @@ public class TripRepositoryImpl implements TripRepository {
         }
     }
 
-    private void insertSeedStop(String name, int day, int position, Integer durationMin,
-                                 boolean booked, String time) {
-        database.itineraryItemDao().insert(new ItineraryItemEntity(
-                UUID.randomUUID().toString(), SEED_TRIP_ID, null, name, day, time, durationMin,
-                booked, null, null, position));
+    private void insertSeedStop(String placeId, int day, String time,
+                                Map<String, ItemDetails> previous) {
+        DemoCatalog.Place place = DemoCatalog.findById(placeId);
+        insertCatalogStop(UUID.randomUUID().toString(), SEED_TRIP_ID, place, day, time,
+                place.minutes, time != null, place.itemDetails(), previous);
     }
 
     private <T> void deliver(Result.Callback<T> callback, Result<T> result) {

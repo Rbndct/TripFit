@@ -9,12 +9,17 @@ import com.itismob.s01.group01.tripfit.data.local.entity.TripEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
+import com.itismob.s01.group01.tripfit.prototype.ItemDetails;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 
 import java.util.List;
 
 /** Repository interface the ViewModels depend on; Room (local) + Supabase REST (remote) back it. */
 public interface TripRepository {
+
+    String CATALOG_ALREADY_PLANNED = "catalog_already_planned";
+    String CATALOG_STOP_UNAVAILABLE = "catalog_stop_unavailable";
 
     LiveData<List<TripEntity>> observeTrips();
 
@@ -56,6 +61,19 @@ public interface TripRepository {
     void addItineraryItemFromPlace(String itemId, String tripId, PlaceDto place, int day,
                                    String time, Integer durationMin, boolean booked,
                                    Result.Callback<Void> callback);
+
+    /** Adds checked sample places, optionally spreading them from the target day. */
+    void addCatalogPlaces(String tripId, List<DemoCatalog.Place> places, int targetDay,
+                          boolean spread, Result.Callback<Void> callback);
+
+    /** Saves a sample place with the user's validated form values. */
+    void addCatalogPlace(String itemId, String tripId, DemoCatalog.Place place, int day,
+                         String time, int durationMin, boolean booked, ItemDetails details,
+                         Result.Callback<Void> callback);
+
+    /** Replaces one flexible stop in place, preserving its incoming leg settings. */
+    void replaceWithCatalogPlace(String tripId, String itemId, DemoCatalog.Place place,
+                                 Result.Callback<Void> callback);
 
     /** Creates a new trip and hands back its id so the caller can navigate into it. */
     void createTrip(String name, Result.Callback<String> callback);

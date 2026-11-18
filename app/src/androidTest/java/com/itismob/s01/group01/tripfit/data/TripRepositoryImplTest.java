@@ -1,6 +1,7 @@
 package com.itismob.s01.group01.tripfit.data;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import androidx.room.Room;
@@ -12,6 +13,9 @@ import com.itismob.s01.group01.tripfit.data.local.TripFitDatabase;
 import com.itismob.s01.group01.tripfit.data.local.entity.CityEntity;
 import com.itismob.s01.group01.tripfit.data.local.entity.ItineraryItemEntity;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
+import com.itismob.s01.group01.tripfit.prototype.ItemDetails;
+import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 
 import org.junit.After;
 import org.junit.Before;
@@ -167,8 +171,9 @@ public class TripRepositoryImplTest {
     // ---- routing fields, pins and batch updates (compile-only here; run on a device) ----
 
     private ItineraryItemEntity firstItem(String name) throws InterruptedException {
-        return awaitItems("seed-trip-tokyo").stream()
-                .filter(i -> name.equals(i.getCustomName())).findFirst().orElseThrow();
+        return awaitItemsWithPlace("seed-trip-tokyo").stream()
+                .filter(row -> name.equals(row.item.displayName(row.placeName)))
+                .map(row -> row.item).findFirst().orElseThrow();
     }
 
     private Result<Void> awaitVoid(java.util.function.Consumer<Result.Callback<Void>> call)
@@ -186,7 +191,8 @@ public class TripRepositoryImplTest {
     @Test
     public void updateBufferAndMode_writeOnlyTheirColumns() throws InterruptedException {
         awaitSeed();
-        String id = firstItem("Senso-ji Temple").getId();
+        ItineraryItemEntity original = firstItem("Senso-ji Temple");
+        String id = original.getId();
 
         awaitVoid(cb -> repository.updateBuffer(id, 0, cb));
         awaitVoid(cb -> repository.updateTransportMode(id, "CYCLE", cb));
@@ -194,7 +200,7 @@ public class TripRepositoryImplTest {
         ItineraryItemEntity item = firstItem("Senso-ji Temple");
         assertEquals(Integer.valueOf(0), item.getBufferMin());
         assertEquals("CYCLE", item.getTransportMode());
-        assertEquals(Integer.valueOf(45), item.getDurationMin());
+        assertEquals(original.getDurationMin(), item.getDurationMin());
 
         awaitVoid(cb -> repository.updateTransportMode(id, null, cb));
         assertEquals(null, firstItem("Senso-ji Temple").getTransportMode());
@@ -221,6 +227,7 @@ public class TripRepositoryImplTest {
         awaitSeed();
         ItineraryItemEntity pinned = firstItem("Senso-ji Temple");
         ItineraryItemEntity other = firstItem("Meiji Shrine");
+        ItineraryItemWithPlace originalOther = awaitSingle(other.getId());
 
         Result<Void> result = awaitVoid(cb -> repository.adjustPin(pinned.getId(), null,
                 "Senso-ji Temple", 35.7148, 139.7967, cb));
@@ -234,7 +241,8 @@ public class TripRepositoryImplTest {
         assertEquals("pin-" + pinned.getId(), pinnedRow.item.getPlaceId());
         assertEquals(35.7148, pinnedRow.placeLat, 0.00001);
         assertEquals(139.7967, pinnedRow.placeLng, 0.00001);
-        assertEquals(null, otherRow.placeLat);
+        assertEquals(originalOther.placeLat, otherRow.placeLat);
+        assertEquals(originalOther.placeLng, otherRow.placeLng);
         assertEquals(1, database.placeDao().countByIdSync("pin-" + pinned.getId()));
     }
 
@@ -288,7 +296,7 @@ public class TripRepositoryImplTest {
         assertEquals(11.0, pin.getLat(), 0.00001);
         assertEquals("Ueno Park", pin.getAddress());
         assertEquals("city-1", pin.getCityId());
-        assertEquals("pin-" + id, firstItem("Senso-ji Temple").getPlaceId());
+        assertEquals("pin-" + id, awaitSingle(id).item.getPlaceId());
     }
 
     @Test
@@ -385,6 +393,57 @@ public class TripRepositoryImplTest {
         assertEquals(1, firstItem("Senso-ji Temple").getPosition());
         assertEquals(0, firstItem("Shibuya Crossing").getPosition());
         assertEquals(1, firstItem("Meiji Shrine").getPosition());
+    }
+
+    @Test
+    public void catalogAdd_savesMetadataOnTargetDayAndRejectsDuplicateAcrossDays()
+            throws InterruptedException {
+        awaitSeed();
+        DemoCatalog.Place place = DemoCatalog.findById("offline-nezu-museum");
+        Result<Void> added = awaitVoid(cb -> repository.addCatalogPlaces("seed-trip-tokyo",
+                java.util.Collections.singletonList(place), 2, false, cb));
+
+        assertTrue(added.isSuccess());
+        ItineraryItemEntity item = firstItem(place.name);
+        ItineraryItemWithPlace row = awaitSingle(item.getId());
+        assertEquals(2, item.getDay());
+        assertEquals(Integer.valueOf(place.minutes), item.getDurationMin());
+        assertEquals(place.lat, row.placeLat, 0.00001);
+        assertEquals(place.lng, row.placeLng, 0.00001);
+        ItemDetails details = PrototypeStore.get().itemDetails(item.getId());
+        assertEquals(place.price, details.getCost(), 0.0);
+        assertEquals("JPY", details.getCostCurrency());
+        assertEquals(place.category, details.getCategory());
+        assertFalse(details.isOutdoor());
+
+        Result<Void> duplicate = awaitVoid(cb -> repository.addCatalogPlaces("seed-trip-tokyo",
+                java.util.Collections.singletonList(place), 1, false, cb));
+        assertEquals(TripRepository.CATALOG_ALREADY_PLANNED, duplicate.getErrorMessage());
+        assertEquals(7, awaitItems("seed-trip-tokyo").size());
+    }
+
+    @Test
+    public void catalogSwap_keepsLegAndRejectsBookedStops() throws InterruptedException {
+        awaitSeed();
+        ItineraryItemEntity original = firstItem("Senso-ji Temple");
+        awaitVoid(cb -> repository.updateLegSettings(original.getId(), 10, "WALK", cb));
+        DemoCatalog.Place place = DemoCatalog.findById("offline-nezu-museum");
+        assertTrue(awaitVoid(cb -> repository.replaceWithCatalogPlace("seed-trip-tokyo",
+                original.getId(), place, cb)).isSuccess());
+        ItineraryItemWithPlace row = awaitSingle(original.getId());
+        assertEquals(place.name, row.placeName);
+        assertEquals(place.lat, row.placeLat, 0.00001);
+        assertEquals(original.getDay(), row.item.getDay());
+        assertEquals(original.getPosition(), row.item.getPosition());
+        assertEquals(Integer.valueOf(10), row.item.getBufferMin());
+        assertEquals("WALK", row.item.getTransportMode());
+        assertEquals(place.price, PrototypeStore.get().itemDetails(row.item.getId()).getCost(), 0.0);
+
+        ItineraryItemEntity skytree = firstItem("Tokyo Skytree");
+        Result<Void> blocked = awaitVoid(cb -> repository.replaceWithCatalogPlace("seed-trip-tokyo",
+                skytree.getId(), DemoCatalog.findById("offline-nezu"), cb));
+        assertEquals(TripRepository.CATALOG_STOP_UNAVAILABLE, blocked.getErrorMessage());
+        assertEquals("18:00", firstItem("Tokyo Skytree").getTime());
     }
 
     private ItineraryItemWithPlace awaitSingle(String id) throws InterruptedException {
