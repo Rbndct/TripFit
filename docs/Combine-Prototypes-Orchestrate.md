@@ -18,7 +18,7 @@
 | 6 | done | 99a8050 |
 | 7 | done | a704ad2 |
 | 8 | done | 5d50188 |
-| 9 | done | |
+| 9 | done | 67e9fde |
 | 10-12 | not started | |
 
 Next is Step 10 (Remove duplicate screens). Step 5 notes: one rates table
