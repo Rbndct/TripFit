@@ -1,46 +1,44 @@
 package com.itismob.s01.group01.tripfit;
 
+import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.core.view.ViewCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.MaterialColors;
 
-import com.itismob.s01.group01.tripfit.data.AppExecutors;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
-import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
+import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
 import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
-import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
+import com.itismob.s01.group01.tripfit.prototype.TripDates;
+import com.itismob.s01.group01.tripfit.prototype.TripExport;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.Labels;
-import com.itismob.s01.group01.tripfit.ui.TripPdfWriter;
+import com.itismob.s01.group01.tripfit.viewmodel.DocumentExportViewModel;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Printable trip summary: per-day schedule plus budget breakdown. Export PDF writes a real
- * PDF and shares it; Share summary sends the same content as plain text.
- */
+/** Shows the trip summary and shares or saves it using the common exporter. */
 public class SummaryActivity extends ScreenActivity {
 
     /** One label/value pair inside a section card; the value is data and renders monospace. */
@@ -55,105 +53,129 @@ public class SummaryActivity extends ScreenActivity {
     }
 
     private final PrototypeStore store = PrototypeStore.get();
-    private final List<String> lines = new ArrayList<>();
-    private String tripName = "";
-    private boolean isTripLoaded;
-    private boolean isItemsLoaded;
-    private boolean isExporting;
+    private List<ItineraryItemWithPlace> items;
+    private String tripName;
+    private DraftTrip snapshot;
+    private DocumentExportViewModel export;
+    private ActivityResultLauncher<String> createDocument;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(@Nullable Bundle state) {
+        super.onCreate(state);
         if (!setScreen(R.layout.activity_summary, R.string.summary_title)) {
             return;
         }
+        export = new ViewModelProvider(this).get(DocumentExportViewModel.class);
+        createDocument = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/pdf"),
+                uri -> {
+                    export.onDocumentPicked(uri);
+                    export.writePickedDocument(snapshot, DocumentExportViewModel.Format.PDF);
+                });
         ViewCompat.setAccessibilityHeading(findViewById(R.id.text_trip_name), true);
-        findViewById(R.id.button_export_pdf).setOnClickListener(v -> exportPdf());
+        findViewById(R.id.button_export_pdf).setOnClickListener(v -> savePdf());
+        findViewById(R.id.button_share_pdf).setOnClickListener(v -> export.sharePdf(snapshot));
         findViewById(R.id.button_share).setOnClickListener(v -> shareText());
+        export.busy().observe(this, busy -> updateActions());
+        export.outcome().observe(this, outcome -> {
+            if (outcome == null) {
+                return;
+            }
+            export.consumeOutcome();
+            if (outcome.sharedPdf != null) {
+                sharePdf(outcome.sharedPdf, outcome.tripName);
+            } else {
+                toast(outcome.message);
+            }
+        });
 
         TripRepository repository = ((TripFitApp) getApplication()).getTripRepository();
         repository.observeTrip(tripId).observe(this, trip -> {
             if (trip != null) {
                 tripName = trip.getName();
-                isTripLoaded = true;
                 ((TextView) findViewById(R.id.text_trip_name)).setText(tripName);
-                updateActions();
+                render();
             }
         });
-        repository.observeItineraryItemsWithPlaceNames(tripId).observe(this, this::render);
+        repository.observeItineraryItemsWithPlaceNames(tripId).observe(this, rows -> {
+            items = rows;
+            render();
+        });
+        updateActions();
     }
 
-    private void render(List<ItineraryItemWithPlace> items) {
-        lines.clear();
+    private void render() {
+        if (tripName == null || items == null) {
+            return;
+        }
+        snapshot = TripSnapshots.forExport(tripId, tripName, items, store);
         ViewGroup container = findViewById(R.id.container_summary);
         container.removeAllViews();
-        Map<Integer, List<RoutePreview.Slot>> byDay = TripSnapshots.schedule(
-                tripId, store.meta(tripId), items, store);
-        for (Map.Entry<Integer, List<RoutePreview.Slot>> day : byDay.entrySet()) {
-            addDay(day.getKey(), day.getValue(), container);
+        int warnings = 0;
+        for (int day = 1; day <= snapshot.days; day++) {
+            List<RoutePreview.Slot> slots = RoutePreview.day(snapshot, day, false);
+            addDay(day, slots, container);
+            for (RoutePreview.Slot slot : slots) {
+                if (slot.conflict) {
+                    warnings++;
+                }
+            }
         }
         addBudget(container);
-        findViewById(R.id.text_empty).setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
-        isItemsLoaded = true;
+        TextView warningText = findViewById(R.id.text_schedule_warnings);
+        warningText.setVisibility(View.VISIBLE);
+        warningText.setText(getResources().getQuantityString(R.plurals.export_schedule_warnings,
+                warnings, warnings));
+        export.writePickedDocument(snapshot, DocumentExportViewModel.Format.PDF);
         updateActions();
     }
 
     private void addDay(int day, List<RoutePreview.Slot> slots, ViewGroup container) {
-        String heading = getString(R.string.day_label, day);
-        List<Line> sectionLines = new ArrayList<>();
-        lines.add(heading);
+        String date = TripDates.dayDateLabel(snapshot.startDate, day);
+        String heading = date.isEmpty() ? getString(R.string.day_label, day)
+                : getString(R.string.day_heading_dated, day, date);
+        List<Line> lines = new ArrayList<>();
         for (RoutePreview.Slot slot : slots) {
-            String time = ScheduleMath.format(slot.start) + "–" + ScheduleMath.format(slot.end);
-            sectionLines.add(new Line(slot.stop.name, time));
-            lines.add("  " + time + "  " + slot.stop.name);
+            String time = getString(R.string.calendar_event_time,
+                    RoutePreview.time(slot.start), RoutePreview.time(slot.end));
+            String label = slot.stop.name;
+            if (slot.stop.booked) {
+                label += "\n" + getString(R.string.calendar_booked);
+            }
+            if (slot.conflict) {
+                label += "\n" + getString(R.string.calendar_event_conflict);
+            }
+            lines.add(new Line(label, time));
         }
-        lines.add("");
         String count = getResources().getQuantityString(R.plurals.summary_stop_count,
-                sectionLines.size(), sectionLines.size());
-        container.addView(buildSection(container, heading, count, sectionLines, null, false));
+                slots.size(), slots.size());
+        String note = slots.isEmpty() ? getString(R.string.summary_day_empty) : null;
+        container.addView(buildSection(container, heading, count, lines, note, false));
     }
 
     private void addBudget(ViewGroup container) {
-        BudgetSettings budget = store.budget(tripId);
-        String home = budget.getHomeCurrency();
-        double total = budget.tripTotal(store.meta(tripId).getDays());
+        String home = snapshot.homeCurrency;
+        double total = snapshot.totalBudget();
         List<Expense> expenses = store.expenses(tripId);
         double spent = BudgetMath.totalSpent(expenses);
-        boolean hasBudget = total > 0;
-        String spentText = CurrencyRates.format(spent, home);
-        String headline = hasBudget
-                ? getString(R.string.summary_spent_of, spentText, CurrencyRates.format(total, home))
-                : getString(R.string.summary_spent_only, spentText);
-        String note = budgetNote(hasBudget, spent, total, home);
-
-        List<Line> sectionLines = new ArrayList<>();
-        sectionLines.add(new Line(getString(R.string.summary_spent_label), hasBudget
-                ? getString(R.string.summary_spent_value, spentText, CurrencyRates.format(total, home))
-                : spentText));
-        lines.add(getString(R.string.summary_budget_title));
-        lines.add("  " + headline);
-        for (Map.Entry<Category, Double> entry
-                : BudgetMath.spentByCategory(expenses).entrySet()) {
-            String label = Labels.category(this, entry.getKey());
-            String amount = CurrencyRates.format(entry.getValue(), home);
-            sectionLines.add(new Line(label, amount));
-            lines.add("  " + label + ": " + amount);
+        double planned = BudgetMath.plannedTotal(snapshot);
+        List<Line> lines = new ArrayList<>();
+        lines.add(new Line(getString(R.string.summary_limit), CurrencyRates.format(total, home)));
+        lines.add(new Line(getString(R.string.budget_planned_label), CurrencyRates.format(planned, home)));
+        lines.add(new Line(getString(R.string.summary_logged), CurrencyRates.format(spent, home)));
+        if (total > 0) {
+            lines.add(new Line(getString(R.string.summary_remaining),
+                    CurrencyRates.format(total - spent, home)));
         }
-        if (note != null) {
-            lines.add("  " + note);
+        Map<Category, Double> loggedByCategory = BudgetMath.spentByCategory(expenses);
+        for (Map.Entry<Category, Double> entry : loggedByCategory.entrySet()) {
+            lines.add(new Line(getString(R.string.summary_category_logged, Labels.category(this,
+                    entry.getKey())), CurrencyRates.format(entry.getValue(), home)));
         }
-        container.addView(buildSection(container, getString(R.string.summary_budget_title), null,
-                sectionLines, note, hasBudget && BudgetMath.isOver(spent, total)));
-    }
-
-    /** Text status for the budget card (so over-budget never relies on color alone). */
-    @Nullable
-    private String budgetNote(boolean hasBudget, double spent, double total, String home) {
-        if (!hasBudget) {
-            return getString(R.string.budget_no_total);
-        }
-        return BudgetMath.isOver(spent, total)
+        boolean over = BudgetMath.isOver(spent, total);
+        String note = total <= 0 ? getString(R.string.budget_no_total) : over
                 ? getString(R.string.budget_over, CurrencyRates.format(spent - total, home)) : null;
+        container.addView(buildSection(container, getString(R.string.summary_budget_title), null,
+                lines, note, over));
     }
 
     private View buildSection(ViewGroup parent, String title, @Nullable String count,
@@ -182,64 +204,40 @@ public class SummaryActivity extends ScreenActivity {
         return section;
     }
 
-    /** Actions wait for data, and Export PDF shows a busy label (and ignores taps) while writing. */
     private void updateActions() {
-        boolean isReady = isTripLoaded && isItemsLoaded;
-        MaterialButton export = findViewById(R.id.button_export_pdf);
-        export.setEnabled(isReady && !isExporting);
-        export.setText(isExporting ? R.string.summary_exporting : R.string.action_export_pdf);
-        findViewById(R.id.button_share).setEnabled(isReady);
+        boolean ready = snapshot != null && !export.isBusy();
+        MaterialButton save = findViewById(R.id.button_export_pdf);
+        save.setEnabled(ready);
+        save.setText(export.isBusy() ? R.string.summary_exporting : R.string.action_export_pdf);
+        findViewById(R.id.button_share_pdf).setEnabled(ready);
+        findViewById(R.id.button_share).setEnabled(ready);
+    }
+
+    private void savePdf() {
+        export.beginPicker(snapshot);
+        try {
+            createDocument.launch(getString(R.string.summary_filename));
+        } catch (ActivityNotFoundException error) {
+            export.onDocumentPicked(null);
+            toast(R.string.export_save_failed);
+        }
     }
 
     private void shareText() {
         Intent send = new Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
-                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.summary_share_subject, tripName))
-                .putExtra(Intent.EXTRA_TEXT, tripName + "\n\n" + String.join("\n", lines));
+                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.summary_share_subject, snapshot.name))
+                .putExtra(Intent.EXTRA_TEXT, TripExport.summary(snapshot));
         startActivity(Intent.createChooser(send, getString(R.string.action_share_summary)));
     }
 
-    private void exportPdf() {
-        if (isExporting || !isTripLoaded || !isItemsLoaded) {
-            return;
-        }
-        isExporting = true;
-        updateActions();
-        List<String> snapshot = new ArrayList<>(lines);
-        String title = getString(R.string.summary_share_subject, tripName);
-        AppExecutors.getInstance().diskIO().execute(() -> {
-            try {
-                File file = TripPdfWriter.write(getApplicationContext(), title, snapshot);
-                Uri uri = FileProvider.getUriForFile(getApplicationContext(),
-                        getPackageName() + ".fileprovider", file);
-                AppExecutors.getInstance().mainThread().execute(() -> finishExport(uri, title));
-            } catch (IOException | RuntimeException e) {
-                Log.e("SummaryActivity", "PDF export failed", e);
-                AppExecutors.getInstance().mainThread().execute(() -> finishExport(null, title));
-            }
-        });
-    }
-
-    /** Back on the main thread: clears the busy state, then shares the PDF or reports failure. */
-    private void finishExport(@Nullable Uri uri, String title) {
-        if (isFinishing() || isDestroyed()) {
-            return;
-        }
-        isExporting = false;
-        updateActions();
-        if (uri == null) {
-            toast(R.string.pdf_failed);
-        } else {
-            sharePdf(uri, title);
-        }
-    }
-
-    private void sharePdf(Uri uri, String title) {
+    private void sharePdf(Uri uri, String name) {
         Intent send = new Intent(Intent.ACTION_SEND)
                 .setType("application/pdf")
                 .putExtra(Intent.EXTRA_STREAM, uri)
-                .putExtra(Intent.EXTRA_SUBJECT, title)
+                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.summary_share_subject, name))
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(Intent.createChooser(send, getString(R.string.action_export_pdf)));
+        send.setClipData(ClipData.newRawUri(getString(R.string.action_share_pdf), uri));
+        startActivity(Intent.createChooser(send, getString(R.string.action_share_pdf)));
     }
 }

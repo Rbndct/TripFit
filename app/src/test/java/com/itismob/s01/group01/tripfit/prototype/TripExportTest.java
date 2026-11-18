@@ -35,4 +35,60 @@ public class TripExportTest {
         assertTrue(summary.contains("Logged expenses: 50"));
         assertTrue(summary.contains("Remaining after expenses: 950"));
     }
+    @Test public void calendarRejectsMissingOrMalformedDates() {
+        DraftTrip trip = new DraftTrip();
+        trip.stops.add(new DraftTrip.Stop());
+        for (String date : new String[]{null, "", "2026-02-30", "2026-12-01extra"}) {
+            trip.startDate = date;
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> TripExport.calendar(trip));
+            assertEquals("Invalid trip date", error.getMessage());
+        }
+    }
+
+    @Test public void calendarUsesLocalWallTimeOnDaylightSavingTransition() {
+        DraftTrip trip = new DraftTrip();
+        trip.startDate = "2026-03-08";
+        trip.city = "New York";
+        DraftTrip.Stop stop = new DraftTrip.Stop();
+        stop.name = "Gallery";
+        stop.address = "1 Main St, New York";
+        trip.stops.add(stop);
+
+        String calendar = TripExport.calendar(trip);
+        assertTrue(calendar.contains("DTSTART:20260308T130000Z"));
+        assertTrue(calendar.contains("LOCATION:1 Main St\\, New York"));
+    }
+
+    @Test public void calendarKeepsDurationWhenBookedTimeFallsInSpringForwardGap() {
+        DraftTrip trip = new DraftTrip();
+        trip.startDate = "2026-03-08";
+        trip.city = "New York";
+        DraftTrip.Stop stop = new DraftTrip.Stop();
+        stop.booked = true;
+        stop.fixedMinute = 165; // 02:45 local is skipped when clocks advance.
+        stop.duration = 30;
+        trip.stops.add(stop);
+
+        String calendar = TripExport.calendar(trip);
+        assertTrue(calendar.contains("DTSTART:20260308T074500Z"));
+        assertTrue(calendar.contains("DTEND:20260308T081500Z"));
+    }
+
+    @Test public void calendarUsesPinBeforeFallingBackToCity() {
+        DraftTrip trip = new DraftTrip();
+        trip.startDate = "2026-12-01";
+        trip.city = "Manila";
+        DraftTrip.Stop pinned = new DraftTrip.Stop();
+        pinned.hasLocation = true;
+        pinned.lat = 14.5995;
+        pinned.lng = 120.9842;
+        trip.stops.add(pinned);
+        trip.stops.add(new DraftTrip.Stop());
+
+        String calendar = TripExport.calendar(trip);
+        assertTrue(calendar.contains("DTSTART:20261201T010000Z"));
+        assertTrue(calendar.contains("LOCATION:14.59950\\, 120.98420"));
+        assertTrue(calendar.contains("LOCATION:Manila"));
+    }
 }

@@ -14,14 +14,14 @@ Branch: `feat/ui-prototype-step5`
 | 4 Itinerary planning logic | **done** | `4a41e48` | Per-leg buffers, conflict detection, booking locks, travel modes |
 | 5 Budget and currency | **done** | `fb2da5c` | Unified budget model, planned vs actual costs, currency rates |
 | 6 Discover and catalog | **done** | `99a8050` | One Tokyo and Manila sample catalog |
-| 7 Weather screen | **done** | | Saved forecasts, outdoor warnings, and indoor alternatives |
-| 8 Calendar and export | **next** | | `.ics` and PDF export with file picker |
-| 9 Group and journal | pending | | Companions, voting, persistable photo URIs |
+| 7 Weather screen | **done** | `a704ad2` | Saved forecasts, outdoor warnings, and indoor alternatives |
+| 8 Calendar and export | **done** | | Calendar and PDF file export, plus summary sharing |
+| 9 Group and journal | **next** | | Companions, voting, persistable photo URIs |
 | 10 Remove duplicate screens | pending | | Remove obsolete `prototype/*Activity` classes |
 | 11 Naming and docs | pending | | App name consistency across strings and docs |
 | 12 Final verification | pending | | Full test sweep and emulator walkthrough |
 
-Next is **Step 8 (Calendar and export)**.
+Next is **Step 9 (Group and journal)**.
 
 ---
 

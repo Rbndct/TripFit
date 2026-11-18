@@ -27,12 +27,14 @@ public interface ItineraryItemDao {
             + "FROM itinerary_items GROUP BY tripId")
     LiveData<List<TripItemCount>> observeItemCounts();
 
-    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng "
+    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng, "
+            + "p.address AS placeAddress "
             + "FROM itinerary_items i LEFT JOIN places p ON p.id = i.placeId "
             + "WHERE i.tripId = :tripId ORDER BY i.day, i.position")
     LiveData<List<ItineraryItemWithPlace>> observeByTripIdWithPlace(String tripId);
 
-    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng "
+    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng, "
+            + "p.address AS placeAddress "
             + "FROM itinerary_items i LEFT JOIN places p ON p.id = i.placeId "
             + "WHERE i.tripId = :tripId ORDER BY i.day, i.position")
     List<ItineraryItemWithPlace> listWithPlaceSync(String tripId);
@@ -45,7 +47,8 @@ public interface ItineraryItemDao {
     int replaceFlexiblePlace(String tripId, String id, String placeId, int durationMin);
 
 
-    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng "
+    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng, "
+            + "p.address AS placeAddress "
             + "FROM itinerary_items i LEFT JOIN places p ON p.id = i.placeId "
             + "WHERE i.id = :id")
     LiveData<ItineraryItemWithPlace> observeByIdWithPlace(String id);
