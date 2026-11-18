@@ -34,6 +34,19 @@ public interface ItineraryItemDao {
 
     @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng "
             + "FROM itinerary_items i LEFT JOIN places p ON p.id = i.placeId "
+            + "WHERE i.tripId = :tripId ORDER BY i.day, i.position")
+    List<ItineraryItemWithPlace> listWithPlaceSync(String tripId);
+
+    @Insert
+    void insertNew(ItineraryItemEntity item);
+
+    @Query("UPDATE itinerary_items SET placeId = :placeId, customName = NULL, "
+            + "durationMin = :durationMin WHERE tripId = :tripId AND id = :id AND isBooked = 0")
+    int replaceFlexiblePlace(String tripId, String id, String placeId, int durationMin);
+
+
+    @Query("SELECT i.*, p.name AS placeName, p.lat AS placeLat, p.lng AS placeLng "
+            + "FROM itinerary_items i LEFT JOIN places p ON p.id = i.placeId "
             + "WHERE i.id = :id")
     LiveData<ItineraryItemWithPlace> observeByIdWithPlace(String id);
 

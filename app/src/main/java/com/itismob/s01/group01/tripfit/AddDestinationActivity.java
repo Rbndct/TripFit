@@ -9,6 +9,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,10 +28,12 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
+import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.remote.dto.CityDto;
 import com.itismob.s01.group01.tripfit.data.remote.dto.PlaceDto;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
+import com.itismob.s01.group01.tripfit.prototype.CatalogSuggestions;
+import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 import com.itismob.s01.group01.tripfit.prototype.StopFormRules;
@@ -56,6 +59,7 @@ public class AddDestinationActivity extends ScreenActivity {
     /** Optional: the itinerary's selected day, used as the new stop's default (P-118). */
     public static final String EXTRA_DAY = "extra_day";
     private static final long SEARCH_DEBOUNCE_MS = 350;
+    private static final String KEY_SEARCH_CITY = "search_city";
     private static final String KEY_PENDING_ITEM = "pending_item_id";
     private static final String KEY_PLACE_ID = "place_id";
     private static final String KEY_PLACE_CITY = "place_city";
@@ -87,6 +91,7 @@ public class AddDestinationActivity extends ScreenActivity {
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable pendingSearch;
     private String selectedCityId;
+    private String restoredCityId;
     private CityDto selectedCity;
     private PlaceDto selectedPlace;
     private boolean suppressNameWatcher;
@@ -102,6 +107,7 @@ public class AddDestinationActivity extends ScreenActivity {
         TripFitApp app = (TripFitApp) getApplication();
         if (savedInstanceState != null) {
             pendingItemId = savedInstanceState.getString(KEY_PENDING_ITEM);
+            restoredCityId = savedInstanceState.getString(KEY_SEARCH_CITY);
         }
         viewModel = new ViewModelProvider(this,
                 new AddDestinationViewModel.Factory(app.getTripRepository()))
@@ -144,6 +150,7 @@ public class AddDestinationActivity extends ScreenActivity {
         layoutTime.setEndIconOnClickListener(openTimePicker);
 
         findViewById(R.id.button_save).setOnClickListener(v -> attemptSave());
+        findViewById(R.id.button_save).setEnabled(!viewModel.isSaving());
 
         viewModel.getCitiesResult().observe(this, result -> {
             if (result == null) {
@@ -152,24 +159,30 @@ public class AddDestinationActivity extends ScreenActivity {
             if (result.isSuccess()) {
                 bindCityChips(result.getData());
             } else {
-                bindCityChips(java.util.Arrays.asList(
-                        new CityDto("demo-tokyo", "Tokyo", "JP", 35.6762, 139.6503),
-                        new CityDto("demo-manila", "Manila", "PH", 14.5995, 120.9842)));
+                searchEmptyState.setText(R.string.search_error);
+                searchEmptyState.setVisibility(View.VISIBLE);
             }
         });
         viewModel.loadCities();
         observeExistingNames(app);
 
         viewModel.getSearchResult().observe(this, result -> {
-            if (result == null) {
-                return;
-            }
-            List<PlaceDto> places = result.isSuccess() ? result.getData() : Collections.emptyList();
+            boolean searching = result != null && selectedPlace == null;
+            List<PlaceDto> places = searching && result.isSuccess()
+                    ? result.getData() : Collections.emptyList();
             searchAdapter.submitPlaces(places);
-            boolean hasQuery = inputSearch.getText() != null && inputSearch.getText().length() > 0;
-            searchEmptyState.setText(result.isSuccess()
-                    ? R.string.search_empty_state : R.string.search_error);
-            searchEmptyState.setVisibility(hasQuery && places.isEmpty() ? View.VISIBLE : View.GONE);
+            RecyclerView results = findViewById(R.id.recycler_search_results);
+            ViewGroup.LayoutParams params = results.getLayoutParams();
+            params.height = places.size() > 3
+                    ? getResources().getDimensionPixelSize(R.dimen.catalog_search_results_height)
+                    : ViewGroup.LayoutParams.WRAP_CONTENT;
+            results.setLayoutParams(params);
+            results.setVisibility(places.isEmpty() ? View.GONE : View.VISIBLE);
+            if (searching) {
+                searchEmptyState.setText(result.isSuccess()
+                        ? R.string.search_empty_state : R.string.search_error);
+            }
+            searchEmptyState.setVisibility(searching && places.isEmpty() ? View.VISIBLE : View.GONE);
         });
 
         viewModel.getSaveResult().observe(this, result -> {
@@ -186,7 +199,9 @@ public class AddDestinationActivity extends ScreenActivity {
                     pendingItemId = null;
                 }
                 findViewById(R.id.button_save).setEnabled(true);
-                Snackbar.make(findViewById(R.id.add_destination_root), R.string.error_save_failed,
+                int message = TripRepository.CATALOG_ALREADY_PLANNED.equals(result.getErrorMessage())
+                        ? R.string.catalog_already_planned : R.string.error_save_failed;
+                Snackbar.make(findViewById(R.id.add_destination_root), message,
                         Snackbar.LENGTH_SHORT).show();
             }
         });
@@ -254,12 +269,18 @@ public class AddDestinationActivity extends ScreenActivity {
                 });
 
         findViewById(R.id.button_pick_on_map).setOnClickListener(v -> {
-            if (selectedCity == null) {
-                return;
-            }
             Intent intent = new Intent(AddDestinationActivity.this, MapPickerActivity.class);
-            intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, selectedCity.getLat());
-            intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, selectedCity.getLng());
+            if (selectedPlace != null) {
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, selectedPlace.getLat());
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, selectedPlace.getLng());
+            } else if (selectedCity != null) {
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, selectedCity.getLat());
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, selectedCity.getLng());
+            } else {
+                String city = PrototypeStore.get().meta(tripId).getCity();
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LAT, DemoCatalog.lat(city));
+                intent.putExtra(MapPickerActivity.EXTRA_CITY_LNG, DemoCatalog.lng(city));
+            }
             mapPickerLauncher.launch(intent);
         });
     }
@@ -268,29 +289,52 @@ public class AddDestinationActivity extends ScreenActivity {
         if (pendingSearch != null) {
             searchHandler.removeCallbacks(pendingSearch);
         }
-        pendingSearch = () -> viewModel.search(selectedCityId, query);
+        viewModel.invalidateSearch();
+        if (selectedCityId == null || selectedPlace != null) {
+            return;
+        }
+        String cityId = selectedCityId;
+        pendingSearch = () -> viewModel.search(cityId, query);
         searchHandler.postDelayed(pendingSearch, SEARCH_DEBOUNCE_MS);
     }
 
     private void bindCityChips(List<CityDto> cities) {
+        String savedCityId = selectedCityId != null ? selectedCityId : restoredCityId;
+        String tripCity = PrototypeStore.get().meta(tripId).getCity();
+        chipGroupCities.setOnCheckedStateChangeListener(null);
         chipGroupCities.removeAllViews();
+        Chip saved = null;
+        Chip preferred = null;
         for (CityDto city : cities) {
             Chip chip = new Chip(this);
             chip.setText(city.getName());
             chip.setCheckable(true);
+            chip.setEnsureMinTouchTargetSize(true);
             chip.setId(View.generateViewId());
             chip.setTag(city);
             chipGroupCities.addView(chip);
+            if (city.getId().equals(savedCityId)) {
+                saved = chip;
+            }
+            if (city.getName().equalsIgnoreCase(tripCity)) {
+                preferred = chip;
+            }
         }
         chipGroupCities.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            selectedCity = checkedIds.isEmpty() ? null : (CityDto) group.findViewById(checkedIds.get(0)).getTag();
+            String previousCityId = selectedCityId;
+            selectedCity = checkedIds.isEmpty() ? null
+                    : (CityDto) group.findViewById(checkedIds.get(0)).getTag();
             selectedCityId = selectedCity == null ? null : selectedCity.getId();
-            findViewById(R.id.button_pick_on_map).setEnabled(selectedCity != null);
-            String query = inputSearch.getText() == null ? "" : inputSearch.getText().toString();
-            scheduleSearch(query);
+            if (previousCityId != null && !previousCityId.equals(selectedCityId)) {
+                selectedPlace = null;
+                renderPin();
+            }
+            scheduleSearch(safeText(inputSearch));
         });
         if (!cities.isEmpty()) {
-            ((Chip) chipGroupCities.getChildAt(0)).setChecked(true);
+            Chip initial = saved != null ? saved : preferred != null ? preferred
+                    : (Chip) chipGroupCities.getChildAt(0);
+            initial.setChecked(true);
         }
     }
 
@@ -301,6 +345,12 @@ public class AddDestinationActivity extends ScreenActivity {
         inputSearch.setText("");
         suppressNameWatcher = false;
         selectedPlace = place;
+        DemoCatalog.Place sample = DemoCatalog.findById(place.getId());
+        if (sample != null) {
+            inputDuration.setText(String.valueOf(sample.minutes));
+            costFields.populate(sample.itemDetails());
+        }
+        scheduleSearch("");
         renderPin();
     }
 
@@ -369,7 +419,14 @@ public class AddDestinationActivity extends ScreenActivity {
         }
 
         String name = safeText(inputName);
-        if (existingNames.contains(name.toLowerCase(Locale.ROOT))) {
+        if (viewModel.isSaving()) {
+            return;
+        }
+        if (existingNames.contains(DemoCatalog.nameKey(name))) {
+            if (selectedPlace != null && DemoCatalog.findById(selectedPlace.getId()) != null) {
+                layoutName.setError(getString(R.string.catalog_already_planned));
+                return;
+            }
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.duplicate_title)
                     .setMessage(getString(R.string.duplicate_message, name))
@@ -428,6 +485,7 @@ public class AddDestinationActivity extends ScreenActivity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_PENDING_ITEM, pendingItemId);
+        outState.putString(KEY_SEARCH_CITY, selectedCityId == null ? restoredCityId : selectedCityId);
         if (selectedPlace != null) {
             outState.putString(KEY_PLACE_ID, selectedPlace.getId());
             outState.putString(KEY_PLACE_CITY, selectedPlace.getCityId());
@@ -459,9 +517,7 @@ public class AddDestinationActivity extends ScreenActivity {
     private void observeExistingNames(TripFitApp app) {
         app.getTripRepository().observeItineraryItemsWithPlaceNames(tripId).observe(this, items -> {
             existingNames.clear();
-            for (ItineraryItemWithPlace entry : items) {
-                existingNames.add(entry.item.displayName(entry.placeName).toLowerCase(Locale.ROOT));
-            }
+            existingNames.addAll(CatalogSuggestions.plannedNames(items));
         });
     }
 
@@ -474,6 +530,13 @@ public class AddDestinationActivity extends ScreenActivity {
 
         // The details are keyed by the new row's id; they are dropped again if the save fails.
         pendingItemId = UUID.randomUUID().toString();
+        DemoCatalog.Place sample = selectedPlace == null ? null
+                : DemoCatalog.findById(selectedPlace.getId());
+        if (sample != null) {
+            viewModel.saveFromCatalog(pendingItemId, tripId, sample, day, durationMin, booked,
+                    time, costFields.toDetails(sample.itemDetails()));
+            return;
+        }
         PrototypeStore.get().setItemDetails(pendingItemId, costFields.toDetails(null));
         if (selectedPlace != null && selectedPlace.getName().equals(name)) {
             viewModel.saveFromPlace(pendingItemId, tripId, selectedPlace, day, durationMin, booked,

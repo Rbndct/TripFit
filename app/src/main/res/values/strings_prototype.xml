@@ -5,7 +5,6 @@
     <string name="action_save_changes">Save changes</string>
     <string name="action_delete">Delete</string>
     <string name="action_add">Add</string>
-    <string name="action_added">Added</string>
     <string name="cd_back">Back</string>
 
     <!-- Profile -->
@@ -225,35 +224,24 @@
     <string name="tab_food">Food</string>
     <string name="tab_activities">Activities</string>
     <string name="filter_fits_budget">Fits my budget</string>
-    <string name="suggestion_subtitle">%1$s · ★ %2$.1f · %3$.1f km · %4$s</string>
-    <string name="suggestions_budget_hint">%1$s left in your %2$s budget</string>
-    <string name="suggestions_empty">Nothing fits your remaining budget right now.</string>
     <string name="suggestions_show_all">Show all places</string>
-    <string name="suggestions_budget_used_up">Your %1$s budget is used up</string>
     <string name="suggestions_target_day">Adding to Day %1$d</string>
-    <string name="suggestion_subtitle_over">%1$s · ★ %2$.1f · %3$.1f km · %4$s · Over budget</string>
     <string name="suggestion_add_cd">Add %1$s to Day %2$d</string>
     <string name="suggestion_add_failed">Could not add %1$s. Try again.</string>
     <string name="suggestion_added">%1$s added to Day %2$d</string>
 
     <!-- Discover -->
     <string name="discover_title">Discover</string>
-    <string name="discover_city">Suggestions for %1$s</string>
     <string name="action_change_city">Change city</string>
-    <string name="discover_famous">Famous &amp; must-see</string>
     <string name="discover_hidden">Hidden gems</string>
-    <string name="discover_row_sub">%1$s · ★ %2$.1f · %3$,d reviews</string>
-    <string name="discover_tap_swap">Tap a spot to swap it for another</string>
     <string name="action_add_selected">Add %1$d to itinerary</string>
     <string name="discover_none_selected">Select spots to add</string>
-    <string name="swap_title">Swap %1$s with…</string>
     <plurals name="discover_added">
         <item quantity="one">Added %1$d stop to your itinerary</item>
         <item quantity="other">Added %1$d stops to your itinerary</item>
     </plurals>
     <string name="discover_add_cd">Add %1$s to selection</string>
     <string name="discover_remove_cd">Remove %1$s from selection</string>
-    <string name="discover_swap_cd">Swap for another spot</string>
     <string name="discover_adding">Adding…</string>
     <string name="city_dialog_title">Choose a city</string>
 

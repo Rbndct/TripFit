@@ -53,6 +53,7 @@ public class RowAdapter extends RecyclerView.Adapter<RowAdapter.RowViewHolder> {
         private final TextView subtitle;
         private final TextView trailing;
         private final MaterialButton action;
+        private final MaterialButton secondary;
 
         RowViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -60,6 +61,7 @@ public class RowAdapter extends RecyclerView.Adapter<RowAdapter.RowViewHolder> {
             subtitle = itemView.findViewById(R.id.text_row_subtitle);
             trailing = itemView.findViewById(R.id.text_row_trailing);
             action = itemView.findViewById(R.id.button_row_action);
+            secondary = itemView.findViewById(R.id.button_row_secondary);
         }
 
         void bind(UiRow row) {
@@ -71,6 +73,11 @@ public class RowAdapter extends RecyclerView.Adapter<RowAdapter.RowViewHolder> {
             action.setText(row.getActionLabel());
             action.setOnClickListener(hasAction && row.getOnAction() != null
                     ? v -> row.getOnAction().run() : null);
+            Runnable onSecondary = row.getOnSecondary();
+            secondary.setVisibility(onSecondary == null ? View.GONE : View.VISIBLE);
+            secondary.setText(row.getSecondaryLabel());
+            secondary.setContentDescription(row.getSecondaryDescription());
+            secondary.setOnClickListener(onSecondary == null ? null : v -> onSecondary.run());
             itemView.setOnClickListener(row.getOnClick() != null
                     ? v -> row.getOnClick().run() : null);
             itemView.setClickable(row.getOnClick() != null);

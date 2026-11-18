@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
 
         ExtendedFloatingActionButton fab = findViewById(R.id.fab_add_destination);
         fab.setOnClickListener(v -> openWithDay(AddDestinationActivity.class));
-        findViewById(R.id.button_empty_discover).setOnClickListener(v -> open(DiscoverActivity.class));
+        findViewById(R.id.button_empty_discover).setOnClickListener(v -> openWithDay(DiscoverActivity.class));
         weatherBanner.setOnClickListener(v -> showWeatherDialog());
     }
 
@@ -151,11 +151,11 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         } else if (id == R.id.action_budget) {
             open(BudgetActivity.class);
         } else if (id == R.id.action_suggestions) {
-            open(SuggestionsActivity.class);
+            openWithDay(SuggestionsActivity.class);
         } else if (id == R.id.action_trip_settings) {
             open(NewTripActivity.class);
         } else if (id == R.id.action_discover) {
-            open(DiscoverActivity.class);
+            openWithDay(DiscoverActivity.class);
         } else if (id == R.id.action_calendar) {
             open(CalendarSyncActivity.class);
         } else if (id == R.id.action_summary) {

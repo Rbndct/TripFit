@@ -60,7 +60,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_xs"
-                android:enabled="false"
+                android:minHeight="48dp"
                 android:text="@string/action_pick_on_map" />
 
             <TextView
@@ -78,7 +78,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_xs"
-                android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_place_result" />
 
             <TextView
