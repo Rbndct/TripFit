@@ -17,9 +17,10 @@ Trippings is an Android trip-planning app (itinerary building, route optimizatio
 * **Test Suite:** JUnit 4 (unit tests) & AndroidX Espresso (instrumented tests).
 
 ### Core Plan Documents (Must Read)
-* **[.claude/plans/combine-prototypes.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/.claude/plans/combine-prototypes.md)**: Master 12-step prototype unification plan.
-* **[.claude/plans/combine-prototypes.orchestrate.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/.claude/plans/combine-prototypes.orchestrate.md)**: Detailed step-by-step execution directives, scope, intent, and acceptance criteria.
-* **[docs/Prototype-Merge-Map.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Prototype-Merge-Map.md)**: 138-item feature mapping and checklist.
+All core plan documents are accessible in the visible `docs/` folder (no need to open hidden dot-folders):
+* **[docs/Prototype-Merge-Map.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Prototype-Merge-Map.md)**: The authoritative 138-item feature mapping and checklist.
+* **[docs/Combine-Prototypes-Plan.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Combine-Prototypes-Plan.md)** *(also in `.claude/plans/combine-prototypes.md`)*: Master 12-step prototype unification plan.
+* **[docs/Combine-Prototypes-Orchestrate.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/docs/Combine-Prototypes-Orchestrate.md)** *(also in `.claude/plans/combine-prototypes.orchestrate.md`)*: Detailed step-by-step execution directives, scope, intent, and acceptance criteria.
 
 ---
 
