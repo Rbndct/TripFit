@@ -41,7 +41,7 @@ public class RemoteDataSource {
 
     RemoteDataSource(OkHttpClient httpClient, String supabaseUrl) {
         // Local trip planning remains available before remote settings are supplied.
-        if (supabaseUrl == null || HttpUrl.parse(supabaseUrl.trim()) == null) {
+        if (supabaseUrl == null || supabaseUrl.trim().isEmpty() || HttpUrl.parse(supabaseUrl.trim()) == null) {
             this.api = null;
             return;
         }

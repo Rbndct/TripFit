@@ -1,6 +1,6 @@
 <div align="center">
 
-# TripFit
+# Trippings
 
 **Smart itinerary planner for Android: route optimization, day-by-day planning, calendar sync and budget tracking in one app.**
 
@@ -39,7 +39,7 @@ ITISMOB (Mobile Development) term project · De La Salle University, College of 
 
 <br>
 
-Travelers plan trips across a map app, a spreadsheet, a currency converter, blog posts and their calendar. TripFit folds those into one pipeline:
+Travelers plan trips across a map app, a spreadsheet, a currency converter, blog posts and their calendar. Trippings folds those into one pipeline:
 
 ```
 add stops → optimize the route → split into days → sync to calendar → track the budget
@@ -55,14 +55,14 @@ Existing apps solve only pieces of this: Google Trips is discontinued, TripIt on
 
 <br>
 
-The app is a **clickable UI prototype**. Every backlog feature has a screen and every button leads somewhere. The backend is only partly connected:
+The app is a **clickable UI prototype**. Every backlog feature has a screen and every button leads somewhere.
 
 | Layer | State |
 |---|---|
 | Trips, stops, day/position, booked times, durations | **Saved** on-device in Room (SQLite) |
 | Place search | Supabase REST, with a bundled offline fallback (Tokyo, Manila) |
-| Expenses, budget setup, transport modes, journal, votes, calendar-sync status | **Session-only** (in-memory `PrototypeStore`, reset when the app closes) |
-| Prices, distances, weather, exchange rates, Discover suggestions | **Demo data** (`prototype/MockData`) until the APIs are wired |
+| Expenses, budget setup, transport modes, journal, votes, calendar-sync status | **Persisted** on-device in `PrototypeStore` (SharedPreferences + Gson) |
+| Prices, distances, weather, exchange rates, Discover suggestions | **Demo data** (`prototype/MockData` / `DemoCatalog`) |
 | Google Sign-In, Calendar push | UI only; debug builds skip the login check |
 
 </details>
