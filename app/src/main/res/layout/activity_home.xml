@@ -22,8 +22,8 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="@dimen/space_md"
-            android:paddingTop="@dimen/space_md"
-            android:paddingBottom="@dimen/space_md">
+            android:paddingTop="@dimen/space_lg"
+            android:paddingBottom="@dimen/space_lg">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -35,6 +35,7 @@
                     android:id="@+id/text_home_greeting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-bold"
                     android:text="@string/home_greeting"
                     android:textAppearance="?attr/textAppearanceHeadlineSmall"
                     android:textColor="@color/on_ticket_carrier" />
@@ -42,8 +43,9 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:alpha="0.85"
+                    android:layout_marginTop="3dp"
+                    android:alpha="0.9"
+                    android:fontFamily="sans-serif"
                     android:text="@string/home_subtitle"
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="@color/on_ticket_carrier" />
@@ -61,8 +63,8 @@
                 android:focusable="true">
 
                 <ImageView
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:layout_gravity="center"
                     android:background="@drawable/bg_avatar_header"
                     android:contentDescription="@null"
@@ -92,6 +94,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-bold"
                 android:paddingHorizontal="@dimen/space_md"
                 android:paddingTop="@dimen/space_lg"
                 android:paddingBottom="@dimen/space_sm"
@@ -117,7 +120,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/space_md"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/new_trip"
+        app:cornerRadius="@dimen/button_corner"
         app:icon="@drawable/ic_add_24"
         app:layout_anchorGravity="bottom|end" />
 

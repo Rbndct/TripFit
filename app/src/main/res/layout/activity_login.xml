@@ -21,16 +21,18 @@
             android:id="@+id/text_brand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="64dp"
-            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="72dp"
+            android:fontFamily="sans-serif-black"
+            android:letterSpacing="0.02"
             android:text="@string/app_name"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textAppearance="?attr/textAppearanceHeadlineLarge"
             android:textColor="?attr/colorPrimary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
+            android:fontFamily="sans-serif"
             android:text="@string/login_subtitle"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
@@ -40,16 +42,20 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
-            android:hint="@string/field_email_hint">
+            android:layout_marginTop="44dp"
+            android:hint="@string/field_email_hint"
+            app:boxCornerRadiusBottomEnd="@dimen/input_corner"
+            app:boxCornerRadiusBottomStart="@dimen/input_corner"
+            app:boxCornerRadiusTopEnd="@dimen/input_corner"
+            app:boxCornerRadiusTopStart="@dimen/input_corner">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/input_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:autofillHints="emailAddress"
-                android:importantForAutofill="yes"
                 android:imeOptions="actionNext"
+                android:importantForAutofill="yes"
                 android:inputType="textEmailAddress" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -61,6 +67,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
             android:hint="@string/field_password_hint"
+            app:boxCornerRadiusBottomEnd="@dimen/input_corner"
+            app:boxCornerRadiusBottomStart="@dimen/input_corner"
+            app:boxCornerRadiusTopEnd="@dimen/input_corner"
+            app:boxCornerRadiusTopStart="@dimen/input_corner"
             app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -79,10 +89,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_lg"
+            android:fontFamily="sans-serif-medium"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:minHeight="56dp"
-            android:text="@string/action_sign_in" />
+            android:minHeight="52dp"
+            android:text="@string/action_sign_in"
+            app:cornerRadius="@dimen/button_corner" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -100,7 +112,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="@dimen/space_sm"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="@dimen/space_md"
                 android:text="@string/divider_or"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant" />
@@ -119,12 +132,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_md"
+            android:fontFamily="sans-serif-medium"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:minHeight="48dp"
+            android:minHeight="52dp"
             android:paddingVertical="@dimen/space_sm"
             android:text="@string/action_sign_in_google"
             android:textColor="?attr/colorOnSurface"
+            app:cornerRadius="@dimen/button_corner"
             app:icon="@drawable/ic_google_logo"
             app:iconGravity="textStart"
             app:iconTint="@null"

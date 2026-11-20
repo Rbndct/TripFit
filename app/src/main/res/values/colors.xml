@@ -3,32 +3,31 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Brand: ticket-stub navy (light) -->
-    <color name="md_primary">#13213B</color>
+    <!-- Brand: Vibrant Electric Indigo (light) -->
+    <color name="md_primary">#6366F1</color>
     <color name="md_on_primary">#FFFFFF</color>
-    <color name="md_primary_container">#D7DEEA</color>
-    <color name="md_on_primary_container">#13213B</color>
+    <color name="md_primary_container">#EEF2FF</color>
+    <color name="md_on_primary_container">#312E81</color>
 
-    <!-- Secondary: amber, used for "booked" accents (light) -->
-    <color name="md_secondary">#8A5B00</color>
+    <!-- Secondary: Sunset Amber / Coral Accent (light) -->
+    <color name="md_secondary">#D97706</color>
     <color name="md_on_secondary">#FFFFFF</color>
-    <color name="md_secondary_container">#FFE8B2</color>
-    <color name="md_on_secondary_container">#2B1B00</color>
+    <color name="md_secondary_container">#FEF3C7</color>
+    <color name="md_on_secondary_container">#78350F</color>
 
-    <!-- Surfaces: off-white paper (light) -->
-    <color name="md_background">#FBFBF9</color>
-    <color name="md_on_background">#15181D</color>
-    <color name="md_surface">#FBFBF9</color>
-    <color name="md_on_surface">#15181D</color>
-    <color name="md_surface_variant">#E7E9ED</color>
-    <color name="md_on_surface_variant">#4A4E57</color>
-    <color name="md_outline">#8B93A6</color>
+    <!-- Surfaces: Clean Modern Slate Canvas (light) -->
+    <color name="md_background">#F8FAFC</color>
+    <color name="md_on_background">#0F172A</color>
+    <color name="md_surface">#FFFFFF</color>
+    <color name="md_on_surface">#0F172A</color>
+    <color name="md_surface_variant">#F1F5F9</color>
+    <color name="md_on_surface_variant">#64748B</color>
+    <color name="md_outline">#E2E8F0</color>
 
     <!-- Ticket motif accents -->
-    <color name="ticket_barcode_bar">#8B93A6</color>
+    <color name="ticket_barcode_bar">#94A3B8</color>
 
-    <!-- Ticket carrier band: fixed navy in both themes, never inverted by DayNight.
-         This is the direction's one committed shell color, not a Material role. -->
+    <!-- Ticket carrier band: fixed navy in both themes, never inverted by DayNight. -->
     <color name="ticket_carrier_navy">#13213B</color>
     <color name="on_ticket_carrier">#FFFFFF</color>
     <color name="on_ticket_carrier_translucent">#66FFFFFF</color>

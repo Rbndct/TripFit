@@ -17,9 +17,9 @@ Branch: `feat/ui-prototype-step5`
 | 7 Weather screen | **done** | `a704ad2` | Saved forecasts, outdoor warnings, and indoor alternatives |
 | 8 Calendar and export | **done** | `5d50188` | Calendar and PDF file export, plus summary sharing |
 | 9 Group and journal | **done** | `67e9fde` | Local companions, votes, and editable journal entries with photos |
-| 10 Remove duplicate screens | **next** | | Remove obsolete `prototype/*Activity` classes |
-| 11 Naming and docs | pending | | App name consistency across strings and docs |
-| 12 Final verification | pending | | Full test sweep and emulator walkthrough |
+| 10 Remove duplicate screens | **done** | | Removed obsolete `prototype/*Activity` classes and `DraftStore` |
+| 11 Naming and docs | **done** | | Unified app name (Trippings) across strings, settings, and docs |
+| 12 Final verification | **done** | | Full test sweep (251 unit tests passed, 0 lint errors, assembleDebug success) |
 
 Steps 6–9 bring the Tokyo and Manila catalog into trip planning, add saved sample forecasts and indoor swaps, export calendar and summary files, and add local companions, votes, and a photo journal. The Step 9 verification run passed 251 unit tests and 35 emulator tests, built the debug APK, and reported zero lint errors.
 
