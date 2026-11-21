@@ -13,7 +13,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.itismob.s01.group01.tripfit.R;
 import com.itismob.s01.group01.tripfit.data.AppExecutors;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.TripExport;
 import com.itismob.s01.group01.tripfit.ui.ExportNames;
 
@@ -42,7 +42,7 @@ public final class DocumentExportViewModel extends AndroidViewModel {
     private final AppExecutors executors = AppExecutors.getInstance();
     private final MutableLiveData<Boolean> busy = new MutableLiveData<>(false);
     private final MutableLiveData<Outcome> outcome = new MutableLiveData<>();
-    private DraftTrip pickedTrip;
+    private TripSnapshot pickedTrip;
     private Uri destination;
 
     public DocumentExportViewModel(@NonNull Application application) {
@@ -55,7 +55,7 @@ public final class DocumentExportViewModel extends AndroidViewModel {
 
     public void consumeOutcome() { outcome.setValue(null); }
 
-    public void beginPicker(DraftTrip snapshot) {
+    public void beginPicker(TripSnapshot snapshot) {
         pickedTrip = snapshot;
         busy.setValue(true);
     }
@@ -68,8 +68,8 @@ public final class DocumentExportViewModel extends AndroidViewModel {
         busy.setValue(uri != null);
     }
 
-    public void writePickedDocument(@Nullable DraftTrip current, Format format) {
-        DraftTrip snapshot = pickedTrip == null ? current : pickedTrip;
+    public void writePickedDocument(@Nullable TripSnapshot current, Format format) {
+        TripSnapshot snapshot = pickedTrip == null ? current : pickedTrip;
         if (destination == null || snapshot == null) {
             return;
         }
@@ -87,7 +87,7 @@ public final class DocumentExportViewModel extends AndroidViewModel {
         });
     }
 
-    private void writeDocument(Uri target, DraftTrip snapshot, Format format) throws IOException {
+    private void writeDocument(Uri target, TripSnapshot snapshot, Format format) throws IOException {
         byte[] calendar = null;
         if (format == Format.CALENDAR) {
             if (snapshot.stops.isEmpty()) {
@@ -107,7 +107,7 @@ public final class DocumentExportViewModel extends AndroidViewModel {
         }
     }
 
-    public void sharePdf(DraftTrip snapshot) {
+    public void sharePdf(TripSnapshot snapshot) {
         busy.setValue(true);
         executors.diskIO().execute(() -> {
             try {

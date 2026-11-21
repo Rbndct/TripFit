@@ -10,8 +10,8 @@ import java.util.List;
 /** Clock helpers plus the flow expectations that used to live on ScheduleMath.build. */
 public class ScheduleMathTest {
 
-    private static DraftTrip.Stop stop(String name, int duration, int buffer) {
-        DraftTrip.Stop s = new DraftTrip.Stop();
+    private static TripSnapshot.Stop stop(String name, int duration, int buffer) {
+        TripSnapshot.Stop s = new TripSnapshot.Stop();
         s.name = name;
         s.duration = duration;
         s.buffer = buffer;
@@ -20,7 +20,7 @@ public class ScheduleMathTest {
 
     @Test
     public void flexibleStops_flowFromNineAmWithPlaceholderLegAndBuffer() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 45, 15));
         trip.stops.add(stop("B", 30, 15));
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, false);
@@ -33,9 +33,9 @@ public class ScheduleMathTest {
 
     @Test
     public void bookedStop_isPinnedToItsFixedTimeWithoutConflict() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 30, 15));
-        DraftTrip.Stop dinner = stop("Dinner", 90, 15);
+        TripSnapshot.Stop dinner = stop("Dinner", 90, 15);
         dinner.booked = true;
         dinner.fixedMinute = 18 * 60;
         trip.stops.add(dinner);

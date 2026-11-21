@@ -1,6 +1,6 @@
 package com.itismob.s01.group01.tripfit.ui;
 
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
 import com.itismob.s01.group01.tripfit.prototype.TravelMode;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
@@ -35,10 +35,10 @@ public final class ItineraryRow {
     private final double estimateHome;
     private final String homeCurrency;
 
-    private ItineraryRow(DraftTrip trip, RoutePreview.Slot slot, RoutePreview.Slot previous,
+    private ItineraryRow(TripSnapshot trip, RoutePreview.Slot slot, RoutePreview.Slot previous,
                         int indexInDay) {
-        DraftTrip.Stop stop = slot.stop;
-        DraftTrip.Stop before = previous == null ? null : previous.stop;
+        TripSnapshot.Stop stop = slot.stop;
+        TripSnapshot.Stop before = previous == null ? null : previous.stop;
         this.id = stop.id;
         this.name = stop.name;
         this.indexInDay = indexInDay;
@@ -61,7 +61,7 @@ public final class ItineraryRow {
     }
 
     /** The day's rows in current (non-optimized) schedule order. */
-    public static List<ItineraryRow> build(DraftTrip trip, int day) {
+    public static List<ItineraryRow> build(TripSnapshot trip, int day) {
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, day, false);
         List<ItineraryRow> rows = new ArrayList<>();
         for (int i = 0; i < slots.size(); i++) {

@@ -26,7 +26,7 @@ public class TripExportRatesTest {
 
     @Test
     public void footer_sampleRatesComeFromTheSingleTable() {
-        String text = TripExport.summary(new DraftTrip());
+        String text = TripExport.summary(new TripSnapshot());
 
         assertFalse(text, text.contains("0.38"));
         assertTrue(text, text.contains("1 USD = 56.0000 PHP"));
@@ -41,7 +41,7 @@ public class TripExportRatesTest {
         perUsd.put("JPY", 120.0);
         CurrencyRates.update(CurrencyRates.Snapshot.of(perUsd, null, "2026-11-14", true));
 
-        String text = TripExport.summary(new DraftTrip());
+        String text = TripExport.summary(new TripSnapshot());
 
         assertTrue(text, text.contains("as of 2026-11-14"));
         assertTrue(text, text.contains("1 USD = 60.0000 PHP"));

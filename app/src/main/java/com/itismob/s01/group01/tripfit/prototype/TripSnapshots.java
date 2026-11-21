@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Adapter between Room rows plus the persistent store and the pure {@link DraftTrip} snapshot the
+ * Adapter between Room rows plus the persistent store and the pure {@link TripSnapshot} snapshot the
  * {@link RoutePreview} engine plans on. It also owns the mapping between the engine's display
  * mode names (Walking, Cycling, Driving, Transit, Suggested) and {@link TravelMode}.
  */
@@ -63,9 +63,9 @@ public final class TripSnapshots {
     }
 
     /** Builds the planning snapshot for a trip from its rows; the store supplies defaults and extras. */
-    public static DraftTrip from(String tripId, TripMeta meta, List<ItineraryItemWithPlace> items,
+    public static TripSnapshot from(String tripId, TripMeta meta, List<ItineraryItemWithPlace> items,
                                  PrototypeStore store) {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.id = tripId;
         int maxDay = 0;
         for (ItineraryItemWithPlace entry : items) {
@@ -79,10 +79,10 @@ public final class TripSnapshots {
     }
 
     /** Adds persisted dates, budget and original expense currencies to the route snapshot. */
-    public static DraftTrip forExport(String tripId, String name, List<ItineraryItemWithPlace> items,
+    public static TripSnapshot forExport(String tripId, String name, List<ItineraryItemWithPlace> items,
                                       PrototypeStore store) {
         TripMeta meta = store.meta(tripId);
-        DraftTrip trip = from(tripId, meta, items, store);
+        TripSnapshot trip = from(tripId, meta, items, store);
         trip.name = name;
         trip.startDate = meta.getStartDateIso();
         BudgetSettings budget = store.budget(tripId);
@@ -94,7 +94,7 @@ public final class TripSnapshots {
         trip.transportBudget = budget.limitFor(Category.TRANSPORT, meta.getDays());
         trip.otherBudget = budget.limitFor(Category.OTHER, meta.getDays());
         for (Expense expense : store.expenses(tripId)) {
-            DraftTrip.Expense saved = new DraftTrip.Expense();
+            TripSnapshot.Expense saved = new TripSnapshot.Expense();
             saved.id = expense.getId();
             saved.title = expense.getTitle();
             saved.category = BudgetMath.categoryName(expense.getCategory());
@@ -105,9 +105,9 @@ public final class TripSnapshots {
         return trip;
     }
 
-    private static DraftTrip.Stop stopFrom(ItineraryItemWithPlace entry, PrototypeStore store) {
+    private static TripSnapshot.Stop stopFrom(ItineraryItemWithPlace entry, PrototypeStore store) {
         ItineraryItemEntity item = entry.item;
-        DraftTrip.Stop stop = new DraftTrip.Stop();
+        TripSnapshot.Stop stop = new TripSnapshot.Stop();
         stop.id = item.getId();
         stop.name = item.displayName(entry.placeName);
         stop.address = entry.placeAddress == null ? "" : entry.placeAddress;
@@ -130,7 +130,7 @@ public final class TripSnapshots {
         return stop;
     }
 
-    private static void applyDetails(DraftTrip.Stop stop, ItemDetails details) {
+    private static void applyDetails(TripSnapshot.Stop stop, ItemDetails details) {
         if (details == null) {
             return;
         }
@@ -166,7 +166,7 @@ public final class TripSnapshots {
      */
     public static Map<Integer, List<RoutePreview.Slot>> schedule(
             String tripId, TripMeta meta, List<ItineraryItemWithPlace> items, PrototypeStore store) {
-        DraftTrip trip = from(tripId, meta, items, store);
+        TripSnapshot trip = from(tripId, meta, items, store);
         Map<Integer, List<RoutePreview.Slot>> byDay = new TreeMap<>();
         for (int day = 1; day <= trip.days; day++) {
             List<RoutePreview.Slot> slots = RoutePreview.day(trip, day, false);

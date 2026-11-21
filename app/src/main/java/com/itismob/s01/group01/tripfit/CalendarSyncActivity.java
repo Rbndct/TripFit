@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
@@ -37,7 +37,7 @@ public class CalendarSyncActivity extends ScreenActivity {
 
     private final PrototypeStore store = PrototypeStore.get();
     private final RowAdapter adapter = new RowAdapter();
-    private DraftTrip trip;
+    private TripSnapshot trip;
     private int eventCount;
     private int warningCount;
     private boolean restorePreview;

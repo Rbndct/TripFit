@@ -27,7 +27,7 @@ import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.TripDates;
 import com.itismob.s01.group01.tripfit.prototype.TripMeta;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
     /** Rebuilds the tabs, heading, summary and cards from the latest rows and trip details. */
     private void render() {
         TripMeta meta = store.meta(tripId);
-        DraftTrip trip = TripSnapshots.from(tripId, meta, allItems, store);
+        TripSnapshot trip = TripSnapshots.from(tripId, meta, allItems, store);
         tripDays = trip.days;
         selectedDay = TripSnapshots.clampDay(selectedDay, tripDays);
         renderDayTabs();
@@ -285,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements ItineraryAdapter.
         ViewCompat.setStateDescription(tab, selected ? getString(R.string.state_selected) : null);
     }
 
-    private void renderSelectedDayStops(DraftTrip trip, TripMeta meta) {
+    private void renderSelectedDayStops(TripSnapshot trip, TripMeta meta) {
         List<ItineraryRow> rows = ItineraryRow.build(trip, selectedDay);
         adapter.submitRows(rows);
         emptyState.setVisibility(rows.isEmpty() ? View.VISIBLE : View.GONE);

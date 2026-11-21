@@ -16,8 +16,8 @@ import java.util.Set;
 /** Ports the RouteMath intents to RoutePreview semantics, plus the merged-engine behaviours. */
 public class RoutePreviewMergeTest {
 
-    private static DraftTrip.Stop stop(String id, int day, int duration, int buffer) {
-        DraftTrip.Stop s = new DraftTrip.Stop();
+    private static TripSnapshot.Stop stop(String id, int day, int duration, int buffer) {
+        TripSnapshot.Stop s = new TripSnapshot.Stop();
         s.id = id;
         s.name = id;
         s.day = day;
@@ -26,8 +26,8 @@ public class RoutePreviewMergeTest {
         return s;
     }
 
-    private static DraftTrip.Stop pinned(String id, double lng) {
-        DraftTrip.Stop s = stop(id, 1, 30, 0);
+    private static TripSnapshot.Stop pinned(String id, double lng) {
+        TripSnapshot.Stop s = stop(id, 1, 30, 0);
         s.hasLocation = true;
         s.lat = 0;
         s.lng = lng;
@@ -35,15 +35,15 @@ public class RoutePreviewMergeTest {
         return s;
     }
 
-    private static DraftTrip.Stop booked(String id, int day, int minute, int duration) {
-        DraftTrip.Stop s = stop(id, day, duration, 0);
+    private static TripSnapshot.Stop booked(String id, int day, int minute, int duration) {
+        TripSnapshot.Stop s = stop(id, day, duration, 0);
         s.booked = true;
         s.fixedMinute = minute;
         return s;
     }
 
-    private static DraftTrip lineTrip() {
-        DraftTrip trip = new DraftTrip();
+    private static TripSnapshot lineTrip() {
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(pinned("A", 0));
         trip.stops.add(pinned("B", .03));
         trip.stops.add(pinned("C", .01));
@@ -70,16 +70,16 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void optimize_reducesTotalTravel() {
-        DraftTrip trip = lineTrip();
+        TripSnapshot trip = lineTrip();
         int current = RoutePreview.totalTravel(RoutePreview.day(trip, 1, false));
         int preview = RoutePreview.totalTravel(RoutePreview.day(trip, 1, true));
         assertTrue(preview < current);
     }
 
     @Test public void optimize_bookedStopKeepsDayAndTimeAndFlexibleStopsFitAround() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 1, 30, 15));
-        DraftTrip.Stop lunch = booked("Lunch", 1, 660, 60);
+        TripSnapshot.Stop lunch = booked("Lunch", 1, 660, 60);
         lunch.buffer = 15;
         trip.stops.add(lunch);
         trip.stops.add(stop("B", 1, 30, 15));
@@ -92,7 +92,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void day_returnsEveryStopOnceWithDistinctIds() {
-        DraftTrip trip = lineTrip();
+        TripSnapshot trip = lineTrip();
         trip.stops.add(booked("Dinner", 1, 1080, 90));
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, true);
         Set<String> ids = new HashSet<>();
@@ -104,7 +104,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void day_singleStopStartsAtNineWithNoTravel() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 1, 60, 30));
         RoutePreview.Slot slot = RoutePreview.day(trip, 1, true).get(0);
         assertEquals(540, slot.start);
@@ -114,7 +114,7 @@ public class RoutePreviewMergeTest {
     // ---- conflicts ----
 
     @Test public void overlappingBookingIsFlagged() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(booked("A", 1, 600, 120));
         trip.stops.add(booked("B", 1, 660, 60));
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, false);
@@ -124,19 +124,19 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void flexibleStopEndingAfterEightPmIsFlagged() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("Long", 1, 700, 0));
         assertTrue(RoutePreview.day(trip, 1, false).get(0).conflict);
     }
 
     @Test public void loneEarlyBookingIsNotFlagged() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(booked("Early", 1, 480, 60));
         assertFalse(RoutePreview.day(trip, 1, false).get(0).conflict);
     }
 
     @Test public void bookingPastMidnightIsFlagged() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(booked("Late", 1, 1400, 120));
         assertTrue(RoutePreview.day(trip, 1, false).get(0).conflict);
     }
@@ -144,14 +144,14 @@ public class RoutePreviewMergeTest {
     // ---- buffer, legs, modes ----
 
     @Test public void firstStopGetsNoBuffer() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 1, 60, 45));
         assertEquals(540, RoutePreview.day(trip, 1, false).get(0).start);
     }
 
     @Test public void unpinnedEitherSideUsesTwentyMinutePlaceholderEvenWithExplicitMode() {
-        DraftTrip.Stop located = pinned("L", 0);
-        DraftTrip.Stop unpinned = stop("U", 1, 30, 0);
+        TripSnapshot.Stop located = pinned("L", 0);
+        TripSnapshot.Stop unpinned = stop("U", 1, 30, 0);
         unpinned.mode = "Walking";
         located.mode = "Walking";
         assertEquals(20, RoutePreview.travel(located, unpinned));
@@ -160,8 +160,8 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void eachLegUsesItsOwnModeAndBuffer() {
-        DraftTrip trip = new DraftTrip();
-        DraftTrip.Stop a = pinned("A", 0), b = pinned("B", .05), c = pinned("C", .10);
+        TripSnapshot trip = new TripSnapshot();
+        TripSnapshot.Stop a = pinned("A", 0), b = pinned("B", .05), c = pinned("C", .10);
         a.mode = "Suggested";
         b.mode = "Walking"; b.buffer = 10;
         c.mode = "Driving"; c.buffer = 0;
@@ -173,7 +173,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void suggestedModeFollowsDistanceBands() {
-        DraftTrip.Stop a = pinned("A", 0), near = pinned("N", .005), mid = pinned("M", .03);
+        TripSnapshot.Stop a = pinned("A", 0), near = pinned("N", .005), mid = pinned("M", .03);
         near.mode = mid.mode = "Suggested";
         assertEquals("Walking", RoutePreview.mode(a, near));
         assertEquals("Cycling", RoutePreview.mode(a, mid));
@@ -182,7 +182,7 @@ public class RoutePreviewMergeTest {
     // ---- optimize with unpinned stops ----
 
     @Test public void optimize_unpinnedStopsKeepOriginalOrder() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("X", 1, 30, 0));
         trip.stops.add(stop("Y", 1, 30, 0));
         trip.stops.add(stop("Z", 1, 30, 0));
@@ -190,7 +190,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void optimize_unpinnedStopsRankLastInOriginalOrder() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("U1", 1, 30, 0));
         trip.stops.add(pinned("A", 0));
         trip.stops.add(stop("U2", 1, 30, 0));
@@ -201,7 +201,7 @@ public class RoutePreviewMergeTest {
     // ---- compare / totalTravel ----
 
     @Test public void compare_reportsBothTotalsAndOrderChange() {
-        DraftTrip trip = lineTrip();
+        TripSnapshot trip = lineTrip();
         RoutePreview.Comparison cmp = RoutePreview.compare(trip, 1);
         assertEquals("ABCD", order(cmp.current));
         assertEquals("ACDB", order(cmp.preview));
@@ -212,20 +212,20 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void compare_singleStopDoesNotChangeOrder() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 1, 30, 0));
         assertFalse(RoutePreview.compare(trip, 1).orderChanged);
     }
 
     @Test public void compare_emptyDayHasNoTravel() {
-        RoutePreview.Comparison cmp = RoutePreview.compare(new DraftTrip(), 2);
+        RoutePreview.Comparison cmp = RoutePreview.compare(new TripSnapshot(), 2);
         assertEquals(0, cmp.currentTravel);
         assertFalse(cmp.orderChanged);
     }
 
     @Test public void totalTravel_sumsLegMinutesAndHandlesEmpty() {
         assertEquals(0, RoutePreview.totalTravel(new ArrayList<RoutePreview.Slot>()));
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("A", 1, 30, 0));
         trip.stops.add(stop("B", 1, 30, 0));
         assertEquals(20, RoutePreview.totalTravel(RoutePreview.day(trip, 1, false)));
@@ -234,7 +234,7 @@ public class RoutePreviewMergeTest {
     // ---- balance ----
 
     @Test public void balance_spreadsFlexibleStopsAndDoesNotMutateInput() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.days = 3;
         for (int i = 0; i < 6; i++) {
             trip.stops.add(stop("s" + i, 1, 60, 15));
@@ -248,13 +248,13 @@ public class RoutePreviewMergeTest {
         assertEquals(2, perDay[1]);
         assertEquals(2, perDay[2]);
         assertEquals(2, perDay[3]);
-        for (DraftTrip.Stop s : trip.stops) {
+        for (TripSnapshot.Stop s : trip.stops) {
             assertEquals(1, s.day);
         }
     }
 
     @Test public void balance_neverMovesBookedStopsAndLoadsAroundThem() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.days = 2;
         trip.stops.add(booked("Big", 1, 600, 300));
         trip.stops.add(stop("a", 1, 60, 15));
@@ -266,7 +266,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void balance_ignoresBookedStopsOutsideTripDays() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.days = 2;
         trip.stops.add(booked("Zero", 0, 600, 60));
         trip.stops.add(booked("Far", 9, 600, 60));
@@ -277,7 +277,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void balance_emptyDaysReceiveStops() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.days = 3;
         trip.stops.add(booked("B1", 1, 600, 60));
         trip.stops.add(stop("a", 1, 60, 15));
@@ -288,7 +288,7 @@ public class RoutePreviewMergeTest {
     }
 
     @Test public void balance_noFlexibleStopsReturnsEmptyMap() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(booked("B", 1, 600, 60));
         assertTrue(RoutePreview.balance(trip).isEmpty());
         assertNull(RoutePreview.balance(trip).get("B"));

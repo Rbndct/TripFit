@@ -68,8 +68,8 @@ public final class DemoCatalog {
             return new ItemDetails(price, currency, category, outdoor);
         }
 
-        public DraftTrip.Stop stop(int day) {
-            DraftTrip.Stop stop = new DraftTrip.Stop();
+        public TripSnapshot.Stop stop(int day) {
+            TripSnapshot.Stop stop = new TripSnapshot.Stop();
             stop.name = name;
             stop.address = address();
             stop.category = category;

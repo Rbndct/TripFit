@@ -122,10 +122,10 @@ public class PrototypeDeviceTest {
     @Test
     public void pdfExportProducesRenderablePages() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.name = "Prototype export check";
         for (int i = 0; i < 24; i++) {
-            DraftTrip.Stop stop = DemoCatalog.places("Tokyo").get(i % 6).stop(i % 3 + 1);
+            TripSnapshot.Stop stop = DemoCatalog.places("Tokyo").get(i % 6).stop(i % 3 + 1);
             trip.stops.add(stop);
         }
         File pdf = new File(context.getCacheDir(), "prototype-qa.pdf");

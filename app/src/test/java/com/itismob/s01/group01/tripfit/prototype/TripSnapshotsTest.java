@@ -42,13 +42,13 @@ public class TripSnapshotsTest {
         return row(id, day, position, 30, false, null, null, null, null, null);
     }
 
-    private DraftTrip snapshot(ItineraryItemWithPlace... rows) {
+    private TripSnapshot snapshot(ItineraryItemWithPlace... rows) {
         return TripSnapshots.from("t", meta, Arrays.asList(rows), store);
     }
 
     @Test
     public void missingDuration_usesDefaultStay() {
-        DraftTrip trip = snapshot(row("a", 1, 0, null, false, null, null, null, null, null));
+        TripSnapshot trip = snapshot(row("a", 1, 0, null, false, null, null, null, null, null));
         List<RoutePreview.Slot> slots = RoutePreview.day(trip, 1, false);
         assertEquals(ScheduleMath.DEFAULT_STAY_MIN, slots.get(0).end - slots.get(0).start);
     }
@@ -56,7 +56,7 @@ public class TripSnapshotsTest {
     @Test
     public void buffer_nullFallsBackToProfileAndExplicitZeroIsKept() {
         store.setBufferMin(40);
-        DraftTrip trip = snapshot(
+        TripSnapshot trip = snapshot(
                 row("a", 1, 0, 30, false, null, null, null, null, null),
                 row("b", 1, 1, 30, false, null, null, 0, null, null),
                 row("c", 1, 2, 30, false, null, null, 25, null, null));
@@ -67,7 +67,7 @@ public class TripSnapshotsTest {
 
     @Test
     public void mode_mapsStoredNamesAndTreatsNullOrInvalidAsSuggested() {
-        DraftTrip trip = snapshot(
+        TripSnapshot trip = snapshot(
                 row("a", 1, 0, 30, false, null, "WALK", null, null, null),
                 row("b", 1, 1, 30, false, null, "CYCLE", null, null, null),
                 row("c", 1, 2, 30, false, null, "DRIVE", null, null, null),
@@ -82,7 +82,7 @@ public class TripSnapshotsTest {
 
     @Test
     public void pinned_requiresPlaceCoordinatesAndCarriesThem() {
-        DraftTrip trip = snapshot(
+        TripSnapshot trip = snapshot(
                 row("a", 1, 0, 30, false, null, null, null, 35.7, 139.8),
                 plain("b", 1, 1));
         assertTrue(trip.stops.get(0).hasLocation);
@@ -93,7 +93,7 @@ public class TripSnapshotsTest {
 
     @Test
     public void bookedStop_usesItsTimeElseNineAm() {
-        DraftTrip trip = snapshot(
+        TripSnapshot trip = snapshot(
                 row("a", 1, 0, 30, true, "18:00", null, null, null, null),
                 row("b", 1, 1, 30, true, null, null, null, null, null),
                 row("c", 1, 2, 30, true, "bad", null, null, null, null));
@@ -106,7 +106,7 @@ public class TripSnapshotsTest {
     @Test
     public void details_costCategoryAndOutdoorComeFromTheStore() {
         store.setItemDetails("a", new ItemDetails(1500, "JPY", "Food", false));
-        DraftTrip trip = snapshot(plain("a", 1, 0), plain("b", 1, 1));
+        TripSnapshot trip = snapshot(plain("a", 1, 0), plain("b", 1, 1));
         assertEquals(1500, trip.stops.get(0).cost, 0.001);
         assertEquals("JPY", trip.stops.get(0).currency);
         assertEquals("Food", trip.stops.get(0).category);
@@ -223,7 +223,7 @@ public class TripSnapshotsTest {
         row.placeName = "Cafe";
         row.placeAddress = "1 Main St, Manila";
 
-        DraftTrip trip = TripSnapshots.forExport("trip", "Manila Break",
+        TripSnapshot trip = TripSnapshots.forExport("trip", "Manila Break",
                 java.util.Collections.singletonList(row), store);
 
         assertEquals("2027-03-02", trip.startDate);

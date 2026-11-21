@@ -12,8 +12,8 @@ import java.util.Random;
 /** Ported from Kevin's ProposalRulesTest: an optimized preview must never make a day worse. */
 public class OptimizeGuardTest {
 
-    private static DraftTrip.Stop stop(String id, double lat, double lng, boolean pinned) {
-        DraftTrip.Stop s = new DraftTrip.Stop();
+    private static TripSnapshot.Stop stop(String id, double lat, double lng, boolean pinned) {
+        TripSnapshot.Stop s = new TripSnapshot.Stop();
         s.id = id;
         s.name = id;
         s.day = 1;
@@ -33,15 +33,15 @@ public class OptimizeGuardTest {
         return count;
     }
 
-    private static DraftTrip randomTrip(Random random) {
-        DraftTrip trip = new DraftTrip();
+    private static TripSnapshot randomTrip(Random random) {
+        TripSnapshot trip = new TripSnapshot();
         int size = 3 + random.nextInt(5);
         for (int i = 0; i < size; i++) {
             boolean pinned = random.nextInt(4) != 0;
             trip.stops.add(stop("S" + i, random.nextDouble() * .2, random.nextDouble() * .2, pinned));
         }
         if (random.nextBoolean()) {
-            DraftTrip.Stop booked = stop("B", .1, .1, true);
+            TripSnapshot.Stop booked = stop("B", .1, .1, true);
             booked.booked = true;
             booked.fixedMinute = 12 * 60 + random.nextInt(180);
             trip.stops.add(booked);
@@ -53,7 +53,7 @@ public class OptimizeGuardTest {
     public void previewNeverTravelsLongerOrConflictsMoreThanCurrentOrder() {
         Random random = new Random(42);
         for (int i = 0; i < 500; i++) {
-            DraftTrip trip = randomTrip(random);
+            TripSnapshot trip = randomTrip(random);
             RoutePreview.Comparison comparison = RoutePreview.compare(trip, 1);
             assertTrue("trip " + i + " travel " + comparison.previewTravel + " > " + comparison.currentTravel,
                     comparison.previewTravel <= comparison.currentTravel);
@@ -66,7 +66,7 @@ public class OptimizeGuardTest {
     public void whenPreviewIsNoBetterTheCurrentOrderIsKept() {
         Random random = new Random(7);
         for (int i = 0; i < 500; i++) {
-            DraftTrip trip = randomTrip(random);
+            TripSnapshot trip = randomTrip(random);
             List<RoutePreview.Slot> current = RoutePreview.day(trip, 1, false);
             List<RoutePreview.Slot> applied = RoutePreview.day(trip, 1, true);
             if (RoutePreview.totalTravel(applied) == RoutePreview.totalTravel(current)
@@ -80,8 +80,8 @@ public class OptimizeGuardTest {
 
     @Test
     public void optimizingDoesNotMutateTheTripOrMoveBookedStops() {
-        DraftTrip trip = randomTrip(new Random(1));
-        DraftTrip.Stop booked = stop("FIXED", .05, .05, true);
+        TripSnapshot trip = randomTrip(new Random(1));
+        TripSnapshot.Stop booked = stop("FIXED", .05, .05, true);
         booked.booked = true;
         booked.fixedMinute = 14 * 60;
         trip.stops.add(booked);

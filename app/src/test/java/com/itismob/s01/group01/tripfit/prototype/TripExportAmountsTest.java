@@ -8,14 +8,14 @@ import org.junit.Test;
 /** The exported summary shows every amount to exactly two decimals. */
 public class TripExportAmountsTest {
 
-    private static DraftTrip trip() {
-        DraftTrip trip = new DraftTrip();
+    private static TripSnapshot trip() {
+        TripSnapshot trip = new TripSnapshot();
         trip.name = "Test trip";
         trip.city = "Tokyo";          // local currency JPY
         trip.days = 1;
         trip.homeCurrency = "PHP";
         trip.budget = 15000;
-        DraftTrip.Stop stop = new DraftTrip.Stop();
+        TripSnapshot.Stop stop = new TripSnapshot.Stop();
         stop.name = "Senso-ji";
         stop.category = "Activities";
         stop.cost = 1234.5;           // JPY, converted at the prototype's sample rate

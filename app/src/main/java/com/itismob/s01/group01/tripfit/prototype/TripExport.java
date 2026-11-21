@@ -18,16 +18,16 @@ import java.util.TimeZone;
 
 /** User-initiated local exports. Nothing is sent to a calendar or another account. */
 public final class TripExport {
-    public static String summary(DraftTrip trip) {
+    public static String summary(TripSnapshot trip) {
         StringBuilder text=new StringBuilder("TRIPPINGS\n").append(trip.name).append("\n").append(trip.city).append(" · ").append(TripFormRules.isValidIsoDate(trip.startDate) ? trip.startDate : "Dates not set").append(" · ").append(trip.days).append(" days\n\n")
             .append("PROTOTYPE: sample prices, exchange rates and travel estimates. Verify bookings, opening hours and routing before travel.\n\n");
         for(int day=1;day<=trip.days;day++) {
             text.append("DAY ").append(day).append("\n");
             List<RoutePreview.Slot> slots=RoutePreview.day(trip,day,false);
-            DraftTrip.Stop previous=null;
+            TripSnapshot.Stop previous=null;
             if(slots.isEmpty()) text.append("No stops planned yet.\n");
             for(RoutePreview.Slot slot:slots) {
-                DraftTrip.Stop stop=slot.stop;
+                TripSnapshot.Stop stop=slot.stop;
                 text.append(RoutePreview.time(slot.start)).append("–").append(RoutePreview.time(slot.end)).append(" ").append(stop.name).append(stop.booked?" [BOOKED]":"").append(slot.conflict?" [CHECK CONFLICT]":"").append("\n");
                 text.append("Stay ").append(stop.duration).append(" min; ");
                 if(previous==null) text.append("start of day\n");
@@ -39,13 +39,13 @@ public final class TripExport {
             text.append("\n");
         }
         double planned=0,actual=0;
-        for(DraftTrip.Stop stop:trip.stops) planned+=trip.convertedCost(stop);
-        for(DraftTrip.Expense expense:trip.expenses) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
+        for(TripSnapshot.Stop stop:trip.stops) planned+=trip.convertedCost(stop);
+        for(TripSnapshot.Expense expense:trip.expenses) actual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
         text.append(String.format(Locale.US,"BUDGET (%s)\nTrip limit: %.2f\nEstimated stops: %.2f\nLogged expenses: %.2f\nRemaining after expenses: %.2f\n",trip.homeCurrency,trip.totalBudget(),planned,actual,trip.totalBudget()-actual));
         for(String category:new String[]{"Food","Activities","Transport","Other"}) {
             double categoryPlanned=0,categoryActual=0;
-            for(DraftTrip.Stop stop:trip.stops) if(stop.category.equals(category)) categoryPlanned+=trip.convertedCost(stop);
-            for(DraftTrip.Expense expense:trip.expenses) if(expense.category.equals(category)) categoryActual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
+            for(TripSnapshot.Stop stop:trip.stops) if(stop.category.equals(category)) categoryPlanned+=trip.convertedCost(stop);
+            for(TripSnapshot.Expense expense:trip.expenses) if(expense.category.equals(category)) categoryActual+=RoutePreview.convert(expense.amount,expense.currency,trip.homeCurrency);
             text.append(String.format(Locale.US,"%s: limit %.2f / planned %.2f / logged %.2f\n",category,trip.categoryBudget(category),categoryPlanned,categoryActual));
         }
         text.append("\n").append(ratesLine(trip.homeCurrency)).append("\nTravel leg costs must be estimated manually in Transport.\n");
@@ -64,7 +64,7 @@ public final class TripExport {
         }
         return line.append(first?"no conversions needed.":".").toString();
     }
-    public static void pdf(DraftTrip trip,OutputStream output) throws IOException {
+    public static void pdf(TripSnapshot trip,OutputStream output) throws IOException {
         PdfDocument document=new PdfDocument();
         try {
             Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG); paint.setTextSize(11); paint.setColor(Color.rgb(19,33,59));
@@ -118,7 +118,7 @@ public final class TripExport {
         }
     }
 
-    public static String location(DraftTrip trip, DraftTrip.Stop stop) {
+    public static String location(TripSnapshot trip, TripSnapshot.Stop stop) {
         if (stop.address != null && !stop.address.trim().isEmpty()) {
             return stop.address.trim();
         }
@@ -126,7 +126,7 @@ public final class TripExport {
                 : trip.city;
     }
 
-    public static String calendar(DraftTrip trip) {
+    public static String calendar(TripSnapshot trip) {
         if (!TripFormRules.isValidIsoDate(trip.startDate)) {
             throw new IllegalArgumentException("Invalid trip date");
         }

@@ -19,7 +19,7 @@ import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.CatalogSuggestions;
 import com.itismob.s01.group01.tripfit.prototype.DemoCatalog;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.RowAdapter;
@@ -157,7 +157,7 @@ public class GroupActivity extends ScreenActivity {
         if (items == null) {
             return;
         }
-        DraftTrip trip = TripSnapshots.from(tripId, store.meta(tripId), items, store);
+        TripSnapshot trip = TripSnapshots.from(tripId, store.meta(tripId), items, store);
         List<String> members = store.members(tripId);
         String home = store.budget(tripId).getHomeCurrency();
         double planned = BudgetMath.plannedTotal(trip);

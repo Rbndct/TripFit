@@ -28,7 +28,7 @@ import com.itismob.s01.group01.tripfit.prototype.AmountRules;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.BudgetSettings;
 import com.itismob.s01.group01.tripfit.prototype.Category;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
@@ -197,7 +197,7 @@ public class BudgetActivity extends ScreenActivity {
         List<Expense> expenses = store.expenses(tripId);
         String home = budget.getHomeCurrency();
         int days = store.meta(tripId).getDays();
-        DraftTrip trip = TripSnapshots.from(tripId, store.meta(tripId), stops, store);
+        TripSnapshot trip = TripSnapshots.from(tripId, store.meta(tripId), stops, store);
         double total = budget.tripTotal(days);
         double spent = BudgetMath.totalSpent(expenses);
 
@@ -219,7 +219,7 @@ public class BudgetActivity extends ScreenActivity {
     }
 
     /** Flags stops and expenses whose currency is not in the rates table (counted 1:1). */
-    private void renderUnknownCurrencies(DraftTrip trip, List<Expense> expenses) {
+    private void renderUnknownCurrencies(TripSnapshot trip, List<Expense> expenses) {
         java.util.Set<String> unknown = BudgetMath.unknownCurrencies(trip, expenses);
         TextView note = findViewById(R.id.text_unknown_currency);
         note.setVisibility(unknown.isEmpty() ? View.GONE : View.VISIBLE);
@@ -230,7 +230,7 @@ public class BudgetActivity extends ScreenActivity {
     }
 
     /** Planned stop estimates, kept apart from the logged total, with an over-budget warning. */
-    private void renderPlanned(DraftTrip trip, double total, String home) {
+    private void renderPlanned(TripSnapshot trip, double total, String home) {
         double planned = BudgetMath.plannedTotal(trip);
         boolean over = BudgetMath.isOver(planned, total);
         ((TextView) findViewById(R.id.text_planned)).setText(CurrencyRates.format(planned, home));
@@ -275,7 +275,7 @@ public class BudgetActivity extends ScreenActivity {
     }
 
     private void renderCategories(BudgetSettings budget, int days, List<Expense> expenses,
-                                  DraftTrip trip) {
+                                  TripSnapshot trip) {
         LinearLayout container = findViewById(R.id.category_container);
         container.removeAllViews();
         Map<Category, Double> byCategory = BudgetMath.spentByCategory(expenses);

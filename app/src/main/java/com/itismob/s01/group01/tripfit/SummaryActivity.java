@@ -22,7 +22,7 @@ import com.google.android.material.color.MaterialColors;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
 import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.Category;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
 import com.itismob.s01.group01.tripfit.prototype.Expense;
@@ -55,7 +55,7 @@ public class SummaryActivity extends ScreenActivity {
     private final PrototypeStore store = PrototypeStore.get();
     private List<ItineraryItemWithPlace> items;
     private String tripName;
-    private DraftTrip snapshot;
+    private TripSnapshot snapshot;
     private DocumentExportViewModel export;
     private ActivityResultLauncher<String> createDocument;
 

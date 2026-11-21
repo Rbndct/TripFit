@@ -39,21 +39,21 @@ public final class BudgetMath {
     }
 
     /** Sum of every stop's estimate converted to the trip's home currency. */
-    public static double plannedTotal(DraftTrip trip) {
+    public static double plannedTotal(TripSnapshot trip) {
         double total = 0;
-        for (DraftTrip.Stop stop : trip.stops) {
+        for (TripSnapshot.Stop stop : trip.stops) {
             total += trip.convertedCost(stop);
         }
         return total;
     }
 
     /** Planned estimates per category in home currency; every category is present. */
-    public static Map<Category, Double> plannedByCategory(DraftTrip trip) {
+    public static Map<Category, Double> plannedByCategory(TripSnapshot trip) {
         Map<Category, Double> totals = new EnumMap<>(Category.class);
         for (Category category : Category.values()) {
             totals.put(category, 0.0);
         }
-        for (DraftTrip.Stop stop : trip.stops) {
+        for (TripSnapshot.Stop stop : trip.stops) {
             Category category = parseCategory(stop.category);
             totals.put(category, totals.get(category) + trip.convertedCost(stop));
         }
@@ -77,9 +77,9 @@ public final class BudgetMath {
     }
 
     /** Currency codes (sorted) used by a costed stop or an expense but missing from the rates table. */
-    public static java.util.Set<String> unknownCurrencies(DraftTrip trip, List<Expense> expenses) {
+    public static java.util.Set<String> unknownCurrencies(TripSnapshot trip, List<Expense> expenses) {
         java.util.Set<String> unknown = new java.util.TreeSet<>();
-        for (DraftTrip.Stop stop : trip.stops) {
+        for (TripSnapshot.Stop stop : trip.stops) {
             String code = trip.costCurrency(stop);
             if (stop.cost > 0 && !CurrencyRates.has(code)) {
                 unknown.add(code);

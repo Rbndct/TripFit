@@ -7,7 +7,7 @@ import androidx.annotation.Nullable;
 
 /**
  * SharedPreferences-backed storage. Uses its own file, never Kevin's {@code trippings_prototype_v1}
- * (that file holds an incompatible {@code DraftTrip} array).
+ * (that file holds an incompatible {@code TripSnapshot} array).
  */
 public final class PrefsKeyValueStorage implements KeyValueStorage {
 

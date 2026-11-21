@@ -16,10 +16,10 @@ import java.util.Map;
  */
 public final class RoutePreview {
     public static class Slot {
-        public DraftTrip.Stop stop;
+        public TripSnapshot.Stop stop;
         public int start, end, travel;
         public boolean conflict;
-        Slot(DraftTrip.Stop stop,int start,int travel,boolean conflict) {
+        Slot(TripSnapshot.Stop stop,int start,int travel,boolean conflict) {
             this.stop=stop; this.start=start; this.end=start+stop.duration; this.travel=travel; this.conflict=conflict;
         }
     }
@@ -42,7 +42,7 @@ public final class RoutePreview {
      * One day's schedule. With optimize the nearest-neighbour preview is returned only when it
      * travels no longer and adds no conflicts; otherwise the current order is kept.
      */
-    public static List<Slot> day(DraftTrip trip,int day,boolean optimize) {
+    public static List<Slot> day(TripSnapshot trip,int day,boolean optimize) {
         List<Slot> current=plan(trip,day,false);
         if(!optimize) return current;
         List<Slot> preview=plan(trip,day,true);
@@ -56,17 +56,17 @@ public final class RoutePreview {
         return count;
     }
 
-    private static List<Slot> plan(DraftTrip trip,int day,boolean optimize) {
-        List<DraftTrip.Stop> flexible=new ArrayList<>(), fixed=new ArrayList<>();
-        for(DraftTrip.Stop stop:trip.stops) if(stop.day==day) (stop.booked?fixed:flexible).add(stop);
+    private static List<Slot> plan(TripSnapshot trip,int day,boolean optimize) {
+        List<TripSnapshot.Stop> flexible=new ArrayList<>(), fixed=new ArrayList<>();
+        for(TripSnapshot.Stop stop:trip.stops) if(stop.day==day) (stop.booked?fixed:flexible).add(stop);
         fixed.sort(Comparator.comparingInt(s->s.fixedMinute));
         List<Slot> result=new ArrayList<>();
         int cursor=ScheduleMath.DAY_START_MIN;
-        DraftTrip.Stop previous=null;
+        TripSnapshot.Stop previous=null;
         for(int anchor=0;anchor<=fixed.size();anchor++) {
-            DraftTrip.Stop booked=anchor<fixed.size()?fixed.get(anchor):null;
+            TripSnapshot.Stop booked=anchor<fixed.size()?fixed.get(anchor):null;
             while(!flexible.isEmpty()) {
-                DraftTrip.Stop chosen=pickNext(flexible,previous,booked,cursor,optimize);
+                TripSnapshot.Stop chosen=pickNext(flexible,previous,booked,cursor,optimize);
                 if(chosen==null) break;
                 int minutes=travel(previous,chosen);
                 int start=cursor+minutes+(previous==null?0:chosen.buffer);
@@ -84,11 +84,11 @@ public final class RoutePreview {
     }
 
     /** The next flexible stop that still fits before {@code booked}; nearest-first when optimizing. */
-    private static DraftTrip.Stop pickNext(List<DraftTrip.Stop> flexible,DraftTrip.Stop previous,DraftTrip.Stop booked,int cursor,boolean optimize) {
-        DraftTrip.Stop chosen=null;
+    private static TripSnapshot.Stop pickNext(List<TripSnapshot.Stop> flexible,TripSnapshot.Stop previous,TripSnapshot.Stop booked,int cursor,boolean optimize) {
+        TripSnapshot.Stop chosen=null;
         double nearest=Double.MAX_VALUE;
         boolean chosenPinned=false;
-        for(DraftTrip.Stop candidate:flexible) {
+        for(TripSnapshot.Stop candidate:flexible) {
             int arrival=cursor+travel(previous,candidate)+(previous==null?0:candidate.buffer);
             int departure=arrival+candidate.duration;
             if(booked!=null && departure+travel(candidate,booked)+booked.buffer>booked.fixedMinute) continue;
@@ -110,7 +110,7 @@ public final class RoutePreview {
     }
 
     /** Current order (optimize=false) versus preview order (optimize=true); never mutates the trip. */
-    public static Comparison compare(DraftTrip trip,int day) {
+    public static Comparison compare(TripSnapshot trip,int day) {
         return new Comparison(day(trip,day,false),day(trip,day,true));
     }
 
@@ -118,12 +118,12 @@ public final class RoutePreview {
      * New day for every FLEXIBLE stop so loads (duration + buffer) even out across all trip days.
      * Booked stops never move and count toward their day's load when it is inside 1..days.
      */
-    public static Map<String,Integer> balance(DraftTrip trip) {
+    public static Map<String,Integer> balance(TripSnapshot trip) {
         Map<String,Integer> result=new LinkedHashMap<>();
         int days=Math.max(1,trip.days);
         int[] loads=new int[days];
-        for(DraftTrip.Stop s:trip.stops) if(s.booked && s.day>=1 && s.day<=days) loads[s.day-1]+=s.duration+s.buffer;
-        for(DraftTrip.Stop s:trip.stops) {
+        for(TripSnapshot.Stop s:trip.stops) if(s.booked && s.day>=1 && s.day<=days) loads[s.day-1]+=s.duration+s.buffer;
+        for(TripSnapshot.Stop s:trip.stops) {
             if(s.booked) continue;
             int lowest=0;
             for(int i=1;i<days;i++) if(loads[i]<loads[lowest]) lowest=i;
@@ -139,18 +139,18 @@ public final class RoutePreview {
         return false;
     }
 
-    public static int travel(DraftTrip.Stop from,DraftTrip.Stop to) {
+    public static int travel(TripSnapshot.Stop from,TripSnapshot.Stop to) {
         if(from==null) return 0;
         if(!from.hasLocation || !to.hasLocation) return ScheduleMath.PLACEHOLDER_TRAVEL_MIN;
         return resolve(from,to).minutesFor(distance(from.lat,from.lng,to.lat,to.lng));
     }
-    public static String mode(DraftTrip.Stop from,DraftTrip.Stop to) {
+    public static String mode(TripSnapshot.Stop from,TripSnapshot.Stop to) {
         return TripSnapshots.modeName(resolve(from,to));
     }
     /** The mode a leg actually uses: the destination's explicit mode, else Suggested by distance. */
-    public static TravelMode legMode(DraftTrip.Stop from,DraftTrip.Stop to) { return resolve(from,to); }
+    public static TravelMode legMode(TripSnapshot.Stop from,TripSnapshot.Stop to) { return resolve(from,to); }
     /** Explicit mode on the destination wins; otherwise Suggested by straight-line distance. */
-    private static TravelMode resolve(DraftTrip.Stop from,DraftTrip.Stop to) {
+    private static TravelMode resolve(TripSnapshot.Stop from,TripSnapshot.Stop to) {
         TravelMode explicit=TripSnapshots.toMode(to.mode);
         if(explicit!=null) return explicit;
         if(from==null || !from.hasLocation || !to.hasLocation) return TravelMode.WALK;

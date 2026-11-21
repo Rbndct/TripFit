@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.itismob.s01.group01.tripfit.data.TripRepository;
 import com.itismob.s01.group01.tripfit.data.local.ItineraryItemWithPlace;
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.RoutePreview;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
@@ -37,7 +37,7 @@ public class OptimizeActivity extends ScreenActivity {
     private final RowAdapter adapter = new RowAdapter();
     private final List<List<String>> pendingOrders = new ArrayList<>();
     private List<ItineraryItemWithPlace> latestItems = new ArrayList<>();
-    private DraftTrip latestTrip;
+    private TripSnapshot latestTrip;
     private TripRepository repository;
     private List<ItineraryItemWithPlace> observedItems = new ArrayList<>();
     private OptimizeWriteViewModel writes;

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 /** Local prototype state. No account, network service, or API key is required. */
-public class DraftTrip {
+public class TripSnapshot {
     public String id = UUID.randomUUID().toString();
     public String name = "";
     public String city = "Tokyo";

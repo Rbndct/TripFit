@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.itismob.s01.group01.tripfit.prototype.DraftTrip;
+import com.itismob.s01.group01.tripfit.prototype.TripSnapshot;
 import com.itismob.s01.group01.tripfit.prototype.TravelMode;
 
 import org.junit.Test;
@@ -14,8 +14,8 @@ import java.util.List;
 
 public class ItineraryRowTest {
 
-    private static DraftTrip.Stop stop(String id, int duration, int buffer) {
-        DraftTrip.Stop s = new DraftTrip.Stop();
+    private static TripSnapshot.Stop stop(String id, int duration, int buffer) {
+        TripSnapshot.Stop s = new TripSnapshot.Stop();
         s.id = id;
         s.name = "Name " + id;
         s.duration = duration;
@@ -23,8 +23,8 @@ public class ItineraryRowTest {
         return s;
     }
 
-    private static DraftTrip.Stop pinned(String id, double lng) {
-        DraftTrip.Stop s = stop(id, 30, 10);
+    private static TripSnapshot.Stop pinned(String id, double lng) {
+        TripSnapshot.Stop s = stop(id, 30, 10);
         s.hasLocation = true;
         s.lat = 35.0;
         s.lng = lng;
@@ -33,9 +33,9 @@ public class ItineraryRowTest {
 
     @Test
     public void rows_followSlotOrderAroundBookedStops() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("a", 30, 15));
-        DraftTrip.Stop lunch = stop("lunch", 60, 15);
+        TripSnapshot.Stop lunch = stop("lunch", 60, 15);
         lunch.booked = true;
         lunch.fixedMinute = 660;
         trip.stops.add(lunch);
@@ -52,7 +52,7 @@ public class ItineraryRowTest {
 
     @Test
     public void firstRow_hasNoIncomingLeg() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("a", 30, 25));
         ItineraryRow row = ItineraryRow.build(trip, 1).get(0);
         assertFalse(row.hasIncomingLeg());
@@ -62,7 +62,7 @@ public class ItineraryRowTest {
 
     @Test
     public void unpinnedEndOfLeg_usesPlaceholderAndPinnedRowExposesCoordinates() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(pinned("a", 139.70));
         trip.stops.add(stop("b", 30, 10));
         List<ItineraryRow> rows = ItineraryRow.build(trip, 1);
@@ -76,10 +76,10 @@ public class ItineraryRowTest {
 
     @Test
     public void legMode_explicitWinsAndSuggestedResolvesByDistance() {
-        DraftTrip trip = new DraftTrip();
-        DraftTrip.Stop a = pinned("a", 139.70);
-        DraftTrip.Stop b = pinned("b", 139.80);
-        DraftTrip.Stop c = pinned("c", 139.90);
+        TripSnapshot trip = new TripSnapshot();
+        TripSnapshot.Stop a = pinned("a", 139.70);
+        TripSnapshot.Stop b = pinned("b", 139.80);
+        TripSnapshot.Stop c = pinned("c", 139.90);
         b.mode = "Driving";
         trip.stops.add(a);
         trip.stops.add(b);
@@ -94,14 +94,14 @@ public class ItineraryRowTest {
 
     @Test
     public void conflict_isCarriedFromTheEngine() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("long", 700, 0));
         assertTrue(ItineraryRow.build(trip, 1).get(0).isConflict());
     }
 
     @Test
     public void totals_sumStayAndTravelMinutes() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("a", 30, 0));
         trip.stops.add(stop("b", 45, 0));
         List<ItineraryRow> rows = ItineraryRow.build(trip, 1);
@@ -113,9 +113,9 @@ public class ItineraryRowTest {
     @Test
     public void estimate_isConvertedToTheHomeCurrencyAndKeepsTheStopCurrency() {
         com.itismob.s01.group01.tripfit.data.CurrencyRates.useFallback();
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.homeCurrency = "PHP";
-        DraftTrip.Stop a = stop("a", 30, 15);
+        TripSnapshot.Stop a = stop("a", 30, 15);
         a.cost = 150;
         a.currency = "JPY";
         trip.stops.add(a);
@@ -126,7 +126,7 @@ public class ItineraryRowTest {
 
     @Test
     public void estimate_zeroCostMeansNoEstimate() {
-        DraftTrip trip = new DraftTrip();
+        TripSnapshot trip = new TripSnapshot();
         trip.stops.add(stop("a", 30, 15));
         assertEquals(0.0, ItineraryRow.build(trip, 1).get(0).getEstimateHome(), 0.0);
     }

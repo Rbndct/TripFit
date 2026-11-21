@@ -20,16 +20,16 @@ public class PlannedCostsTest {
         CurrencyRates.useFallback();
     }
 
-    private static DraftTrip trip(DraftTrip.Stop... stops) {
-        DraftTrip trip = new DraftTrip();
+    private static TripSnapshot trip(TripSnapshot.Stop... stops) {
+        TripSnapshot trip = new TripSnapshot();
         trip.city = "Tokyo";
         trip.homeCurrency = "PHP";
         trip.stops.addAll(Arrays.asList(stops));
         return trip;
     }
 
-    private static DraftTrip.Stop stop(double cost, String currency, String category) {
-        DraftTrip.Stop stop = new DraftTrip.Stop();
+    private static TripSnapshot.Stop stop(double cost, String currency, String category) {
+        TripSnapshot.Stop stop = new TripSnapshot.Stop();
         stop.cost = cost;
         stop.currency = currency;
         stop.category = category;
@@ -53,13 +53,13 @@ public class PlannedCostsTest {
 
     @Test
     public void plannedTotal_convertsEachStopFromItsOwnCurrency() {
-        DraftTrip trip = trip(stop(150, "JPY", "Food"), stop(100, "PHP", "Activities"));
+        TripSnapshot trip = trip(stop(150, "JPY", "Food"), stop(100, "PHP", "Activities"));
         assertEquals(156.0, BudgetMath.plannedTotal(trip), 0.0001);
     }
 
     @Test
     public void plannedTotal_stopWithoutCurrencyUsesTheTripsLocalCurrency() {
-        DraftTrip trip = trip(stop(150, "", "Food"));
+        TripSnapshot trip = trip(stop(150, "", "Food"));
         assertEquals(56.0, BudgetMath.plannedTotal(trip), 0.0001);
     }
 
@@ -70,7 +70,7 @@ public class PlannedCostsTest {
 
     @Test
     public void plannedByCategory_groupsAndIncludesEveryCategory() {
-        DraftTrip trip = trip(stop(150, "JPY", "Food"), stop(300, "JPY", "Food"),
+        TripSnapshot trip = trip(stop(150, "JPY", "Food"), stop(300, "JPY", "Food"),
                 stop(100, "PHP", "Transport"), stop(5, "PHP", "mystery"));
         Map<Category, Double> byCategory = BudgetMath.plannedByCategory(trip);
         assertEquals(Category.values().length, byCategory.size());
@@ -82,7 +82,7 @@ public class PlannedCostsTest {
 
     @Test
     public void plannedAndLoggedAreSeparateNumbers() {
-        DraftTrip trip = trip(stop(150, "JPY", "Food"));
+        TripSnapshot trip = trip(stop(150, "JPY", "Food"));
         Expense logged = new Expense("Ramen", Category.FOOD, 300, "JPY", 112);
         double planned = BudgetMath.plannedTotal(trip);
         double spent = BudgetMath.totalSpent(Arrays.asList(logged));
@@ -113,8 +113,8 @@ public class PlannedCostsTest {
 
     @Test
     public void explicitStopCurrencyStaysAfterTheCityChanges() {
-        DraftTrip trip = trip(stop(150, "JPY", "Food"));
-        DraftTrip.Stop stop = trip.stops.get(0);
+        TripSnapshot trip = trip(stop(150, "JPY", "Food"));
+        TripSnapshot.Stop stop = trip.stops.get(0);
         assertEquals("JPY", trip.costCurrency(stop));
         trip.city = "Manila";
         assertEquals("JPY", trip.costCurrency(stop));
@@ -124,7 +124,7 @@ public class PlannedCostsTest {
     @Test
     public void localCurrencyFollowsTheSameRuleAsBudgetSettings() {
         for (String city : new String[]{"Tokyo", "Manila", "Seoul"}) {
-            DraftTrip trip = new DraftTrip();
+            TripSnapshot trip = new TripSnapshot();
             trip.city = city;
             assertEquals(MockData.currencyFor(city), trip.localCurrency());
         }
@@ -132,7 +132,7 @@ public class PlannedCostsTest {
 
     @Test
     public void unknownCurrencies_listsStopsAndExpensesOutsideTheTable() {
-        DraftTrip trip = trip(stop(10, "XXX", "Food"), stop(10, "JPY", "Food"),
+        TripSnapshot trip = trip(stop(10, "XXX", "Food"), stop(10, "JPY", "Food"),
                 stop(0, "ZZZ", "Food"));
         Expense odd = new Expense("Odd", Category.FOOD, 5, "QQQ", 5);
         Expense fine = new Expense("Fine", Category.FOOD, 5, "USD", 280);
@@ -153,7 +153,7 @@ public class PlannedCostsTest {
     public void plannedVersusTripTotal_dailyBudgetUsesDays() {
         BudgetSettings daily = new BudgetSettings("PHP", "JPY", 100, true,
                 java.util.Collections.<Category, Double>emptyMap());
-        DraftTrip trip = trip(stop(250, "PHP", "Food"));
+        TripSnapshot trip = trip(stop(250, "PHP", "Food"));
         assertTrue(BudgetMath.isOver(BudgetMath.plannedTotal(trip), daily.tripTotal(2)));
         assertFalse(BudgetMath.isOver(BudgetMath.plannedTotal(trip), daily.tripTotal(3)));
     }
