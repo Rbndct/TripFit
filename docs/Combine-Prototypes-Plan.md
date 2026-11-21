@@ -2,7 +2,7 @@
 
 _For copy-paste prompts tailored for ChatGPT or other AI assistants, see [CHATGPT.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/CHATGPT.md)._
 
-## Progress (updated 2026-11-21)
+## Progress (updated 2026-11-21, finish pass)
 
 Branch: `integration/steps-6-12` (teammates' steps 6-12 plus the audit fixes; not pushed)
 
@@ -19,7 +19,7 @@ Branch: `integration/steps-6-12` (teammates' steps 6-12 plus the audit fixes; no
 | 9 Group and journal | **done** | `67e9fde` | Local companions, votes, and editable journal entries with photos |
 | 10 Remove duplicate screens | **done** | `7fcce7a`, `317242d` | Removed obsolete `prototype/*Activity` classes and `DraftStore` |
 | 11 Naming and docs | **done** | `1979475` | Unified app name (Trippings) across strings, settings, and docs |
-| 12 Final verification | **partly done** | `aab1835` | 272 unit tests, 0 lint errors, assembleDebug. Checklist 137 of 138 ticked. Emulator walk covered Login, Home, Itinerary and Budget only; the other screens and the device tests still need a run on a healthy emulator (findings in `docs/Prototype-Merge-Map.md` section 9) |
+| 12 Final verification | **done** | `468a6ee` | 272 unit tests, 36 instrumented tests, 0 lint errors, assembleDebug. Checklist 138 of 138 ticked. Every screen walked on an emulator (findings in `docs/Prototype-Merge-Map.md` section 9) |
 
 Steps 6–9 bring the Tokyo and Manila catalog into trip planning, add saved sample forecasts and indoor swaps, export calendar and summary files, and add local companions, votes, and a photo journal. The Step 9 verification run passed 251 unit tests and 35 emulator tests, built the debug APK, and reported zero lint errors.
 
