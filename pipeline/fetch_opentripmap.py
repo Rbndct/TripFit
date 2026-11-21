@@ -1,4 +1,4 @@
-"""OpenTripMap: rated POIs. Server-side key only (never on-device, per DEV-HANDOFF.md §2).
+"""OpenTripMap: rated POIs. Server-side key only (never on-device).
 
 No OPENTRIPMAP_API_KEY is provisioned in this project's secrets yet (confirmed against
 `gh secret list` during Phase 1 setup). Per the free-API guardrail ("don't work around a

@@ -20,6 +20,6 @@ calling them per-device (see `API-Integration-Plan.md` §2).
 
 ## Notes
 
-- **Dropped already (per DEV-HANDOFF.md):** Google Directions/Maps Platform (billing required), Foursquare paid tier, OpenWeather paid tiers. Not re-checked since they're out of scope by design.
+- **Dropped already (decided earlier):** Google Directions/Maps Platform (billing required), Foursquare paid tier, OpenWeather paid tiers. Not re-checked since they're out of scope by design.
 - **OpenTripMap is the one open item.** The fetch adapter (`pipeline/fetch_opentripmap.py`) checks `OPENTRIPMAP_API_KEY` at runtime and logs a warning + returns an empty result set if it's absent, rather than failing the pipeline or inventing a key. Cross-referencing still works from Nominatim + Overpass + Wikidata + Wikivoyage alone; OpenTripMap mainly adds POI ratings, which degrade to "unrated" without it.
 - Re-verify this table before any term where ingestion volume grows significantly (e.g. expanding past the two SEA seed cities) — free-tier terms can change.

@@ -3,7 +3,6 @@
 _As of 2026-10-13 · Raphael Benedict C. Maagma_
 
 > Consolidated from the ITISMOB project proposal (PDF) and the TripFit product backlog (CSV).
-> Live doc: https://claude.ai/code/artifact/225683f2-d4ca-4531-9964-9af450f24218
 
 ## Project Overview
 

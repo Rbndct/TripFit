@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       cities:
-        description: '"Name,CC" pairs, space-separated (DEV-HANDOFF.md §9 secondary targets: Osaka,JP Kyoto,JP "Cebu City",PH Bangkok,TH Singapore,SG Hanoi,VN "Kuala Lumpur",MY)'
+        description: '"Name,CC" pairs, space-separated (secondary targets: Osaka,JP Kyoto,JP "Cebu City",PH Bangkok,TH Singapore,SG Hanoi,VN "Kuala Lumpur",MY)'
         required: false
         default: 'Tokyo,JP Manila,PH'
 

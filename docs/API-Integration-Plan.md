@@ -25,7 +25,7 @@ The proposal assumed a **client-only app that calls third-party APIs live, per r
 
 **Dropped:** Google Directions transit routing (requires a billing account). Transit legs are out of scope; per-leg modes are **walk / cycle / drive** via OpenRouteService. If transit becomes a hard requirement later, evaluate **Navitia.io** (free key, open-data coverage varies) — do not re-add Google.
 
-> **Action for Phase 0:** re-confirm each service's current free terms against its official pricing/usage page before writing ingestion code (limits change). Checklist lives in `DEV-HANDOFF.md`.
+> **Action for Phase 0:** re-confirm each service's current free terms against its official pricing/usage page before writing ingestion code (limits change). Checklist lives in `docs/api-terms.md`.
 
 ## 2. Target architecture
 

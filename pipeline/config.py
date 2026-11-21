@@ -5,7 +5,7 @@ SEED_CITIES = [
     {"name": "Manila", "country": "PH"},
 ]
 
-# Secondary SEA expansion targets (DEV-HANDOFF.md §9, decision 2). Not run automatically --
+# Secondary SEA expansion targets (decision 2). Not run automatically --
 # pass explicitly via `--cities` or the ingest workflow's `cities` dispatch input.
 SECONDARY_CITIES = [
     {"name": "Osaka", "country": "JP"},

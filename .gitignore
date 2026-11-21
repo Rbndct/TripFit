@@ -16,8 +16,7 @@
 .cxx
 local.properties
 
-# Local machine-specific Claude Code settings
-.claude/*.local.json
+# Local machine-specific tool settings
 
-# claude-mem local session/memory files — keep local, never commit
+# Local session/memory files — keep local, never commit
 docs/memory/

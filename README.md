@@ -266,7 +266,6 @@ python -m unittest discover -s pipeline/tests -t .
 |---|---|
 | [`docs/TripFit-Proposal-and-Backlog.md`](docs/TripFit-Proposal-and-Backlog.md) | Proposal, scope, 19-item backlog, sprint plan |
 | [`docs/API-Integration-Plan.md`](docs/API-Integration-Plan.md) | Backend architecture and phases |
-| [`docs/DEV-HANDOFF.md`](docs/DEV-HANDOFF.md) | Conventions and constraints for the data layer |
 | [`docs/api-terms.md`](docs/api-terms.md) | Usage terms of the free APIs |
 | [`PRODUCT.md`](PRODUCT.md) | Product brief |
 

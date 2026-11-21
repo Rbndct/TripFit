@@ -1,7 +1,7 @@
 """Overpass API: POI candidates (amenities, tourism, shops) inside a city bbox.
 
 One batched query per city — never per-POI calls — per the Overpass fair-use
-expectation referenced in DEV-HANDOFF.md §2.
+usage-policy expectation.
 """
 from pipeline import http_client
 from pipeline.config import OVERPASS_URL

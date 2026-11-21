@@ -1,7 +1,5 @@
 # Plan: Combine the Two Frontend Prototypes
 
-_For copy-paste prompts tailored for ChatGPT or other AI assistants, see [CHATGPT.md](file:///Users/rbndct/CODING%20/School/MOB%20DEVE/TripFit/CHATGPT.md)._
-
 ## Progress (updated 2026-11-21, finish pass)
 
 Branch: `integration/steps-6-12` (teammates' steps 6-12 plus the audit fixes; not pushed)

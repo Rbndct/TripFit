@@ -1,6 +1,6 @@
 # Prototype Merge Map
 
-_Step 1 of `.claude/plans/combine-prototypes.md`. Written 2026-11-16 on branch `feat/ui-prototype`. No code was changed in this step._
+_Step 1 of the combine plan (`docs/Combine-Prototypes-Plan.md`). Written 2026-11-16 on branch `feat/ui-prototype`. No code was changed in this step._
 
 **Path convention.** `<pkg>/` means `app/src/main/java/com/itismob/s01/group01/tripfit/`. Kevin's classes are under `<pkg>/prototype/`. Where a simple name exists twice, the full path decides which class is meant: for example `prototype/BudgetActivity.java` is Kevin's and `BudgetActivity.java` (root package) is ours.
 
@@ -816,4 +816,4 @@ A row also owns every item whose only UI is that screen:
 
 **Validation after these fixes.** 272 unit tests, 0 lint errors, `assembleDebug` and 38 of 38 instrumented tests pass.
 
-**Deferred.** The capture tool `.claude/plans/tools/capture.py` cannot open Stop Details by itself (fake item id); it now has a Weather entry.
+**Deferred.** The screen capture script cannot open Stop Details by itself (fake item id); it now has a Weather entry.
