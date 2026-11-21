@@ -11,6 +11,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.TextView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -18,6 +20,8 @@ import com.itismob.s01.group01.tripfit.HomeActivity;
 import com.itismob.s01.group01.tripfit.MapPickerActivity;
 import com.itismob.s01.group01.tripfit.R;
 import com.itismob.s01.group01.tripfit.ScreenActivity;
+import com.itismob.s01.group01.tripfit.TripFitApp;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.io.File;
@@ -32,6 +36,15 @@ import static androidx.test.espresso.action.ViewActions.click;
 
 @RunWith(AndroidJUnit4.class)
 public class PrototypeDeviceTest {
+
+    /** Screens close themselves when their trip is missing, so a clean install needs the sample trip. */
+    @Before
+    public void seedSampleTrip() throws InterruptedException {
+        TripFitApp app = ApplicationProvider.getApplicationContext();
+        CountDownLatch seeded = new CountDownLatch(1);
+        app.getTripRepository().ensureSeedData(result -> seeded.countDown());
+        assertTrue("Sample trip was not seeded", seeded.await(10, TimeUnit.SECONDS));
+    }
 
     @Test
     public void screenActivitiesLaunchLocally() {
@@ -54,25 +67,30 @@ public class PrototypeDeviceTest {
             intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
             try (ActivityScenario<?> scenario = ActivityScenario.launch(intent)) {
                 scenario.onActivity(activity -> assertTrue(activity instanceof ScreenActivity));
-                assertTrue(screen.getSimpleName() + " has no status-bar padding",
-                        awaitStatusBarPadding(scenario));
+                assertTrue(screen.getSimpleName() + " toolbar is under the status bar",
+                        awaitToolbarBelowStatusBar(scenario));
             }
         }
     }
 
     /**
-     * The shell's app bar consumes the status-bar inset as top padding, so it must be above zero
-     * shortly after launch (insets arrive after the first layout pass).
+     * The shell's app bar uses fitsSystemWindows, so the toolbar must sit at or below the
+     * status-bar inset (insets arrive after the first layout pass, so wait for them).
      */
-    private static boolean awaitStatusBarPadding(ActivityScenario<?> scenario) {
+    private static boolean awaitToolbarBelowStatusBar(ActivityScenario<?> scenario) {
         long deadline = System.currentTimeMillis() + 3000;
-        int[] top = new int[1];
+        boolean[] clear = new boolean[1];
         while (System.currentTimeMillis() < deadline) {
             scenario.onActivity(activity -> {
-                View appBar = (View) activity.findViewById(R.id.toolbar).getParent();
-                top[0] = appBar.getPaddingTop();
+                View toolbar = activity.findViewById(R.id.toolbar);
+                WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(toolbar);
+                int statusBar = insets == null ? 0
+                        : insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                int[] location = new int[2];
+                toolbar.getLocationInWindow(location);
+                clear[0] = statusBar > 0 && location[1] >= statusBar;
             });
-            if (top[0] > 0) {
+            if (clear[0]) {
                 return true;
             }
             try {
