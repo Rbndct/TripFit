@@ -31,7 +31,7 @@ Design and decision records: `docs/Combine-Prototypes-Plan.md`, `docs/Prototype-
 | 8 Calendar and export | `.ics` and PDF through the file picker, summary sharing | `5d50188` |
 | 9 Group and journal | Local companions, votes, editable photo journal | `67e9fde`, `96defcd` |
 | 10 to 12 | Remove duplicate screens, naming, final verification | `7fcce7a`, `317242d`, `1979475` |
-| Audit fixes | Optimize guard and whole-trip budget allowance, pin name, budget, stop card, keyboard, tagline and trip-settings gaps | `27e2013`, `f90cea5`, `8ee4d6f`, `468a6ee` |
+| Audit fixes | Optimize guard and whole-trip budget allowance, pin name, budget, stop card, keyboard, tagline, trip-settings, snackbar, large-font and label gaps | `27e2013`, `f90cea5`, `8ee4d6f`, `468a6ee`, and the Discover font and label fix |
 | Tests and docs | Device test fixes, refreshed captures, merge-map and plan updates | `1a97209`, `3dadafb`, `aab1835`, `b7b21ff`, `1017abf`, `4be9a48`, `4f5611d` |
 | Planning docs | Project plans, contributor docs and tooling | `6893b7b` to `d3520ac` |
 
@@ -40,7 +40,7 @@ Design and decision records: `docs/Combine-Prototypes-Plan.md`, `docs/Prototype-
 Run on `integration/steps-6-12` (JDK 25 from Android Studio):
 
 - `./gradlew compileDebugJavaWithJavac testDebugUnitTest lintDebug compileDebugAndroidTestJava assembleDebug`: **BUILD SUCCESSFUL**, **272 unit tests, 0 failures, 0 lint errors**.
-- `./gradlew connectedDebugAndroidTest` on a freshly wiped Pixel 3a (API 34): **36 of 36 instrumented tests pass**.
+- `./gradlew connectedDebugAndroidTest` on a freshly wiped Pixel 3a (API 34): **38 of 38 instrumented tests pass**.
 - Emulator walkthrough of every screen (light, dark and 1.3x font captures in `.impeccable/review/`): no ANRs, no layout problems found. The "Budget saved" snackbar, keyboard hiding after submit (Budget calculator, Group companion) and the weather forecast change were exercised by hand.
 - Checklist: 138 of 138 items in `docs/Prototype-Merge-Map.md` verified against the code.
 
@@ -49,8 +49,6 @@ Run on `integration/steps-6-12` (JDK 25 from Android Studio):
 - **Sample data only.** Places, prices, ratings, weather and routing are illustrative. Exchange rates are live from Frankfurter when reachable and fall back to a sample table. Travel times are straight-line estimates.
 - **Local storage only.** Trips and stops are in Room v1 (no migration was needed); expenses, budget, journal, votes and per-stop cost are in `PrototypeStore`. Nothing syncs to a server and no invitations are sent.
 - **Not merged from `origin/feat/ui-prototype`:** Kevin's later commits `123c8cd` and `8952904` (travel data adapters, `ExchangeRates`, extra tests) edit screens this PR deletes, and `ExchangeRates` would add a second rates table. Two of their rules were ported as tests plus fixes (optimized previews never get worse; suggestions respect the whole-trip budget). The rest needs a follow-up PR from Kevin on top of this one, using the single `CurrencyRates` table.
-- Discover says "remaining" using the larger of planned and logged spending, while the Budget tracker counts logged spending only, so the two figures can differ.
-- At 1.3x font the Discover "Adding to Day 1" chip wraps and leaves the "1" on its own line.
 - Calendar sync is a preview: nothing is sent to Google Calendar; the `.ics` file is saved for manual import.
 
 ## Reviewer checklist

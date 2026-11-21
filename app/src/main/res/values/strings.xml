@@ -118,7 +118,7 @@
         <item quantity="other">%1$,d reviews</item>
     </plurals>
     <string name="catalog_card">%1$s · %2$s · %3$s\n%4$s\n★ %5$.1f · %6$s · %7$.1f km\n%8$s · %9$s ≈ %10$s · %11$d min</string>
-    <string name="catalog_remaining">%1$s remaining in %2$s</string>
+    <string name="catalog_remaining">%1$s left in %2$s after planned or logged costs</string>
     <string name="catalog_no_limit">No category budget set</string>
     <string name="catalog_over_budget">Over category budget</string>
     <string name="catalog_already_planned">Already in your itinerary</string>
