@@ -74,9 +74,15 @@ public class BudgetActivity extends ScreenActivity {
     private final ActivityResultLauncher<Intent> budgetSetup = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    toast(R.string.budget_saved);
+                    showBudgetSaved();
                 }
             });
+
+    /** Package-private so the screen test can trigger it without driving Budget setup. */
+    void showBudgetSaved() {
+        Snackbar.make(findViewById(R.id.budget_root), R.string.budget_saved,
+                Snackbar.LENGTH_SHORT).setAnchorView(R.id.fab_add_expense).show();
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
