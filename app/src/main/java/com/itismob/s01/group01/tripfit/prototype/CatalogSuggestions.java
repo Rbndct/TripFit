@@ -55,6 +55,22 @@ public final class CatalogSuggestions {
         return limit - Math.max(planned, logged);
     }
 
+    /**
+     * What a suggestion may still cost: the tighter of the category and whole-trip remaining.
+     * A limit of 0 means "no limit" and is ignored; with no limits at all the result is unbounded.
+     */
+    public static double allowance(double categoryLimit, double categoryPlanned, double categoryLogged,
+                                   double tripLimit, double tripPlanned, double tripLogged) {
+        double allowance = Double.POSITIVE_INFINITY;
+        if (categoryLimit > 0) {
+            allowance = remaining(categoryLimit, categoryPlanned, categoryLogged);
+        }
+        if (tripLimit > 0) {
+            allowance = Math.min(allowance, remaining(tripLimit, tripPlanned, tripLogged));
+        }
+        return allowance;
+    }
+
     public static final class Anchor {
         public final String name;
         private final double lat, lng;

@@ -45,6 +45,24 @@ public class CatalogSuggestionsTest {
     }
 
     @Test
+    public void allowanceIsTheTighterOfCategoryAndWholeTripRemaining() {
+        // category has 400 left, trip has only 100 left
+        assertEquals(100, CatalogSuggestions.allowance(500, 100, 0, 1000, 900, 0), 0.0);
+        // category is the tighter one
+        assertEquals(50, CatalogSuggestions.allowance(150, 100, 0, 1000, 200, 0), 0.0);
+        // logged spending counts instead of planned when it is higher
+        assertEquals(-20, CatalogSuggestions.allowance(500, 100, 0, 1000, 400, 1020), 0.0);
+    }
+
+    @Test
+    public void allowanceTreatsZeroLimitsAsNoLimit() {
+        assertEquals(300, CatalogSuggestions.allowance(500, 200, 0, 0, 9000, 0), 0.0);
+        assertEquals(700, CatalogSuggestions.allowance(0, 0, 0, 1000, 300, 0), 0.0);
+        assertEquals(Double.POSITIVE_INFINITY,
+                CatalogSuggestions.allowance(0, 0, 0, 0, 0, 0), 0.0);
+    }
+
+    @Test
     public void nearbyUsesLastPinnedStopOnTargetDay() {
         DemoCatalog.Place temple = DemoCatalog.findById("offline-senso-ji");
         DemoCatalog.Place shrine = DemoCatalog.findById("offline-meiji");

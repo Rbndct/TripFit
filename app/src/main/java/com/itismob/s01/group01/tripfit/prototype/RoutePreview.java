@@ -38,7 +38,25 @@ public final class RoutePreview {
         }
     }
 
+    /**
+     * One day's schedule. With optimize the nearest-neighbour preview is returned only when it
+     * travels no longer and adds no conflicts; otherwise the current order is kept.
+     */
     public static List<Slot> day(DraftTrip trip,int day,boolean optimize) {
+        List<Slot> current=plan(trip,day,false);
+        if(!optimize) return current;
+        List<Slot> preview=plan(trip,day,true);
+        boolean worse=totalTravel(preview)>totalTravel(current) || conflicts(preview)>conflicts(current);
+        return worse?current:preview;
+    }
+
+    private static int conflicts(List<Slot> slots) {
+        int count=0;
+        for(Slot slot:slots) if(slot.conflict) count++;
+        return count;
+    }
+
+    private static List<Slot> plan(DraftTrip trip,int day,boolean optimize) {
         List<DraftTrip.Stop> flexible=new ArrayList<>(), fixed=new ArrayList<>();
         for(DraftTrip.Stop stop:trip.stops) if(stop.day==day) (stop.booked?fixed:flexible).add(stop);
         fixed.sort(Comparator.comparingInt(s->s.fixedMinute));

@@ -40,13 +40,28 @@ public final class CatalogRows {
                 planned.get(category), logged.get(category));
     }
 
+    /** Tighter of the category and whole-trip remaining; unbounded when no limits are set. */
+    private double allowance(Category category) {
+        return CatalogSuggestions.allowance(budget.limitFor(category, days),
+                planned.get(category), logged.get(category),
+                budget.tripTotal(days), sum(planned), sum(logged));
+    }
+
+    private static double sum(Map<Category, Double> amounts) {
+        double total = 0;
+        for (double amount : amounts.values()) {
+            total += amount;
+        }
+        return total;
+    }
+
     private double homePrice(DemoCatalog.Place place) {
         return CurrencyRates.convert(place.price, place.currency, budget.getHomeCurrency());
     }
 
     public boolean isOverBudget(DemoCatalog.Place place) {
         Category category = BudgetMath.parseCategory(place.category);
-        return budget.limitFor(category, days) > 0 && homePrice(place) > remaining(category);
+        return homePrice(place) > allowance(category);
     }
 
     public String nearbyLabel(CatalogSuggestions.Anchor anchor) {
