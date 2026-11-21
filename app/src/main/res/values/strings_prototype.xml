@@ -18,8 +18,8 @@
     <string name="setting_dark_mode">Dark mode</string>
     <string name="setting_reminders">Event reminders</string>
     <string name="setting_reminders_helper">Handled natively by Google Calendar</string>
-    <string name="setting_about">About TripFit</string>
-    <string name="about_message">TripFit v1.0: smart itinerary planning with route, budget and calendar sync. ITISMOB term project, DLSU CCS-IT.\n\nYour drafts stay on this device. Discovery, prices, exchange rates and weather use sample data.</string>
+    <string name="setting_about">About Trippings</string>
+    <string name="about_message">Trippings v1.0: smart itinerary planning with route, budget and calendar sync. ITISMOB term project, DLSU CCS-IT.\n\nYour drafts stay on this device. Discovery, prices, exchange rates and weather use sample data.</string>
     <string name="buffer_none">No buffer</string>
     <string name="buffer_minutes">%1$d min</string>
     <string name="action_sign_out">Sign out</string>

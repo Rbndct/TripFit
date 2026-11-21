@@ -6,7 +6,7 @@ This prototype implements the flows in the ITISMOB proposal's Scope of Work. It 
 
 Run the `app` debug configuration on an emulator or Android device. On the welcome screen, leave the fields blank and tap **Continue**. Open the sample Tokyo trip, or create a trip for Tokyo or Manila.
 
-The primary entry flow is `LoginActivity` → `HomeActivity` → `MainActivity`. Prototype state is saved in `trippings_prototype_v1` SharedPreferences (`PrototypeStore`) and Room database. All screens run off the unified root Activity architecture.
+The primary entry flow is `LoginActivity` → `HomeActivity` → `MainActivity`. Prototype state is saved in the `trippings_store_v2` SharedPreferences file (`PrototypeStore`) and the Room database. All screens run off the unified root Activity architecture.
 
 ## Proposal coverage
 

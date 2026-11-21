@@ -12,11 +12,11 @@ Independent travelers and small groups planning multi-stop trips — city tours,
 
 ## Product Purpose
 
-TripFit folds itinerary building, route optimization, calendar sync, and budget tracking into one app, so travelers stop juggling separate tools (maps, a spreadsheet, a currency converter, blog posts, their calendar) for each slice of trip planning. Success means a user can go from "where do I want to go" to a finalized, budgeted, calendar-synced plan inside one app.
+Trippings folds itinerary building, route optimization, calendar sync, and budget tracking into one app, so travelers stop juggling separate tools (maps, a spreadsheet, a currency converter, blog posts, their calendar) for each slice of trip planning. Success means a user can go from "where do I want to go" to a finalized, budgeted, calendar-synced plan inside one app.
 
 ## Positioning
 
-No existing app combines route optimization, calendar sync, budget-aware recommendations, currency conversion, and destination discovery in one place: Google Trips is discontinued, TripIt only organizes bookings already made, and Wanderlog/Google My Maps list places without sequencing them efficiently or accounting for budget. TripFit's mechanism is the pipeline itself — stops feed route optimization, which feeds the day-by-day builder, which feeds calendar sync and the budget tracker — rather than any single feature in isolation.
+No existing app combines route optimization, calendar sync, budget-aware recommendations, currency conversion, and destination discovery in one place: Google Trips is discontinued, TripIt only organizes bookings already made, and Wanderlog/Google My Maps list places without sequencing them efficiently or accounting for budget. Trippings' mechanism is the pipeline itself — stops feed route optimization, which feeds the day-by-day builder, which feeds calendar sync and the budget tracker — rather than any single feature in isolation.
 
 ## Operating Context
 
@@ -28,7 +28,7 @@ No existing app combines route optimization, calendar sync, budget-aware recomme
 
 ## Capabilities and Constraints
 
-**Scope commitment:** full TripFit (all 19 backlog items) is committed for this term. The proposal's trimmed fallback, TripFit Lite (manual itinerary + calendar sync + budget tracking on 2-3 APIs, dropping route optimization and the recommendation engine), stays as a guardrail only if the term runs short — not the current plan.
+**Scope commitment:** full Trippings (all 19 backlog items) is committed for this term. The proposal's trimmed fallback, Trippings Lite (called TripFit Lite in the proposal; manual itinerary + calendar sync + budget tracking on 2-3 APIs, dropping route optimization and the recommendation engine), stays as a guardrail only if the term runs short — not the current plan.
 
 In-scope capabilities, by epic:
 

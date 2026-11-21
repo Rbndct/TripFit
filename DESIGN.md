@@ -1,5 +1,5 @@
 ---
-name: TripFit
+name: Trippings
 description: Trip-planning Android app whose Home and Itinerary screens read as boarding passes — one hero ticket on Home, a per-day tab strip on Itinerary, both riding the same fixed navy shell.
 colors:
   ticket-carrier-navy: "#13213B"
@@ -74,13 +74,13 @@ components:
     padding: "16dp 8dp"
 ---
 
-# Design System: TripFit
+# Design System: Trippings
 
 ## Overview
 
 **Creative North Star: "Boarding Pass / Ticket Stub"**
 
-TripFit's Home screen reads its trip list as a small stack of travel tickets: one trip — the one the pipeline (destination → route → calendar → budget) is currently moving — gets the full boarding-pass treatment; every other trip is a plain stub. The Itinerary screen (per-trip day-by-day builder) is the second surface built in this world: it inherits the fixed navy shell and tabular-monospace rule as-is and adds one structural move of its own — a horizontal day-tab strip, read as stepping between legs of the same boarding pass rather than paging a generic tab control. Both screens stay inside the platform's standard navigation, layout, and controls: the world contributes type, palette, density, and a signature move per surface, never a substitute for RecyclerView lists, AppBarLayout, or Material components.
+Trippings' Home screen reads its trip list as a small stack of travel tickets: one trip — the one the pipeline (destination → route → calendar → budget) is currently moving — gets the full boarding-pass treatment; every other trip is a plain stub. The Itinerary screen (per-trip day-by-day builder) is the second surface built in this world: it inherits the fixed navy shell and tabular-monospace rule as-is and adds one structural move of its own — a horizontal day-tab strip, read as stepping between legs of the same boarding pass rather than paging a generic tab control. Both screens stay inside the platform's standard navigation, layout, and controls: the world contributes type, palette, density, and a signature move per surface, never a substitute for RecyclerView lists, AppBarLayout, or Material components.
 
 The palette is a fixed navy carrier band (`#13213B`) holding white text, paired with an off-white paper surface — a deliberate, non-theme-reactive shell color chosen once and held constant across light and dark, the same way a printed ticket's ink color doesn't invert at night. Everything else in either screen (surfaces, outlines, secondary/amber accents) is ordinary Material role tokens that DayNight inverts normally.
 
