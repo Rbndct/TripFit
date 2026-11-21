@@ -93,7 +93,7 @@
     <string name="map_picker_coords">%1$.5f, %2$.5f</string>
     <string name="map_picker_finding">Finding place…</string>
     <string name="action_use_location">Use this location</string>
-    <string name="map_picker_fallback_name">Pinned location</string>
+    <string name="map_picker_fallback_name">Pinned destination</string>
 
     <string name="catalog_notice">Sample places. Names, ratings, reviews and prices are illustrative. Distances are straight-line estimates.</string>
     <string name="catalog_empty">No sample places match these filters…</string>

@@ -260,10 +260,8 @@ public class AddDestinationActivity extends ScreenActivity {
                                 R.string.error_pin_invalid, Snackbar.LENGTH_SHORT).show();
                         return;
                     }
-                    String name = data.getStringExtra(MapPickerActivity.EXTRA_RESULT_NAME);
-                    if (TextUtils.isEmpty(name)) {
-                        name = getString(R.string.map_picker_fallback_name);
-                    }
+                    String name = StopFormRules.nameForPin(safeText(inputName),
+                            getString(R.string.map_picker_fallback_name));
                     onPlaceSelected(new PlaceDto(UUID.randomUUID().toString(), selectedCityId,
                             name, null, lat, lng, null, null, null, false, null, null));
                 });

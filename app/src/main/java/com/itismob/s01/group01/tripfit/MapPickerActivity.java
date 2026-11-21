@@ -33,7 +33,6 @@ public class MapPickerActivity extends ScreenActivity {
     public static final String EXTRA_CITY_LNG = "extra_city_lng";
     public static final String EXTRA_RESULT_LAT = "extra_result_lat";
     public static final String EXTRA_RESULT_LNG = "extra_result_lng";
-    public static final String EXTRA_RESULT_NAME = "extra_result_name";
 
     private static final String STATE_PIN_LAT = "state_pin_lat";
     private static final String STATE_PIN_LNG = "state_pin_lng";
@@ -141,8 +140,6 @@ public class MapPickerActivity extends ScreenActivity {
         Intent result = new Intent();
         result.putExtra(EXTRA_RESULT_LAT, position.getLatitude());
         result.putExtra(EXTRA_RESULT_LNG, position.getLongitude());
-        result.putExtra(EXTRA_RESULT_NAME, String.format(java.util.Locale.US,
-                "Pinned location (%.5f, %.5f)", position.getLatitude(), position.getLongitude()));
         setResult(RESULT_OK, result);
         finish();
     }

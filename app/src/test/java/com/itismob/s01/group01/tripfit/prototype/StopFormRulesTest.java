@@ -86,4 +86,12 @@ public class StopFormRulesTest {
         assertFalse(StopFormRules.isPinValid(Double.NaN, Double.NaN));
         assertFalse(StopFormRules.isPinValid(10, Double.NaN));
     }
+
+    @Test
+    public void pinName_keepsTheTypedNameAndFallsBackOnlyWhenBlank() {
+        assertEquals("Ramen spot", StopFormRules.nameForPin("  Ramen spot ", "Pinned destination"));
+        assertEquals("Pinned destination", StopFormRules.nameForPin("", "Pinned destination"));
+        assertEquals("Pinned destination", StopFormRules.nameForPin("   ", "Pinned destination"));
+        assertEquals("Pinned destination", StopFormRules.nameForPin(null, "Pinned destination"));
+    }
 }

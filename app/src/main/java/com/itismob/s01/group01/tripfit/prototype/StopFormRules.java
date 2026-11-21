@@ -12,6 +12,11 @@ public final class StopFormRules {
 
     private StopFormRules() { }
 
+    /** The name a map pin gets: what the user already typed, else the fallback label. */
+    public static String nameForPin(@Nullable String typed, String fallback) {
+        return isBlank(typed) ? fallback : typed.trim();
+    }
+
     /** Blank is valid (it means the default stay); otherwise 5..720 whole minutes. */
     public static boolean isDurationValid(@Nullable String text) {
         if (isBlank(text)) {
