@@ -37,12 +37,21 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
+        <TextView
+            android:id="@+id/text_tagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:text="@string/tagline"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorPrimary" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/layout_email"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="44dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:hint="@string/field_email_hint"
             app:boxCornerRadiusBottomEnd="@dimen/input_corner"
             app:boxCornerRadiusBottomStart="@dimen/input_corner"

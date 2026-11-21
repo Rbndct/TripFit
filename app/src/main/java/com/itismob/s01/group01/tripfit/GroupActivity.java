@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import com.itismob.s01.group01.tripfit.ui.Keyboard;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -197,6 +198,7 @@ public class GroupActivity extends ScreenActivity {
     }
 
     private void submitCompanion(TextInputLayout layout, boolean join) {
+        Keyboard.hide(dialogInput);
         String value = String.valueOf(dialogInput.getText()).trim();
         if (join && !INVITE_CODE.equalsIgnoreCase(value)) {
             layout.setError(getString(R.string.group_invalid_code, INVITE_CODE));

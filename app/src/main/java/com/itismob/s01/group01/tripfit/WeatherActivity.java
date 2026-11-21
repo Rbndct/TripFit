@@ -3,6 +3,7 @@ package com.itismob.s01.group01.tripfit;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import com.itismob.s01.group01.tripfit.ui.Keyboard;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -169,6 +170,7 @@ public class WeatherActivity extends ScreenActivity {
                 .setTitle(getString(R.string.weather_change_forecast_cd, day))
                 .setSingleChoiceItems(labels, WeatherPlanning.conditionAt(store.weather(tripId), day)
                         .ordinal(), (picker, choice) -> {
+                            Keyboard.hide(findViewById(android.R.id.content));
                             store.setForecastCondition(tripId, day, choices[choice]);
                             picker.dismiss();
                             render();

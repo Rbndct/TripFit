@@ -7,9 +7,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.ViewCompat;
@@ -34,6 +37,8 @@ import com.itismob.s01.group01.tripfit.prototype.Expense;
 import com.itismob.s01.group01.tripfit.prototype.PrototypeStore;
 import com.itismob.s01.group01.tripfit.prototype.TripSnapshots;
 import com.itismob.s01.group01.tripfit.ui.AddExpenseDialog;
+import com.itismob.s01.group01.tripfit.ui.BudgetLines;
+import com.itismob.s01.group01.tripfit.ui.Keyboard;
 import com.itismob.s01.group01.tripfit.ui.Labels;
 import com.itismob.s01.group01.tripfit.ui.NoFilterAdapter;
 import com.itismob.s01.group01.tripfit.ui.RowAdapter;
@@ -66,6 +71,12 @@ public class BudgetActivity extends ScreenActivity {
     private TextInputLayout layoutCalcAmount;
     private TextInputEditText inputCalcAmount;
     private MaterialAutoCompleteTextView inputCalcCurrency;
+    private final ActivityResultLauncher<Intent> budgetSetup = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    toast(R.string.budget_saved);
+                }
+            });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -78,7 +89,7 @@ public class BudgetActivity extends ScreenActivity {
         findViewById(R.id.button_edit_budget).setOnClickListener(v -> {
             Intent intent = new Intent(this, BudgetSetupActivity.class);
             intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
-            startActivity(intent);
+            budgetSetup.launch(intent);
         });
         findViewById(R.id.fab_add_expense).setOnClickListener(v -> showExpenseDialog(null));
         findViewById(R.id.button_find_cheap).setOnClickListener(v -> {
@@ -125,6 +136,13 @@ public class BudgetActivity extends ScreenActivity {
             @Override
             public void afterTextChanged(Editable s) { }
         };
+        inputCalcAmount.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            Keyboard.hide(v);
+            return true;
+        });
         inputCalcAmount.addTextChangedListener(watcher);
         inputCalcCurrency.addTextChangedListener(watcher);
     }
@@ -146,6 +164,13 @@ public class BudgetActivity extends ScreenActivity {
                 ? getString(R.string.calc_result_live, original, converted,
                         CurrencyRates.asOfDate())
                 : getString(R.string.calc_result_sample, original, converted));
+    }
+
+    /** Names the rate source (sample/reference or live as of a date) and the unpriced-leg caveat. */
+    private void renderRatesNotice() {
+        ((TextView) findViewById(R.id.text_rates_notice)).setText(CurrencyRates.isLive()
+                ? getString(R.string.budget_rates_notice_live, CurrencyRates.asOfDate())
+                : getString(R.string.budget_rates_notice_sample));
     }
 
     /** Opens Add Expense (once at a time), optionally restoring a draft after rotation. */
@@ -216,6 +241,7 @@ public class BudgetActivity extends ScreenActivity {
         renderCategories(budget, days, expenses, trip);
         renderExpenses(expenses, home);
         renderCalculator();
+        renderRatesNotice();
     }
 
     /** Flags stops and expenses whose currency is not in the rates table (counted 1:1). */
@@ -291,10 +317,9 @@ public class BudgetActivity extends ScreenActivity {
             ((TextView) row.findViewById(R.id.text_category_name))
                     .setText(Labels.category(this, category));
             row.findViewById(R.id.badge_over).setVisibility(over ? View.VISIBLE : View.GONE);
-            String amountText = limit > 0
-                    ? getString(R.string.category_progress, CurrencyRates.format(spent, home),
-                            CurrencyRates.format(limit, home))
-                    : getString(R.string.category_no_limit, CurrencyRates.format(spent, home));
+            String amountText = BudgetLines.categoryLine(spent, limit, home,
+                    getString(R.string.category_remaining), getString(R.string.category_over),
+                    getString(R.string.category_no_limit));
             ((TextView) row.findViewById(R.id.text_category_amount)).setText(amountText);
             String plannedText = getString(R.string.category_planned,
                     CurrencyRates.format(planned, home));
@@ -305,8 +330,8 @@ public class BudgetActivity extends ScreenActivity {
             ViewCompat.setScreenReaderFocusable(row, true);
             String spoken = planned > 0
                     ? getString(R.string.category_planned_cd, amountText, plannedText) : amountText;
-            row.setContentDescription(getString(over ? R.string.category_row_cd_over
-                    : R.string.category_row_cd, Labels.category(this, category), spoken));
+            row.setContentDescription(getString(R.string.category_row_cd,
+                    Labels.category(this, category), spoken));
             bindProgress(row.findViewById(R.id.progress_category), spent, limit);
             container.addView(row);
         }

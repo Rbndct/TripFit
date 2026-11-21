@@ -3,14 +3,13 @@ package com.itismob.s01.group01.tripfit.prototype;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.TextView;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -23,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
@@ -43,15 +43,46 @@ public class PrototypeDeviceTest {
             com.itismob.s01.group01.tripfit.WeatherActivity.class,
             com.itismob.s01.group01.tripfit.GroupActivity.class,
             com.itismob.s01.group01.tripfit.JournalActivity.class,
-            com.itismob.s01.group01.tripfit.SummaryActivity.class
+            com.itismob.s01.group01.tripfit.SummaryActivity.class,
+            com.itismob.s01.group01.tripfit.OptimizeActivity.class,
+            com.itismob.s01.group01.tripfit.CalendarSyncActivity.class,
+            com.itismob.s01.group01.tripfit.SuggestionsActivity.class,
+            com.itismob.s01.group01.tripfit.BudgetSetupActivity.class
         };
         for (Class<?> screen : screens) {
             Intent intent = new Intent(context, screen);
             intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
             try (ActivityScenario<?> scenario = ActivityScenario.launch(intent)) {
                 scenario.onActivity(activity -> assertTrue(activity instanceof ScreenActivity));
+                assertTrue(screen.getSimpleName() + " has no status-bar padding",
+                        awaitStatusBarPadding(scenario));
             }
         }
+    }
+
+    /**
+     * The shell's app bar consumes the status-bar inset as top padding, so it must be above zero
+     * shortly after launch (insets arrive after the first layout pass).
+     */
+    private static boolean awaitStatusBarPadding(ActivityScenario<?> scenario) {
+        long deadline = System.currentTimeMillis() + 3000;
+        int[] top = new int[1];
+        while (System.currentTimeMillis() < deadline) {
+            scenario.onActivity(activity -> {
+                View appBar = (View) activity.findViewById(R.id.toolbar).getParent();
+                top[0] = appBar.getPaddingTop();
+            });
+            if (top[0] > 0) {
+                return true;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return false;
     }
 
     @Test
@@ -103,20 +134,26 @@ public class PrototypeDeviceTest {
 
     @Test
     public void pinnedStopAndExpenseSurviveReopeningTheLocalStore() {
-        Context isolated = new ContextWrapper(ApplicationProvider.getApplicationContext()) {
-            @Override public SharedPreferences getSharedPreferences(String name, int mode) {
-                return super.getSharedPreferences("device_test_" + name, mode);
+        Context context = ApplicationProvider.getApplicationContext();
+        String suffix = UUID.randomUUID().toString();
+        String tripId = "test-store-trip-" + suffix;
+        String itemId = "item-" + suffix;
+        PrototypeStore first = PrototypeStore.forStorage(new PrefsKeyValueStorage(context));
+        first.setItemDetails(itemId, new ItemDetails(500, "PHP", "Activities", true));
+        first.addExpense(tripId, "Lunch", Category.FOOD, 150, "PHP");
+        try {
+            // A second store over the same preferences file must load what the first one saved.
+            PrototypeStore reopened = PrototypeStore.forStorage(new PrefsKeyValueStorage(context));
+            assertNotNull(reopened.itemDetails(itemId));
+            assertEquals(500.0, reopened.itemDetails(itemId).getCost(), 0.001);
+            assertEquals(1, reopened.expenses(tripId).size());
+            assertEquals("Lunch", reopened.expenses(tripId).get(0).getTitle());
+        } finally {
+            first.removeItemDetails(itemId);
+            for (Expense expense : first.expenses(tripId)) {
+                first.removeExpense(tripId, expense.getId());
             }
-        };
-        PrototypeStore.init(isolated);
-        PrototypeStore store = PrototypeStore.get();
-        String tripId = "test-store-trip";
-        store.setItemDetails("item-1", new ItemDetails(500, "PHP", "Activities", true));
-        store.addExpense(tripId, "Lunch", Category.FOOD, 150, "PHP");
-
-        assertEquals(500.0, store.itemDetails("item-1").getCost(), 0.001);
-        assertEquals(1, store.expenses(tripId).size());
-        assertEquals("Lunch", store.expenses(tripId).get(0).getTitle());
+        }
     }
 
     @Test

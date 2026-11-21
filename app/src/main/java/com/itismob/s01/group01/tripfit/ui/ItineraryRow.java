@@ -33,6 +33,7 @@ public final class ItineraryRow {
     private final TravelMode legMode;
     private final TravelMode explicitMode;
     private final double estimateHome;
+    private final String category;
     private final String homeCurrency;
 
     private ItineraryRow(TripSnapshot trip, RoutePreview.Slot slot, RoutePreview.Slot previous,
@@ -58,6 +59,7 @@ public final class ItineraryRow {
         this.explicitMode = TripSnapshots.toMode(stop.mode);
         this.estimateHome = trip.convertedCost(stop);
         this.homeCurrency = trip.homeCurrency;
+        this.category = stop.category;
     }
 
     /** The day's rows in current (non-optimized) schedule order. */
@@ -131,4 +133,10 @@ public final class ItineraryRow {
     public double getEstimateHome() { return estimateHome; }
 
     public String getHomeCurrency() { return homeCurrency; }
+
+    /** The stop's budget category name ("Food", "Activities", ...). */
+    public String getCategory() { return category; }
+
+    /** Minutes spent at the stop. */
+    public int getDurationMin() { return end - start; }
 }

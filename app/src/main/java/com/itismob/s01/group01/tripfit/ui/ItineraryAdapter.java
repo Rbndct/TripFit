@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
 import com.itismob.s01.group01.tripfit.R;
 import com.itismob.s01.group01.tripfit.data.CurrencyRates;
+import com.itismob.s01.group01.tripfit.prototype.BudgetMath;
 import com.itismob.s01.group01.tripfit.prototype.ScheduleMath;
 
 import java.util.ArrayList;
@@ -97,11 +98,15 @@ public class ItineraryAdapter extends RecyclerView.Adapter<ItineraryAdapter.Stop
                             ? R.string.stop_status_fixed : R.string.stop_status_flexible)));
             bookedBadge.setVisibility(stop.isBooked() ? View.VISIBLE : View.GONE);
             conflictRow.setVisibility(stop.isConflict() ? View.VISIBLE : View.GONE);
-            estimate.setVisibility(stop.getEstimateHome() > 0 ? View.VISIBLE : View.GONE);
-            if (stop.getEstimateHome() > 0) {
-                estimate.setText(context.getString(R.string.stop_estimate,
-                        CurrencyRates.format(stop.getEstimateHome(), stop.getHomeCurrency())));
-            }
+            String estimateText = stop.getEstimateHome() > 0
+                    ? context.getString(R.string.stop_estimate,
+                            CurrencyRates.format(stop.getEstimateHome(), stop.getHomeCurrency()))
+                    : null;
+            estimate.setText(StopCardText.summary(
+                    Labels.category(context, BudgetMath.parseCategory(stop.getCategory())),
+                    context.getString(R.string.stop_duration, stop.getDurationMin()),
+                    estimateText));
+            estimate.setVisibility(View.VISIBLE);
             coords.setVisibility(stop.hasLocation() ? View.VISIBLE : View.GONE);
             if (stop.hasLocation()) {
                 coords.setText(context.getString(R.string.stop_coords,

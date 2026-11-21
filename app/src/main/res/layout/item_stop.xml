@@ -59,12 +59,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:fontFamily="monospace"
                 android:textAppearance="?attr/textAppearanceBodySmall"
                 android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone"
-                tools:text="Est. ₱56.00"
-                tools:visibility="visible" />
+                tools:text="Food · 45 min · Est. ₱56.00" />
 
             <TextView
                 android:id="@+id/text_stop_coords"

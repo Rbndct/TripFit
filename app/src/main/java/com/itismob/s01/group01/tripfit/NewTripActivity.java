@@ -127,6 +127,13 @@ public class NewTripActivity extends ScreenActivity {
             findViewById(R.id.plan_mode_group).setVisibility(View.GONE);
             layoutBudget.setVisibility(View.GONE);
             switchDaily.setVisibility(View.GONE);
+            View budgetButton = findViewById(R.id.button_edit_budget_settings);
+            budgetButton.setVisibility(View.VISIBLE);
+            budgetButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, BudgetSetupActivity.class);
+                intent.putExtra(HomeActivity.EXTRA_TRIP_ID, tripId);
+                startActivity(intent);
+            });
             inputDays.setImeOptions(EditorInfo.IME_ACTION_DONE);
             TripMeta meta = store.meta(tripId);
             inputCity.setText(meta.getCity(), false);

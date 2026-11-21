@@ -131,9 +131,9 @@
     <string name="budget_empty_expenses">No expenses logged yet. Tap Add expense to log your first one.</string>
     <string name="budget_no_total">No budget set</string>
     <string name="category_row_cd">%1$s, %2$s</string>
-    <string name="category_row_cd_over">%1$s, over budget, %2$s</string>
     <string name="category_status_over">Over</string>
-    <string name="category_progress">%1$s of %2$s</string>
+    <string name="category_remaining">%1$s remaining of %2$s</string>
+    <string name="category_over">Over budget by %1$s of %2$s</string>
     <string name="category_no_limit">%1$s spent, no limit set</string>
     <string name="cat_food">Food</string>
     <string name="cat_activities">Activities</string>
@@ -149,6 +149,7 @@
     <string name="error_amount_required">Enter an amount</string>
     <string name="error_title_required">Enter a description</string>
     <string name="expense_added">Expense added</string>
+    <string name="budget_saved">Budget saved</string>
     <string name="field_paid_in">Paid in</string>
     <string name="error_amount_range">Enter an amount from 0.01 to 100,000,000</string>
     <string name="expense_remove">Remove</string>
@@ -164,6 +165,7 @@
     <string name="cost_helper">Optional. Kept in the currency you pick, shown in %1$s on the itinerary.</string>
     <string name="error_optional_amount_range">Enter an amount from 0 to 100,000,000, or leave blank</string>
     <string name="stop_estimate">Est. %1$s</string>
+    <string name="stop_duration">%1$d min</string>
     <string name="budget_planned_label">Planned stop estimates</string>
     <string name="budget_planned_note">Estimates from your itinerary. They are never added to your logged expenses.</string>
     <string name="budget_planned_of">of %1$s budget</string>
@@ -180,7 +182,8 @@
     <string name="calc_result_sample">%1$s = %2$s · Sample rate</string>
     <string name="calc_result_live">%1$s = %2$s · Rate as of %3$s</string>
     <string name="calc_error">Enter an amount from 0 to 100,000,000</string>
-    <string name="budget_rates_notice">Exchange rates are sample or reference rates, not what a bank or card will charge. Stop costs are estimates.</string>
+    <string name="budget_rates_notice_sample">Rates are sample or reference rates, not what a bank or card will charge. Stop costs are estimates and exclude unpriced travel legs.</string>
+    <string name="budget_rates_notice_live">Rates are live as of %1$s, not what a bank or card will charge. Stop costs are estimates and exclude unpriced travel legs.</string>
     <string name="budget_find_cheap">Find budget-friendly food &amp; activities</string>
     <string name="itinerary_subtitle_budget">%1$s · Budget %2$s</string>
     <string name="itinerary_subtitle_full">%1$s · %2$s · Budget %3$s</string>
@@ -279,6 +282,7 @@
     <string name="trip_settings_title">Trip settings</string>
     <string name="action_trip_settings">Trip settings</string>
     <string name="action_save_trip_settings">Save trip settings</string>
+    <string name="action_edit_budget_settings">Edit budget and daily setting</string>
     <string name="trip_edit_note">Changing city keeps your existing stops. Changing currency keeps the numeric budget, so review your category limits in Budget.</string>
     <string name="error_start_date_invalid">Use a valid date, for example 2026-12-01</string>
     <string name="error_days_range">Enter a whole number of days from 1 to 30</string>

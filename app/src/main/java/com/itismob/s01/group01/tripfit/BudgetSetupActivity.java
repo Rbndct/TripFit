@@ -269,6 +269,7 @@ public class BudgetSetupActivity extends ScreenActivity {
         saveButton.setEnabled(false);
         store.setBudget(tripId, new BudgetSettings(homeCode(), current.getLocalCurrency(), amount,
                 isPerDay(), limits));
+        setResult(RESULT_OK);
         finish();
     }
 

@@ -152,6 +152,16 @@
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:visibility="gone" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_budget_settings"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:minHeight="48dp"
+                android:text="@string/action_edit_budget_settings"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:id="@+id/plan_mode_group"
                 android:layout_width="match_parent"
